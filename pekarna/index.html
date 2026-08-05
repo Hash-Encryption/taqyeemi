@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#241811">
+  <meta name="description" content="PEKARNA Bakery & Specialty Coffee in Jeddah — French pastries, artisanal sourdough, signature pizzas, and specialty coffee.">
+  <title>PEKARNA Bakery & Specialty Coffee</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ink: #241811;
+      --ink-soft: #5f5148;
+      --caramel: #c98c4a;
+      --caramel-dark: #93591f;
+      --cream: #fffaf0;
+      --oat: #f3ead9;
+      --sage: #dce2bd;
+      --white: #ffffff;
+      --line: rgba(36, 24, 17, 0.14);
+      --shadow-sm: 0 8px 24px rgba(36, 24, 17, 0.08);
+      --shadow-lg: 0 24px 60px rgba(36, 24, 17, 0.18);
+      --radius-sm: 0.8rem;
+      --radius-md: 1.25rem;
+      --radius-lg: 1.75rem;
+      --header-height: 4.5rem;
+      --content: 74rem;
+      --ease: cubic-bezier(.2, .75, .25, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: calc(var(--header-height) + 1rem);
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-width: 20rem;
+      overflow-x: hidden;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1rem;
+      line-height: 1.65;
+      padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+      text-rendering: optimizeLegibility;
+      text-align: start;
+    }
+
+    html[lang="ar"] body { font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif; }
+    html[lang="ar"] h1,
+    html[lang="ar"] h2,
+    html[lang="ar"] h3,
+    html[lang="ar"] .logo {
+      font-family: "Noto Naskh Arabic", Tahoma, serif;
+      letter-spacing: 0;
+      line-height: 1.22;
+    }
+
+    img, svg, iframe { display: block; max-width: 100%; }
+    img { height: auto; }
+    a { color: inherit; }
+    button, input { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    button { cursor: pointer; }
+    [hidden] { display: none !important; }
+
+    :focus-visible {
+      outline: 3px solid var(--caramel);
+      outline-offset: 4px;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 0.75rem;
+      inset-inline-start: 0.75rem;
+      z-index: 200;
+      transform: translateY(-160%);
+      border-radius: 999px;
+      background: var(--white);
+      color: var(--ink);
+      padding: 0.7rem 1rem;
+      font-weight: 700;
+      transition: transform 180ms ease-out;
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+
+    .container {
+      width: min(100% - 2rem, var(--content));
+      margin-inline: auto;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin: 0 0 0.8rem;
+      color: var(--caramel-dark);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 2rem;
+      height: 2px;
+      background: currentColor;
+      content: "";
+    }
+
+    h1, h2, h3 {
+      margin-top: 0;
+      font-family: "Playfair Display", Georgia, serif;
+      line-height: 1.06;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-size: clamp(2.75rem, 12.5vw, 4.7rem);
+      letter-spacing: -0.045em;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      font-size: clamp(2.15rem, 9vw, 3.5rem);
+      letter-spacing: -0.035em;
+    }
+
+    h3 { font-size: 1.45rem; }
+
+    p { margin-top: 0; }
+
+    .button {
+      display: inline-flex;
+      min-height: 3rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 0.75rem 1.25rem;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 800;
+      line-height: 1.15;
+      transition: transform 180ms var(--ease), background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+    }
+
+    .button:active { transform: scale(0.97); }
+    .button--primary { background: var(--caramel); color: var(--ink); }
+    .button--primary:hover { background: #e3ad70; }
+    .button--dark { background: var(--ink); color: var(--cream); }
+    .button--dark:hover { background: var(--caramel-dark); }
+    .button--light { border-color: rgba(255,255,255,.75); background: rgba(255,255,255,.06); color: var(--white); }
+    .button--light:hover { background: var(--white); color: var(--ink); }
+
+    .site-header {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 80;
+      border-bottom: 1px solid rgba(201, 140, 74, 0.2);
+      background: rgba(255, 250, 240, 0.94);
+      box-shadow: 0 1px 0 rgba(36,24,17,.02);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .nav-row {
+      display: flex;
+      min-height: var(--header-height);
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .logo {
+      min-height: 2.75rem;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+
+    .logo span { color: var(--caramel-dark); }
+
+    .menu-toggle {
+      width: 3rem;
+      height: 3rem;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      background: var(--oat);
+      color: var(--ink);
+    }
+
+    .menu-toggle svg { width: 1.45rem; height: 1.45rem; }
+
+    .language-toggle {
+      min-height: 2.75rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink);
+      padding: 0.55rem 0.8rem;
+      font-weight: 800;
+      line-height: 1;
+      transition: background-color 180ms ease, border-color 180ms ease, transform 180ms var(--ease);
+    }
+
+    .language-toggle:hover { border-color: var(--caramel); background: var(--oat); }
+    .language-toggle:active { transform: scale(0.97); }
+    .language-toggle__mark { color: var(--caramel-dark); font-size: 1rem; }
+
+    .desktop-nav { display: none; }
+
+    .mobile-menu {
+      border-top: 1px solid var(--line);
+      background: var(--cream);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .mobile-menu__inner {
+      display: grid;
+      gap: 0.35rem;
+      padding-block: 0.65rem 1rem;
+    }
+
+    .mobile-menu a {
+      display: flex;
+      min-height: 3rem;
+      align-items: center;
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.75rem;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .mobile-menu a:hover, .mobile-menu a[aria-current="page"] { background: var(--oat); color: var(--caramel-dark); }
+    .mobile-menu .language-toggle { width: 100%; margin-top: 0.25rem; }
+
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      min-height: 100dvh;
+      display: grid;
+      align-items: end;
+      isolation: isolate;
+      overflow: hidden;
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    .hero__image, .hero__veil { position: absolute; inset: 0; }
+    .hero__image { width: 100%; height: 100%; object-fit: cover; z-index: -3; }
+    .hero__veil {
+      z-index: -2;
+      background: linear-gradient(180deg, rgba(20,12,8,.28) 0%, rgba(20,12,8,.56) 44%, rgba(20,12,8,.94) 100%);
+    }
+
+    .hero__content { padding-block: calc(var(--header-height) + 4rem) 3rem; }
+    .hero .eyebrow { color: #f1bd7f; }
+    .hero h1 { max-width: 12ch; text-wrap: balance; }
+    .hero__lead { max-width: 38rem; margin-bottom: 1.4rem; color: rgba(255,255,255,.84); font-size: 1.04rem; line-height: 1.7; }
+
+    .hero__actions { display: grid; gap: 0.75rem; }
+
+    .oven-status {
+      width: fit-content;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin-top: 1.15rem;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      padding: 0.55rem 0.8rem;
+      color: rgba(255,255,255,.86);
+      font-size: 0.78rem;
+      font-weight: 700;
+      backdrop-filter: blur(10px);
+    }
+
+    .oven-status::before {
+      width: 0.55rem;
+      height: 0.55rem;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #9eca7f;
+      box-shadow: 0 0 0 0.25rem rgba(158,202,127,.18);
+      content: "";
+    }
+
+    .section { padding-block: 4.5rem; scroll-margin-top: calc(var(--header-height) + 1rem); }
+    .section-copy { color: var(--ink-soft); }
+    .section-copy p { max-width: 62ch; }
+
+    .story { background: var(--cream); }
+    .story__grid { display: grid; gap: 2.25rem; }
+
+    .story__visual {
+      position: relative;
+      min-height: 22rem;
+      margin-inline: 0.55rem 0;
+      border-radius: var(--radius-md);
+      background: var(--caramel);
+    }
+
+    .story__visual img {
+      position: absolute;
+      inset: -0.55rem 0.55rem 0.55rem -0.55rem;
+      width: calc(100% - 0.55rem);
+      height: calc(100% - 0.55rem);
+      border-radius: var(--radius-md);
+      object-fit: cover;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .text-link {
+      display: inline-flex;
+      min-height: 2.75rem;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--caramel-dark);
+      font-weight: 800;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 0.25em;
+    }
+
+    .text-link svg { width: 1.2rem; transition: transform 180ms ease; }
+    .text-link:hover svg { transform: translateX(0.2rem); }
+
+    .menu-section { background: var(--oat); }
+    .section-heading { margin-bottom: 2rem; }
+    .section-heading p { max-width: 42rem; color: var(--ink-soft); }
+
+    .menu-grid { display: grid; gap: 1rem; }
+
+    .menu-card {
+      overflow: hidden;
+      border: 1px solid rgba(36,24,17,.08);
+      border-radius: var(--radius-md);
+      background: var(--cream);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-card__media { aspect-ratio: 16 / 10; overflow: hidden; background: #d9c9af; }
+    .menu-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 350ms var(--ease); }
+    .menu-card:hover .menu-card__media img { transform: scale(1.035); }
+    .menu-card__body { padding: 1.2rem; }
+
+    .menu-card__title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .menu-card h3 { margin-bottom: 0.65rem; }
+    .menu-card p { margin-bottom: 0; color: var(--ink-soft); font-size: 0.92rem; }
+    .price { flex: 0 0 auto; color: var(--caramel-dark); font-size: 0.9rem; font-variant-numeric: tabular-nums; font-weight: 800; }
+    .menu-actions { margin-top: 1.5rem; text-align: center; }
+
+    .visit-card {
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      background: var(--ink);
+      box-shadow: var(--shadow-lg);
+      color: var(--white);
+    }
+
+    .visit-card__copy { padding: 2rem 1.25rem; }
+    .visit-card h2 { color: var(--cream); }
+    .visit-list { display: grid; gap: 1.5rem; margin: 0; }
+    .visit-item { display: grid; grid-template-columns: 3rem 1fr; gap: 0.8rem; align-items: start; }
+
+    .visit-icon {
+      width: 3rem;
+      height: 3rem;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(201,140,74,.16);
+      color: #efb875;
+    }
+
+    .visit-icon svg { width: 1.35rem; height: 1.35rem; }
+    .visit-item dt { margin-bottom: 0.2rem; color: #efb875; font-weight: 800; }
+    .visit-item dd { margin: 0; color: rgba(255,255,255,.75); font-size: 0.94rem; }
+
+    .visit-card__map { position: relative; min-height: 20rem; background: #d6cab8; }
+    .visit-card__map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+    .site-footer { background: var(--ink); color: var(--white); padding-block: 3.5rem 2rem; }
+    .footer-grid { display: grid; gap: 2.5rem; }
+    .site-footer .logo { color: var(--white); }
+    .footer-note, .site-footer li, .newsletter-note { color: rgba(255,255,255,.68); }
+    .footer-note { max-width: 27rem; }
+    .site-footer h2 { margin-bottom: 0.8rem; font-family: inherit; font-size: 0.92rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .footer-links { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.5rem 1rem; margin: 0; padding: 0; list-style: none; }
+
+    .footer-links a {
+      min-height: 2.75rem;
+      display: inline-flex;
+      align-items: center;
+      text-decoration-color: transparent;
+      text-underline-offset: 0.2em;
+    }
+
+    .footer-links a:hover { color: #efb875; text-decoration-color: currentColor; }
+    .newsletter { display: grid; gap: 0.55rem; }
+    .newsletter label { font-size: 0.88rem; font-weight: 700; }
+
+    .newsletter-row { display: grid; gap: 0.65rem; }
+    .newsletter input {
+      min-height: 3rem;
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      color: var(--white);
+      padding: 0.7rem 1rem;
+    }
+
+    .newsletter input::placeholder { color: rgba(255,255,255,.52); }
+    .newsletter-status { min-height: 1.55rem; margin: 0; color: #c5dfa9; font-size: 0.82rem; }
+
+    .footer-bottom {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-top: 2.5rem;
+      border-top: 1px solid rgba(255,255,255,.12);
+      padding-top: 1.5rem;
+      color: rgba(255,255,255,.52);
+      font-size: 0.78rem;
+    }
+
+    .mobile-actions {
+      position: fixed;
+      inset: auto 0 0;
+      z-index: 70;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      border-top: 1px solid var(--line);
+      background: rgba(255,250,240,.96);
+      padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom));
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .mobile-actions .button { min-height: 3rem; padding-block: 0.65rem; font-size: 0.88rem; }
+
+    dialog {
+      width: min(calc(100% - 2rem), 30rem);
+      max-height: calc(100dvh - 2rem);
+      overflow: auto;
+      border: 0;
+      border-radius: var(--radius-lg);
+      background: var(--cream);
+      color: var(--ink);
+      padding: 0;
+      box-shadow: var(--shadow-lg);
+    }
+
+    dialog::backdrop { background: rgba(20,12,8,.72); backdrop-filter: blur(4px); }
+    .dialog-inner { position: relative; padding: 2rem 1.25rem 1.25rem; }
+    .dialog-inner h2 { padding-inline-end: 2.5rem; font-size: 2rem; }
+    .dialog-inner p { color: var(--ink-soft); }
+
+    .dialog-close {
+      position: absolute;
+      top: 0.85rem;
+      inset-inline-end: 0.85rem;
+      width: 2.75rem;
+      height: 2.75rem;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      background: var(--oat);
+      color: var(--ink);
+    }
+
+    .dialog-close svg { width: 1.25rem; }
+    .dialog-actions { display: grid; gap: 0.7rem; margin-top: 1.5rem; }
+
+    .image-fallback { background: linear-gradient(135deg, #d9c9af, #a96f34); }
+    .image-fallback img { opacity: 0; }
+
+    @media (min-width: 36rem) {
+      .container { width: min(100% - 3rem, var(--content)); }
+      .hero__actions { grid-template-columns: repeat(2, max-content); }
+      .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .newsletter-row { grid-template-columns: minmax(0, 1fr) auto; }
+      .dialog-actions { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 64rem) {
+      body { padding-bottom: 0; }
+      .menu-toggle, .mobile-menu, .mobile-actions { display: none !important; }
+      .desktop-nav { display: flex; align-items: center; gap: 0.25rem; }
+      .desktop-nav a {
+        min-height: 2.75rem;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 0.55rem 0.8rem;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+      .desktop-nav a:not(.button):hover, .desktop-nav a[aria-current="page"] { background: var(--oat); color: var(--caramel-dark); }
+      .desktop-nav .button { margin-left: 0.5rem; padding-inline: 1.15rem; }
+      .desktop-nav .button { margin-inline-start: 0.5rem; margin-left: 0; }
+      .hero { align-items: center; }
+      .hero__content { padding-block: calc(var(--header-height) + 5rem) 4rem; }
+      .hero__lead { font-size: 1.15rem; }
+      .section { padding-block: 6.5rem; }
+      .story__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 5rem; }
+      .story__visual { min-height: 33rem; order: 0; }
+      .story__copy { order: 1; }
+      .menu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .visit-card { display: grid; grid-template-columns: 0.9fr 1.1fr; min-height: 34rem; }
+      .visit-card__copy { display: flex; flex-direction: column; justify-content: center; padding: 3.5rem; }
+      .visit-card__map { min-height: 100%; }
+      .footer-grid { grid-template-columns: 1.2fr 0.75fr 1.25fr; }
+      .footer-bottom { flex-direction: row; justify-content: space-between; }
+      .dialog-inner { padding: 2.4rem; }
+    }
+
+    @media (min-width: 70rem) {
+      .desktop-nav { gap: 0.6rem; }
+      .desktop-nav a { padding-inline: 1rem; }
+      .hero h1 { font-size: 5.4rem; }
+    }
+
+    html[dir="rtl"] .eyebrow { letter-spacing: 0.04em; }
+    html[dir="rtl"] .text-link svg { transform: rotate(180deg); }
+    html[dir="rtl"] .text-link:hover svg { transform: rotate(180deg) translateX(0.2rem); }
+    html[dir="rtl"] .story__visual img { inset: -0.55rem -0.55rem 0.55rem 0.55rem; }
+    html[dir="rtl"] .newsletter input { direction: ltr; text-align: left; }
+    html[dir="rtl"] .price { direction: rtl; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip-link" href="#main-content" data-i18n="skipLink">Skip to main content</a>
+
+  <header class="site-header" id="site-header">
+    <div class="container nav-row">
+      <a class="logo" href="#home" aria-label="PEKARNA home" data-i18n-aria-label="logoLabel"><span data-i18n="brandName">PEKARNA</span><span>.</span></a>
+
+      <nav class="desktop-nav" aria-label="Primary navigation">
+        <a href="#home" data-i18n="navHome">Home</a>
+        <a href="#about" data-i18n="navStory">Our story</a>
+        <a href="#menu" data-i18n="navMenu">Menu</a>
+        <a href="#visit" data-i18n="navVisit">Visit us</a>
+        <button class="language-toggle" type="button" data-language-toggle aria-label="Switch to Arabic"><span class="language-toggle__mark" aria-hidden="true">ع</span><span data-language-label>العربية</span></button>
+        <a class="button button--dark order-trigger" href="#order" data-i18n="navOrder">Order online</a>
+      </nav>
+
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-controls="mobile-menu" aria-expanded="false" aria-label="Open navigation menu">
+        <svg class="menu-icon-open" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <svg class="menu-icon-close" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" hidden><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation" hidden>
+      <div class="container mobile-menu__inner">
+        <a href="#home" data-i18n="navHome">Home</a>
+        <a href="#about" data-i18n="navStory">Our story</a>
+        <a href="#menu" data-i18n="navMenu">Menu</a>
+        <a href="#visit" data-i18n="navVisit">Visit us</a>
+        <button class="language-toggle" type="button" data-language-toggle aria-label="Switch to Arabic"><span class="language-toggle__mark" aria-hidden="true">ع</span><span data-language-label>العربية</span></button>
+        <a class="button button--dark order-trigger" href="#order" data-i18n="navOrder">Order online</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" id="home" aria-labelledby="hero-title">
+      <img class="hero__image" src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=1600&q=82" width="1600" height="1067" alt="Barista pouring freshly brewed coffee into a cup" data-i18n-alt="heroAlt" fetchpriority="high" decoding="async">
+      <div class="hero__veil" aria-hidden="true"></div>
+      <div class="container hero__content">
+        <p class="eyebrow" data-i18n="heroEyebrow">Bakery & specialty coffee</p>
+        <h1 id="hero-title" data-i18n="heroTitle">Crafted with passion. Baked to perfection.</h1>
+        <p class="hero__lead" data-i18n="heroLead">French pastries, slow-fermented sourdough, and expertly roasted coffee—made fresh in the heart of Jeddah.</p>
+        <div class="hero__actions">
+          <a class="button button--primary" href="#menu" data-i18n="heroMenu">Explore the menu</a>
+          <a class="button button--light order-trigger" href="#order" data-i18n="heroOrder">Order delivery</a>
+        </div>
+        <div class="oven-status" data-i18n="ovenStatus">Ovens warm daily from 7:00 AM</div>
+      </div>
+    </section>
+
+    <section class="section story" id="about" aria-labelledby="story-title">
+      <div class="container story__grid">
+        <div class="story__visual">
+          <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=82" width="1200" height="800" alt="Freshly baked artisanal sourdough loaves" data-i18n-alt="storyAlt" loading="lazy" decoding="async">
+        </div>
+        <div class="story__copy section-copy">
+          <p class="eyebrow" data-i18n="storyEyebrow">Our story</p>
+          <h2 id="story-title" data-i18n="storyTitle">A dedication to the art of baking.</h2>
+          <p data-i18n="storyBody1">At PEKARNA, great food starts with exceptional ingredients and patient technique. In Jeddah’s Al Khalidiyah district, French pastry tradition meets the everyday comfort of warm artisanal bread.</p>
+          <p data-i18n="storyBody2">Stop by for a morning croissant and a perfectly poured coffee, or share one of our signature “Tina” pizzas with friends. Everything is crafted with care in our kitchen.</p>
+          <a class="text-link" href="#visit"><span data-i18n="storyLink">Plan your visit</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section menu-section" id="menu" aria-labelledby="menu-title">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="menuEyebrow">Made today</p>
+          <h2 id="menu-title" data-i18n="menuTitle">PEKARNA signatures</h2>
+          <p data-i18n="menuLead">A glimpse of what comes from our ovens and espresso machines to your table.</p>
+        </div>
+
+        <div class="menu-grid">
+          <article class="menu-card">
+            <div class="menu-card__media"><img src="https://images.unsplash.com/photo-1549931319-a545dcf3bc73?auto=format&fit=crop&w=800&q=80" width="800" height="533" alt="Golden classic croissant" data-i18n-alt="croissantAlt" loading="lazy" decoding="async"></div>
+            <div class="menu-card__body">
+              <div class="menu-card__title-row"><h3 data-i18n="croissantName">Classic croissant</h3><span class="price" data-i18n="croissantPrice">SR 18</span></div>
+              <p data-i18n="croissantDescription">Buttery, flaky layers baked fresh each morning using traditional French technique.</p>
+            </div>
+          </article>
+
+          <article class="menu-card">
+            <div class="menu-card__media"><img src="https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=800&q=80" width="800" height="533" alt="Specialty latte with milk art" data-i18n-alt="latteAlt" loading="lazy" decoding="async"></div>
+            <div class="menu-card__body">
+              <div class="menu-card__title-row"><h3 data-i18n="latteName">Arabian latte</h3><span class="price" data-i18n="lattePrice">SR 24</span></div>
+              <p data-i18n="latteDescription">Our signature espresso, steamed milk, and a subtle finish of Arabian spices.</p>
+            </div>
+          </article>
+
+          <article class="menu-card">
+            <div class="menu-card__media"><img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80" width="800" height="533" alt="Margherita pizza with basil" data-i18n-alt="pizzaAlt" loading="lazy" decoding="async"></div>
+            <div class="menu-card__body">
+              <div class="menu-card__title-row"><h3 data-i18n="pizzaName">Margherita “Tina”</h3><span class="price" data-i18n="pizzaPrice">SR 55</span></div>
+              <p data-i18n="pizzaDescription">San Marzano tomato, fresh mozzarella, and basil on a sourdough base made for sharing.</p>
+            </div>
+          </article>
+
+          <article class="menu-card">
+            <div class="menu-card__media"><img src="https://images.unsplash.com/photo-1585478259715-876a6a81fa08?auto=format&fit=crop&w=800&q=80" width="800" height="533" alt="Crusty artisan sourdough loaf" data-i18n-alt="sourdoughAlt" loading="lazy" decoding="async"></div>
+            <div class="menu-card__body">
+              <div class="menu-card__title-row"><h3 data-i18n="sourdoughName">Artisan sourdough</h3><span class="price" data-i18n="sourdoughPrice">SR 28</span></div>
+              <p data-i18n="sourdoughDescription">Naturally leavened with a crisp crust, open crumb, and a deep fermented flavor.</p>
+            </div>
+          </article>
+
+          <article class="menu-card extra-menu-item" hidden>
+            <div class="menu-card__media"><img src="https://images.unsplash.com/photo-1486427944299-d1955d23e34d?auto=format&fit=crop&w=800&q=80" width="800" height="533" alt="Fresh fruit pastry" data-i18n-alt="danishAlt" loading="lazy" decoding="async"></div>
+            <div class="menu-card__body">
+              <div class="menu-card__title-row"><h3 data-i18n="danishName">Seasonal danish</h3><span class="price" data-i18n="danishPrice">SR 22</span></div>
+              <p data-i18n="danishDescription">Laminated pastry, vanilla cream, and the best fruit of the season.</p>
+            </div>
+          </article>
+
+          <article class="menu-card extra-menu-item" hidden>
+            <div class="menu-card__media"><img src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=800&q=80" width="800" height="533" alt="Iced coffee in a tall glass" data-i18n-alt="coldBrewAlt" loading="lazy" decoding="async"></div>
+            <div class="menu-card__body">
+              <div class="menu-card__title-row"><h3 data-i18n="coldBrewName">Cold brew</h3><span class="price" data-i18n="coldBrewPrice">SR 21</span></div>
+              <p data-i18n="coldBrewDescription">Steeped slowly for a clean, chocolate-toned cup with a silky finish.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="menu-actions">
+          <button class="button button--dark" id="menu-more" type="button" aria-expanded="false" data-i18n="menuMore">View more signatures</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="visit" aria-labelledby="visit-title">
+      <div class="container">
+        <div class="visit-card">
+          <div class="visit-card__copy">
+            <p class="eyebrow" data-i18n="visitEyebrow">Al Khalidiyah, Jeddah</p>
+            <h2 id="visit-title" data-i18n="visitTitle">Come say hello.</h2>
+            <dl class="visit-list">
+              <div class="visit-item">
+                <div class="visit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+                <div><dt data-i18n="locationLabel">Location</dt><dd data-i18n-html="locationAddress">Prince Sultan Road<br>Al Khalidiyah, Jeddah<br>Saudi Arabia</dd></div>
+              </div>
+              <div class="visit-item">
+                <div class="visit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+                <div><dt data-i18n="hoursLabel">Opening hours</dt><dd data-i18n-html="hoursValue">Saturday–Wednesday: 7:00 AM–11:00 PM<br>Thursday–Friday: 7:00 AM–12:00 AM</dd></div>
+              </div>
+            </dl>
+          </div>
+          <div class="visit-card__map">
+            <iframe src="https://maps.google.com/maps?q=PEKARNA%20Bakery,%20Jeddah&t=&z=15&ie=UTF8&iwloc=&output=embed" title="Map showing PEKARNA Bakery in Jeddah" data-i18n-title="mapTitle" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="#home" aria-label="PEKARNA home" data-i18n-aria-label="logoLabel"><span data-i18n="brandName">PEKARNA</span><span>.</span></a>
+          <p class="footer-note" data-i18n="footerNote">Elevating daily rituals with artisanal baking and specialty coffee in Jeddah.</p>
+        </div>
+
+        <nav aria-label="Footer navigation">
+          <h2 data-i18n="quickLinks">Quick links</h2>
+          <ul class="footer-links">
+            <li><a href="#menu" data-i18n="navMenu">Menu</a></li>
+            <li><a href="#about" data-i18n="navStory">Our story</a></li>
+            <li><a href="#visit" data-i18n="locationLabel">Location</a></li>
+            <li><a class="order-trigger" href="#order" data-i18n="footerOrder">Order</a></li>
+          </ul>
+        </nav>
+
+        <div>
+          <h2 data-i18n="newsletterTitle">Newsletter</h2>
+          <p class="newsletter-note" data-i18n="newsletterNote">New pastries, seasonal coffees, and bakery events—occasionally.</p>
+          <form class="newsletter" id="newsletter-form" novalidate>
+            <label for="newsletter-email" data-i18n="emailLabel">Email address</label>
+            <div class="newsletter-row">
+              <input id="newsletter-email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" data-i18n-placeholder="emailPlaceholder" required aria-describedby="newsletter-status">
+              <button class="button button--primary" type="submit" data-i18n="subscribe">Subscribe</button>
+            </div>
+            <p class="newsletter-status" id="newsletter-status" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span data-i18n="copyright">© 2026 PEKARNA Bakery & Specialty Coffee.</span>
+        <span data-i18n="madeInJeddah">Made fresh in Jeddah.</span>
+      </div>
+    </div>
+  </footer>
+
+  <nav class="mobile-actions" aria-label="Quick actions" data-i18n-aria-label="quickActionsLabel">
+    <a class="button button--primary" href="#menu" data-i18n="mobileMenuAction">View menu</a>
+    <a class="button button--dark" href="#visit" data-i18n="navVisit">Visit us</a>
+  </nav>
+
+  <dialog id="order" aria-labelledby="order-dialog-title">
+    <div class="dialog-inner">
+      <button class="dialog-close" type="button" data-dialog-close aria-label="Close order information" data-i18n-aria-label="closeOrderLabel">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+      <p class="eyebrow" data-i18n="orderEyebrow">Ordering</p>
+      <h2 id="order-dialog-title" data-i18n="orderTitle">Online ordering is almost ready.</h2>
+      <p data-i18n="orderBody">The website is prepared for your delivery link, but no ordering provider was included in the original code. Until it is connected, explore today’s signatures or visit the bakery.</p>
+      <div class="dialog-actions">
+        <a class="button button--primary" href="#menu" data-dialog-close data-i18n="mobileMenuAction">View the menu</a>
+        <a class="button button--dark" href="#visit" data-dialog-close data-i18n="storyLink">Plan a visit</a>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const translations = {
+        en: {
+          pageTitle: "PEKARNA Bakery & Specialty Coffee",
+          pageDescription: "PEKARNA Bakery & Specialty Coffee in Jeddah — French pastries, artisanal sourdough, signature pizzas, and specialty coffee.",
+          skipLink: "Skip to main content",
+          brandName: "PEKARNA",
+          logoLabel: "PEKARNA home",
+          navHome: "Home",
+          navStory: "Our story",
+          navMenu: "Menu",
+          navVisit: "Visit us",
+          navOrder: "Order online",
+          menuOpen: "Open navigation menu",
+          menuClose: "Close navigation menu",
+          languageSwitch: "العربية",
+          languageSwitchLabel: "Switch to Arabic",
+          languageMark: "ع",
+          heroAlt: "Barista pouring freshly brewed coffee into a cup",
+          heroEyebrow: "Bakery & specialty coffee",
+          heroTitle: "Crafted with passion. Baked to perfection.",
+          heroLead: "French pastries, slow-fermented sourdough, and expertly roasted coffee—made fresh in the heart of Jeddah.",
+          heroMenu: "Explore the menu",
+          heroOrder: "Order delivery",
+          ovenStatus: "Ovens warm daily from 7:00 AM",
+          storyAlt: "Freshly baked artisanal sourdough loaves",
+          storyEyebrow: "Our story",
+          storyTitle: "A dedication to the art of baking.",
+          storyBody1: "At PEKARNA, great food starts with exceptional ingredients and patient technique. In Jeddah’s Al Khalidiyah district, French pastry tradition meets the everyday comfort of warm artisanal bread.",
+          storyBody2: "Stop by for a morning croissant and a perfectly poured coffee, or share one of our signature “Tina” pizzas with friends. Everything is crafted with care in our kitchen.",
+          storyLink: "Plan your visit",
+          menuEyebrow: "Made today",
+          menuTitle: "PEKARNA signatures",
+          menuLead: "A glimpse of what comes from our ovens and espresso machines to your table.",
+          croissantAlt: "Golden classic croissant",
+          croissantName: "Classic croissant",
+          croissantPrice: "SR 18",
+          croissantDescription: "Buttery, flaky layers baked fresh each morning using traditional French technique.",
+          latteAlt: "Specialty latte with milk art",
+          latteName: "Arabian latte",
+          lattePrice: "SR 24",
+          latteDescription: "Our signature espresso, steamed milk, and a subtle finish of Arabian spices.",
+          pizzaAlt: "Margherita pizza with basil",
+          pizzaName: "Margherita “Tina”",
+          pizzaPrice: "SR 55",
+          pizzaDescription: "San Marzano tomato, fresh mozzarella, and basil on a sourdough base made for sharing.",
+          sourdoughAlt: "Crusty artisan sourdough loaf",
+          sourdoughName: "Artisan sourdough",
+          sourdoughPrice: "SR 28",
+          sourdoughDescription: "Naturally leavened with a crisp crust, open crumb, and a deep fermented flavor.",
+          danishAlt: "Fresh fruit pastry",
+          danishName: "Seasonal danish",
+          danishPrice: "SR 22",
+          danishDescription: "Laminated pastry, vanilla cream, and the best fruit of the season.",
+          coldBrewAlt: "Iced coffee in a tall glass",
+          coldBrewName: "Cold brew",
+          coldBrewPrice: "SR 21",
+          coldBrewDescription: "Steeped slowly for a clean, chocolate-toned cup with a silky finish.",
+          menuMore: "View more signatures",
+          menuLess: "Show fewer signatures",
+          visitEyebrow: "Al Khalidiyah, Jeddah",
+          visitTitle: "Come say hello.",
+          locationLabel: "Location",
+          locationAddress: "Prince Sultan Road<br>Al Khalidiyah, Jeddah<br>Saudi Arabia",
+          hoursLabel: "Opening hours",
+          hoursValue: "Saturday–Wednesday: 7:00 AM–11:00 PM<br>Thursday–Friday: 7:00 AM–12:00 AM",
+          mapTitle: "Map showing PEKARNA Bakery in Jeddah",
+          footerNote: "Elevating daily rituals with artisanal baking and specialty coffee in Jeddah.",
+          quickLinks: "Quick links",
+          footerOrder: "Order",
+          newsletterTitle: "Newsletter",
+          newsletterNote: "New pastries, seasonal coffees, and bakery events—occasionally.",
+          emailLabel: "Email address",
+          emailPlaceholder: "you@example.com",
+          subscribe: "Subscribe",
+          copyright: "© 2026 PEKARNA Bakery & Specialty Coffee.",
+          madeInJeddah: "Made fresh in Jeddah.",
+          quickActionsLabel: "Quick actions",
+          mobileMenuAction: "View the menu",
+          closeOrderLabel: "Close order information",
+          orderEyebrow: "Ordering",
+          orderTitle: "Online ordering is almost ready.",
+          orderBody: "The website is prepared for your delivery link, but no ordering provider was included in the original code. Until it is connected, explore today’s signatures or visit the bakery.",
+          emailError: "Enter a valid email address to continue.",
+          emailReady: "Form checked—connect your email service to activate subscriptions."
+        },
+        ar: {
+          pageTitle: "بيكارنا | مخبوزات وقهوة مختصة",
+          pageDescription: "بيكارنا للمخبوزات والقهوة المختصة في جدة — معجنات فرنسية، خبز ساوردو حِرفي، بيتزا مميزة، وقهوة مختصة.",
+          skipLink: "انتقل إلى المحتوى الرئيسي",
+          brandName: "بيكارنا",
+          logoLabel: "الصفحة الرئيسية لبيكارنا",
+          navHome: "الرئيسية",
+          navStory: "قصتنا",
+          navMenu: "القائمة",
+          navVisit: "زورونا",
+          navOrder: "اطلب أونلاين",
+          menuOpen: "افتح قائمة التنقل",
+          menuClose: "أغلق قائمة التنقل",
+          languageSwitch: "English",
+          languageSwitchLabel: "التبديل إلى الإنجليزية",
+          languageMark: "EN",
+          heroAlt: "باريستا يصب قهوة محضّرة طازجًا في فنجان",
+          heroEyebrow: "مخبوزات وقهوة مختصة",
+          heroTitle: "نصنعه بشغف، ونخبزه بإتقان.",
+          heroLead: "معجنات فرنسية، خبز ساوردو مخمّر ببطء، وقهوة محمّصة بعناية — تُحضّر طازجة في قلب جدة.",
+          heroMenu: "استكشف القائمة",
+          heroOrder: "اطلب للتوصيل",
+          ovenStatus: "يبدأ الخَبز يوميًا من الساعة ٧:٠٠ صباحًا",
+          storyAlt: "أرغفة ساوردو حِرفية مخبوزة طازجًا",
+          storyEyebrow: "قصتنا",
+          storyTitle: "شغفٌ بفن الخَبز.",
+          storyBody1: "في بيكارنا، يبدأ الطعام الرائع بمكوّنات استثنائية وتقنيات تُمنح وقتها الكافي. في حي الخالدية بجدة، تلتقي تقاليد المعجنات الفرنسية مع دفء الخبز الحِرفي اليومي.",
+          storyBody2: "مرّوا علينا صباحًا لكرواسون طازج وقهوة مضبوطة، أو شاركوا أصدقاءكم إحدى بيتزا «تينا» المميزة. كل ما نقدمه يُحضّر بعناية في مطبخنا.",
+          storyLink: "خطط لزيارتك",
+          menuEyebrow: "محضّر اليوم",
+          menuTitle: "مختارات بيكارنا",
+          menuLead: "لمحة مما يصل من أفراننا وآلات الإسبريسو مباشرةً إلى طاولتكم.",
+          croissantAlt: "كرواسون كلاسيكي ذهبي",
+          croissantName: "كرواسون كلاسيكي",
+          croissantPrice: "١٨ ر.س",
+          croissantDescription: "طبقات زبدية هشة تُخبز طازجة كل صباح وفق الطريقة الفرنسية التقليدية.",
+          latteAlt: "لاتيه مختص برسمة حليب",
+          latteName: "لاتيه عربي",
+          lattePrice: "٢٤ ر.س",
+          latteDescription: "إسبريسو بيكارنا المميز مع حليب مبخّر ولمسة خفيفة من التوابل العربية.",
+          pizzaAlt: "بيتزا مارجريتا مزينة بالريحان",
+          pizzaName: "مارجريتا «تينا»",
+          pizzaPrice: "٥٥ ر.س",
+          pizzaDescription: "طماطم سان مارزانو، موزاريلا طازجة، وريحان على عجينة ساوردو مثالية للمشاركة.",
+          sourdoughAlt: "رغيف ساوردو حِرفي بقشرة مقرمشة",
+          sourdoughName: "ساوردو حِرفي",
+          sourdoughPrice: "٢٨ ر.س",
+          sourdoughDescription: "خبز مخمّر طبيعيًا بقشرة مقرمشة ولبّ خفيف ونكهة تخمير عميقة.",
+          danishAlt: "معجّنات دنماركية بالفواكه الطازجة",
+          danishName: "دانيش موسمي",
+          danishPrice: "٢٢ ر.س",
+          danishDescription: "عجينة مورّقة، كريمة فانيلا، وأفضل فواكه الموسم.",
+          coldBrewAlt: "قهوة باردة في كوب طويل",
+          coldBrewName: "كولد برو",
+          coldBrewPrice: "٢١ ر.س",
+          coldBrewDescription: "تُنقع ببطء لتمنحكم قهوة صافية بنفحات الشوكولاتة وقوام ناعم.",
+          menuMore: "عرض المزيد من المختارات",
+          menuLess: "عرض مختارات أقل",
+          visitEyebrow: "الخالدية، جدة",
+          visitTitle: "ننتظركم بكل ترحاب.",
+          locationLabel: "الموقع",
+          locationAddress: "طريق الأمير سلطان<br>الخالدية، جدة<br>المملكة العربية السعودية",
+          hoursLabel: "ساعات العمل",
+          hoursValue: "السبت–الأربعاء: ٧:٠٠ ص–١١:٠٠ م<br>الخميس–الجمعة: ٧:٠٠ ص–١٢:٠٠ ص",
+          mapTitle: "خريطة توضح موقع مخبز بيكارنا في جدة",
+          footerNote: "نرتقي بطقوسكم اليومية مع المخبوزات الحِرفية والقهوة المختصة في جدة.",
+          quickLinks: "روابط سريعة",
+          footerOrder: "اطلب",
+          newsletterTitle: "النشرة البريدية",
+          newsletterNote: "مخبوزات جديدة، قهوة موسمية، وفعاليات المخبز — من وقت لآخر.",
+          emailLabel: "البريد الإلكتروني",
+          emailPlaceholder: "name@example.com",
+          subscribe: "اشترك",
+          copyright: "© ٢٠٢٦ بيكارنا للمخبوزات والقهوة المختصة.",
+          madeInJeddah: "يُحضّر طازجًا في جدة.",
+          quickActionsLabel: "إجراءات سريعة",
+          mobileMenuAction: "عرض القائمة",
+          closeOrderLabel: "إغلاق معلومات الطلب",
+          orderEyebrow: "الطلب",
+          orderTitle: "الطلب أونلاين سيكون متاحًا قريبًا.",
+          orderBody: "الموقع جاهز لإضافة رابط خدمة التوصيل، لكن مزوّد الطلبات لم يكن ضمن الكود الأصلي. إلى أن يتم ربطه، استكشفوا مختارات اليوم أو زورونا في المخبز.",
+          emailError: "أدخل بريدًا إلكترونيًا صحيحًا للمتابعة.",
+          emailReady: "تم التحقق من النموذج — اربطه بخدمة البريد لتفعيل الاشتراكات."
+        }
+      };
+
+      let currentLanguage = "en";
+
+      function savedLanguage() {
+        try {
+          const saved = localStorage.getItem("pekarna-language");
+          if (saved === "ar" || saved === "en") return saved;
+        } catch (_) {}
+        return navigator.language?.toLowerCase().startsWith("ar") ? "ar" : "en";
+      }
+
+      function applyLanguage(language) {
+        currentLanguage = translations[language] ? language : "en";
+        const copy = translations[currentLanguage];
+        const root = document.documentElement;
+        root.lang = currentLanguage;
+        root.dir = currentLanguage === "ar" ? "rtl" : "ltr";
+        document.title = copy.pageTitle;
+        document.querySelector('meta[name="description"]')?.setAttribute("content", copy.pageDescription);
+
+        document.querySelectorAll("[data-i18n]").forEach((element) => {
+          const value = copy[element.dataset.i18n];
+          if (value !== undefined) element.textContent = value;
+        });
+        document.querySelectorAll("[data-i18n-html]").forEach((element) => {
+          const value = copy[element.dataset.i18nHtml];
+          if (value !== undefined) element.innerHTML = value;
+        });
+        ["alt", "title", "placeholder", "aria-label"].forEach((attribute) => {
+          const dataName = `i18n${attribute.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join("")}`;
+          document.querySelectorAll(`[data-i18n-${attribute}]`).forEach((element) => {
+            const value = copy[element.dataset[dataName]];
+            if (value !== undefined) element.setAttribute(attribute, value);
+          });
+        });
+
+        document.querySelectorAll("[data-language-toggle]").forEach((toggle) => {
+          toggle.setAttribute("aria-label", copy.languageSwitchLabel);
+          const label = toggle.querySelector("[data-language-label]");
+          const mark = toggle.querySelector(".language-toggle__mark");
+          if (label) label.textContent = copy.languageSwitch;
+          if (mark) mark.textContent = copy.languageMark;
+        });
+
+        const menuButtonNow = document.querySelector("#menu-toggle");
+        const menuIsOpen = menuButtonNow?.getAttribute("aria-expanded") === "true";
+        menuButtonNow?.setAttribute("aria-label", menuIsOpen ? copy.menuClose : copy.menuOpen);
+
+        const moreButtonNow = document.querySelector("#menu-more");
+        const menuExpanded = moreButtonNow?.getAttribute("aria-expanded") === "true";
+        if (moreButtonNow) moreButtonNow.textContent = menuExpanded ? copy.menuLess : copy.menuMore;
+
+        const status = document.querySelector("#newsletter-status");
+        if (status) status.textContent = "";
+        try { localStorage.setItem("pekarna-language", currentLanguage); } catch (_) {}
+      }
+
+      document.querySelectorAll("[data-language-toggle]").forEach((toggle) => {
+        toggle.addEventListener("click", () => applyLanguage(currentLanguage === "en" ? "ar" : "en"));
+      });
+
+      applyLanguage(savedLanguage());
+
+      const menuButton = document.querySelector("#menu-toggle");
+      const mobileMenu = document.querySelector("#mobile-menu");
+      const openIcon = menuButton?.querySelector(".menu-icon-open");
+      const closeIcon = menuButton?.querySelector(".menu-icon-close");
+
+      function setMobileMenu(open) {
+        if (!menuButton || !mobileMenu) return;
+        const copy = translations[currentLanguage];
+        menuButton.setAttribute("aria-expanded", String(open));
+        menuButton.setAttribute("aria-label", open ? copy.menuClose : copy.menuOpen);
+        mobileMenu.hidden = !open;
+        if (openIcon) openIcon.hidden = open;
+        if (closeIcon) closeIcon.hidden = !open;
+      }
+
+      menuButton?.addEventListener("click", () => {
+        setMobileMenu(menuButton.getAttribute("aria-expanded") !== "true");
+      });
+
+      mobileMenu?.addEventListener("click", (event) => {
+        if (event.target.closest("a")) setMobileMenu(false);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && menuButton?.getAttribute("aria-expanded") === "true") {
+          setMobileMenu(false);
+          menuButton.focus();
+        }
+      });
+
+      const desktopQuery = window.matchMedia("(min-width: 64rem)");
+      const closeMenuAtDesktop = (event) => { if (event.matches) setMobileMenu(false); };
+      if (desktopQuery.addEventListener) desktopQuery.addEventListener("change", closeMenuAtDesktop);
+      else desktopQuery.addListener(closeMenuAtDesktop);
+
+      const sections = [...document.querySelectorAll("main section[id]")];
+      const trackedLinks = [...document.querySelectorAll('header a[href^="#"]')];
+      if ("IntersectionObserver" in window) {
+        const sectionObserver = new IntersectionObserver((entries) => {
+          const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (!visible) return;
+          trackedLinks.forEach((link) => {
+            if (link.getAttribute("href") === `#${visible.target.id}`) link.setAttribute("aria-current", "page");
+            else link.removeAttribute("aria-current");
+          });
+        }, { rootMargin: "-28% 0px -62%", threshold: [0, 0.25, 0.6] });
+        sections.forEach((section) => sectionObserver.observe(section));
+      }
+
+      const moreButton = document.querySelector("#menu-more");
+      const extraItems = [...document.querySelectorAll(".extra-menu-item")];
+      moreButton?.addEventListener("click", () => {
+        const expanded = moreButton.getAttribute("aria-expanded") !== "true";
+        moreButton.setAttribute("aria-expanded", String(expanded));
+        moreButton.textContent = expanded ? translations[currentLanguage].menuLess : translations[currentLanguage].menuMore;
+        extraItems.forEach((item) => { item.hidden = !expanded; });
+        if (!expanded) document.querySelector("#menu-title")?.scrollIntoView({ block: "start", behavior: "smooth" });
+      });
+
+      const dialog = document.querySelector("#order");
+      document.querySelectorAll(".order-trigger").forEach((trigger) => {
+        trigger.addEventListener("click", (event) => {
+          event.preventDefault();
+          setMobileMenu(false);
+          if (dialog?.showModal) dialog.showModal();
+          else window.location.hash = "menu";
+        });
+      });
+
+      dialog?.querySelectorAll("[data-dialog-close]").forEach((control) => {
+        control.addEventListener("click", () => dialog.close());
+      });
+
+      dialog?.addEventListener("click", (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+
+      const newsletter = document.querySelector("#newsletter-form");
+      const email = document.querySelector("#newsletter-email");
+      const newsletterStatus = document.querySelector("#newsletter-status");
+      newsletter?.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!email.checkValidity()) {
+          newsletterStatus.textContent = translations[currentLanguage].emailError;
+          email.setAttribute("aria-invalid", "true");
+          email.focus();
+          return;
+        }
+        email.removeAttribute("aria-invalid");
+        newsletterStatus.textContent = translations[currentLanguage].emailReady;
+      });
+
+      document.querySelectorAll("img").forEach((image) => {
+        image.addEventListener("error", () => image.parentElement?.classList.add("image-fallback"), { once: true });
+      });
+    })();
+  </script>
+</body>
+</html>

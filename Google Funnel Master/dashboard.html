@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard — Reviews</title>
+    <meta name="description" content="Restaurant owner dashboard — view private customer feedback.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --g-blue: #4285F4;
+            --g-blue-dark: #1A73E8;
+            --g-red: #EA4335;
+            --g-yellow: #FBBC05;
+            --g-green: #34A853;
+            --g-green-light: #81C995;
+
+            --surface: #1E1E1E;
+            --surface-dim: #121212;
+            --surface-container: #2A2A2E;
+            --surface-bright: #28282C;
+            --on-surface: #E8EAED;
+            --on-surface-variant: #9AA0A6;
+            --outline: #3C4043;
+            --outline-variant: #303134;
+
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.35);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.4);
+
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-full: 9999px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Google Sans', 'Inter', sans-serif; background: var(--surface-dim); color: var(--on-surface); min-height: 100vh; }
+
+        /* ── AUTH SCREEN ─────────────────────────────────────── */
+        .auth-screen {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 16px;
+            background: var(--surface-dim);
+            position: relative; overflow: hidden;
+        }
+
+        .bg-blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35; }
+        .blob--blue   { width: 320px; height: 320px; background: var(--g-blue);   top: -10%; left: -5%; animation: blobA 14s ease-in-out infinite alternate; }
+        .blob--green  { width: 280px; height: 280px; background: var(--g-green);  bottom: -10%; right: -5%; animation: blobB 16s ease-in-out infinite alternate; }
+        @keyframes blobA { 0%{transform:translate(0,0)} 100%{transform:translate(30vw,40vh)} }
+        @keyframes blobB { 0%{transform:translate(0,0)} 100%{transform:translate(-25vw,-35vh)} }
+
+        .auth-card {
+            background: var(--surface);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 100%; max-width: 400px;
+            padding: 40px 32px;
+            position: relative; z-index: 1;
+            animation: cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+        .auth-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            background: linear-gradient(90deg, var(--g-blue), var(--g-green));
+        }
+        @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+
+        .auth-logo { font-size: 2rem; margin-bottom: 8px; }
+        .auth-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+        .auth-sub   { font-size: 0.88rem; color: var(--on-surface-variant); margin-bottom: 28px; line-height: 1.5; }
+
+        /* Tabs */
+        .auth-tabs { display: flex; gap: 0; margin-bottom: 24px; background: var(--surface-dim); border-radius: var(--radius-sm); padding: 4px; }
+        .auth-tab {
+            flex: 1; padding: 8px; border: none; background: none; border-radius: 6px;
+            font-family: inherit; font-size: 0.88rem; font-weight: 500;
+            color: var(--on-surface-variant); cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .auth-tab.active { background: var(--surface); color: var(--on-surface); box-shadow: var(--shadow-sm); }
+
+        /* Form */
+        .form-group { margin-bottom: 16px; text-align: left; }
+        .form-label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--on-surface-variant); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+        .form-input {
+            width: 100%; padding: 12px 14px;
+            background: var(--surface-dim); border: 1.5px solid var(--outline);
+            border-radius: var(--radius-sm); color: var(--on-surface);
+            font-family: inherit; font-size: 0.95rem; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input::placeholder { color: var(--on-surface-variant); opacity: 0.6; }
+        .form-input:focus { border-color: var(--g-blue); box-shadow: 0 0 0 3px rgba(66,133,244,0.2); }
+        .form-hint { font-size: 0.78rem; color: var(--on-surface-variant); margin-top: 5px; }
+
+        .btn-primary {
+            width: 100%; padding: 13px 20px; margin-top: 8px;
+            background: var(--g-blue); color: white; border: none;
+            border-radius: var(--radius-full); font-family: inherit;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .btn-primary::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%); pointer-events: none; }
+        .btn-primary:hover   { background: var(--g-blue-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(26,115,232,0.35); }
+        .btn-primary:active  { transform: scale(0.98); }
+        .btn-primary:disabled{ opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .auth-error { background: rgba(234,67,53,0.12); border: 1px solid rgba(234,67,53,0.3); color: #f28b82; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.85rem; margin-top: 14px; display: none; }
+        .auth-error.visible { display: block; }
+
+        /* ── DASHBOARD SCREEN ────────────────────────────────── */
+        .dashboard-screen { display: none; flex-direction: column; min-height: 100vh; }
+
+        /* Navbar */
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--outline-variant);
+            padding: 0 24px;
+            height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .navbar-left { display: flex; align-items: center; gap: 12px; }
+        .navbar-icon { font-size: 1.4rem; }
+        .navbar-name { font-size: 1rem; font-weight: 600; }
+        .navbar-badge { background: var(--g-blue); color: white; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-full); }
+        .btn-logout {
+            background: var(--surface-container); border: 1px solid var(--outline-variant);
+            color: var(--on-surface-variant); padding: 7px 14px;
+            border-radius: var(--radius-full); font-family: inherit;
+            font-size: 0.82rem; font-weight: 500; cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .btn-logout:hover { background: var(--outline-variant); color: var(--on-surface); }
+
+        /* Stats */
+        .stats-bar { padding: 20px 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-md);
+            padding: 16px 20px; text-align: left;
+        }
+        .stat-label { font-size: 0.75rem; font-weight: 500; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+        .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+        .stat-value.blue   { color: var(--g-blue); }
+        .stat-value.yellow { color: var(--g-yellow); }
+        .stat-value.green  { color: var(--g-green); }
+        .stat-sub { font-size: 0.75rem; color: var(--on-surface-variant); margin-top: 4px; }
+
+        /* Filter tabs */
+        .filter-bar { padding: 0 24px 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-btn {
+            padding: 7px 16px; border: 1px solid var(--outline); border-radius: var(--radius-full);
+            background: none; color: var(--on-surface-variant); font-family: inherit;
+            font-size: 0.82rem; font-weight: 500; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn.active { background: var(--g-blue); border-color: var(--g-blue); color: white; }
+        .filter-btn:hover:not(.active) { border-color: var(--g-blue); color: var(--on-surface); }
+
+        /* Feedback list */
+        .feedback-list { padding: 0 24px 40px; display: flex; flex-direction: column; gap: 12px; }
+
+        .feedback-card {
+            background: var(--surface);
+            border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .feedback-card:hover { border-color: rgba(66,133,244,0.35); box-shadow: 0 0 0 2px rgba(66,133,244,0.1); }
+        .feedback-card.unread { border-left: 3px solid var(--g-blue); }
+
+        .feedback-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .feedback-stars  { color: var(--g-yellow); font-size: 1rem; letter-spacing: 1px; }
+        .feedback-date   { font-size: 0.78rem; color: var(--on-surface-variant); }
+        .feedback-text   { font-size: 0.92rem; color: var(--on-surface); line-height: 1.6; margin-bottom: 12px; }
+        .feedback-footer { display: flex; justify-content: flex-end; }
+        .btn-mark-read {
+            background: none; border: 1px solid var(--outline); color: var(--on-surface-variant);
+            padding: 5px 12px; border-radius: var(--radius-full);
+            font-family: inherit; font-size: 0.78rem; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-mark-read:hover { border-color: var(--g-green); color: var(--g-green); }
+        .read-badge { font-size: 0.75rem; color: var(--on-surface-variant); opacity: 0.5; }
+
+        /* Empty & loading states */
+        .state-box { text-align: center; padding: 60px 20px; color: var(--on-surface-variant); }
+        .state-box .state-icon { font-size: 3rem; margin-bottom: 14px; }
+        .state-box .state-title { font-size: 1rem; font-weight: 600; margin-bottom: 6px; color: var(--on-surface); }
+        .state-box .state-sub   { font-size: 0.88rem; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--outline); border-top-color: var(--g-blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .stats-bar { grid-template-columns: repeat(3, 1fr); padding: 16px; gap: 8px; }
+            .stat-card  { padding: 12px; }
+            .stat-value { font-size: 1.4rem; }
+            .feedback-list { padding: 0 16px 40px; }
+            .filter-bar    { padding: 0 16px 12px; }
+            .navbar { padding: 0 16px; }
+            .auth-card { padding: 32px 20px; }
+        }
+        @media (max-width: 380px) {
+            .stats-bar { grid-template-columns: 1fr 1fr; }
+        }
+
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.35s ease forwards; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+
+    <!-- Background blobs (auth screen only) -->
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob--blue"></div>
+        <div class="blob blob--green"></div>
+    </div>
+
+    <!-- ══════════════ AUTH SCREEN ══════════════ -->
+    <div class="auth-screen" id="auth-screen">
+        <div class="auth-card">
+            <div class="auth-logo">🍽️</div>
+            <h1 class="auth-title">Owner Portal</h1>
+            <p class="auth-sub">View and manage customer feedback for your restaurant.</p>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login"    onclick="switchTab('login')">Log In</button>
+                <button class="auth-tab"         id="tab-register" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <!-- Login form -->
+            <div id="form-login">
+                <div class="form-group">
+                    <label class="form-label" for="login-email">Email</label>
+                    <input class="form-input" type="email" id="login-email" placeholder="you@restaurant.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="login-password">Password</label>
+                    <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <button class="btn-primary" id="btn-login" onclick="handleLogin()">Log In</button>
+                <div class="auth-error" id="login-error"></div>
+            </div>
+
+            <!-- Register form -->
+            <div id="form-register" class="hidden">
+                <div class="form-group">
+                    <label class="form-label" for="reg-email">Email</label>
+                    <input class="form-input" type="email" id="reg-email" placeholder="you@restaurant.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reg-password">Password</label>
+                    <input class="form-input" type="password" id="reg-password" placeholder="Min. 8 characters" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reg-code">Restaurant Code</label>
+                    <input class="form-input" type="text" id="reg-code" placeholder="e.g. burger-palace" autocomplete="off">
+                    <p class="form-hint">Your unique code — provided by your account manager.</p>
+                </div>
+                <button class="btn-primary" id="btn-register" onclick="handleRegister()">Create Account</button>
+                <div class="auth-error" id="register-error"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════ DASHBOARD SCREEN ══════════════ -->
+    <div class="dashboard-screen" id="dashboard-screen">
+
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="navbar-left">
+                <span class="navbar-icon">🍽️</span>
+                <span class="navbar-name" id="navbar-name">My Restaurant</span>
+                <span class="navbar-badge hidden" id="unread-badge">0</span>
+            </div>
+            <button class="btn-logout" onclick="handleLogout()">Log out</button>
+        </nav>
+
+        <!-- Stats -->
+        <div class="stats-bar" id="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">Total</div>
+                <div class="stat-value blue" id="stat-total">—</div>
+                <div class="stat-sub">reviews</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Average</div>
+                <div class="stat-value yellow" id="stat-avg">—</div>
+                <div class="stat-sub">star rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Unread</div>
+                <div class="stat-value green" id="stat-unread">—</div>
+                <div class="stat-sub">new messages</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all"    onclick="setFilter('all')">All</button>
+            <button class="filter-btn"        data-filter="unread" onclick="setFilter('unread')">Unread</button>
+            <button class="filter-btn"        data-filter="1"      onclick="setFilter('1')">★</button>
+            <button class="filter-btn"        data-filter="2"      onclick="setFilter('2')">★★</button>
+            <button class="filter-btn"        data-filter="3"      onclick="setFilter('3')">★★★</button>
+        </div>
+
+        <!-- Feedback list -->
+        <div class="feedback-list" id="feedback-list">
+            <div class="state-box">
+                <div class="spinner"></div>
+                <div class="state-title">Loading feedback…</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // CONFIGURATION — Replace with your Supabase project details
+        // Find these in: Supabase Dashboard → Settings → API
+        // ============================================================
+        const SUPABASE_URL      = 'https://tldzmrghbvqfaclantlr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
+
+        // ============================================================
+        const { createClient } = supabase;
+        const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let allFeedback  = [];
+        let currentFilter = 'all';
+        let currentClientId = null;
+
+        // ── Tab switching ─────────────────────────────────────────────
+        function switchTab(tab) {
+            document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+            document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+            document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+        }
+
+        // ── Auth ──────────────────────────────────────────────────────
+        async function handleLogin() {
+            const email    = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn      = document.getElementById('btn-login');
+            const errEl    = document.getElementById('login-error');
+
+            if (!email || !password) { showAuthError(errEl, 'Please fill in all fields.'); return; }
+
+            btn.disabled    = true;
+            btn.textContent = 'Logging in…';
+            errEl.classList.remove('visible');
+
+            const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                showAuthError(errEl, 'Incorrect email or password.');
+                btn.disabled    = false;
+                btn.textContent = 'Log In';
+                return;
+            }
+
+            await enterDashboard(data.session.user);
+        }
+
+        async function handleRegister() {
+            const email    = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const code     = document.getElementById('reg-code').value.trim().toLowerCase();
+            const btn      = document.getElementById('btn-register');
+            const errEl    = document.getElementById('register-error');
+
+            if (!email || !password || !code) { showAuthError(errEl, 'Please fill in all fields.'); return; }
+            if (password.length < 8) { showAuthError(errEl, 'Password must be at least 8 characters.'); return; }
+
+            btn.disabled    = true;
+            btn.textContent = 'Creating account…';
+            errEl.classList.remove('visible');
+
+            const { data, error } = await sb.auth.signUp({
+                email, password,
+                options: { data: { client_slug: code } }
+            });
+
+            if (error) {
+                showAuthError(errEl, error.message);
+                btn.disabled    = false;
+                btn.textContent = 'Create Account';
+                return;
+            }
+
+            if (data.session) {
+                // Email confirmation disabled — logged in immediately
+                await enterDashboard(data.session.user);
+            } else {
+                // Email confirmation enabled — tell user to check inbox
+                errEl.style.background = 'rgba(52,168,83,0.12)';
+                errEl.style.borderColor = 'rgba(52,168,83,0.3)';
+                errEl.style.color = '#81c995';
+                showAuthError(errEl, '✅ Account created! Check your email to verify, then log in.');
+                btn.disabled    = false;
+                btn.textContent = 'Create Account';
+            }
+        }
+
+        async function handleLogout() {
+            await sb.auth.signOut();
+            allFeedback = [];
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('feedback-list').innerHTML = '';
+        }
+
+        function showAuthError(el, msg) {
+            el.textContent = msg;
+            el.classList.add('visible');
+        }
+
+        // ── Dashboard init ────────────────────────────────────────────
+        async function enterDashboard(user) {
+            // Hide auth, show dashboard
+            document.getElementById('auth-screen').style.display = 'none';
+            const dash = document.getElementById('dashboard-screen');
+            dash.style.display = 'flex';
+
+            // Load the client record for this owner
+            const { data: clientData } = await sb
+                .from('clients')
+                .select('id, name')
+                .eq('owner_user_id', user.id)
+                .maybeSingle();
+
+            if (!clientData) {
+                document.getElementById('feedback-list').innerHTML = `
+                    <div class="state-box">
+                        <div class="state-icon">⚠️</div>
+                        <div class="state-title">Account not linked</div>
+                        <div class="state-sub">Your account isn't linked to a restaurant yet. Contact your account manager.</div>
+                    </div>`;
+                document.getElementById('navbar-name').textContent = user.email;
+                return;
+            }
+
+            currentClientId = clientData.id;
+            document.getElementById('navbar-name').textContent = clientData.name;
+            document.title = `${clientData.name} — Dashboard`;
+
+            await loadFeedback();
+        }
+
+        // ── Load feedback ─────────────────────────────────────────────
+        async function loadFeedback() {
+            const { data, error } = await sb
+                .from('feedback')
+                .select('*')
+                .eq('client_id', currentClientId)
+                .order('submitted_at', { ascending: false });
+
+            if (error || !data) {
+                document.getElementById('feedback-list').innerHTML = `
+                    <div class="state-box"><div class="state-icon">⚠️</div><div class="state-title">Failed to load feedback.</div></div>`;
+                return;
+            }
+
+            allFeedback = data;
+            updateStats();
+            renderFeedback();
+        }
+
+        function updateStats() {
+            const total  = allFeedback.length;
+            const unread = allFeedback.filter(f => !f.is_read).length;
+            const avg    = total > 0
+                ? (allFeedback.reduce((sum, f) => sum + f.rating, 0) / total).toFixed(1)
+                : '—';
+
+            document.getElementById('stat-total').textContent  = total;
+            document.getElementById('stat-avg').textContent    = avg;
+            document.getElementById('stat-unread').textContent = unread;
+
+            const badge = document.getElementById('unread-badge');
+            if (unread > 0) {
+                badge.textContent = unread;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // ── Filter ────────────────────────────────────────────────────
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            renderFeedback();
+        }
+
+        function getFiltered() {
+            if (currentFilter === 'all')    return allFeedback;
+            if (currentFilter === 'unread') return allFeedback.filter(f => !f.is_read);
+            return allFeedback.filter(f => f.rating === parseInt(currentFilter));
+        }
+
+        // ── Render ────────────────────────────────────────────────────
+        function renderFeedback() {
+            const list     = document.getElementById('feedback-list');
+            const filtered = getFiltered();
+
+            if (filtered.length === 0) {
+                list.innerHTML = `
+                    <div class="state-box fade-in">
+                        <div class="state-icon">💬</div>
+                        <div class="state-title">No feedback here yet</div>
+                        <div class="state-sub">When customers leave private comments, they'll appear here.</div>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = filtered.map(f => {
+                const stars   = '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating);
+                const date    = new Date(f.submitted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                const isUnread = !f.is_read;
+                return `
+                    <div class="feedback-card ${isUnread ? 'unread' : ''} fade-in" id="card-${f.id}">
+                        <div class="feedback-header">
+                            <span class="feedback-stars">${stars}</span>
+                            <span class="feedback-date">${date}</span>
+                        </div>
+                        <p class="feedback-text">${escapeHtml(f.feedback_text)}</p>
+                        <div class="feedback-footer">
+                            ${isUnread
+                                ? `<button class="btn-mark-read" onclick="markRead('${f.id}')">✓ Mark as read</button>`
+                                : `<span class="read-badge">✓ Read</span>`
+                            }
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        // ── Mark as read ──────────────────────────────────────────────
+        async function markRead(feedbackId) {
+            const { error } = await sb
+                .from('feedback')
+                .update({ is_read: true })
+                .eq('id', feedbackId);
+
+            if (!error) {
+                const item = allFeedback.find(f => f.id === feedbackId);
+                if (item) item.is_read = true;
+                updateStats();
+                renderFeedback();
+            }
+        }
+
+        // ── Utility ───────────────────────────────────────────────────
+        function escapeHtml(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── Init: check existing session ─────────────────────────────
+        (async () => {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                document.getElementById('auth-screen').style.display = 'none';
+                await enterDashboard(session.user);
+            }
+        })();
+    </script>
+</body>
+</html>

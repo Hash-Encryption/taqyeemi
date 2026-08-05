@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Your Experience</title>
+    <meta name="description" content="Share your experience and help us improve. Rate your visit and leave feedback.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ========== CSS Variables — Google Palette ========== */
+        :root {
+            --g-blue: #4285F4;
+            --g-blue-light: #669DF6;
+            --g-blue-dark: #1A73E8;
+            --g-red: #EA4335;
+            --g-yellow: #FBBC05;
+            --g-green: #34A853;
+            --g-green-light: #81C995;
+
+            --surface: #1E1E1E;
+            --surface-dim: #121212;
+            --surface-container: #2A2A2E;
+            --on-surface: #E8EAED;
+            --on-surface-variant: #9AA0A6;
+            --outline: #3C4043;
+            --outline-variant: #303134;
+
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.25);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.2);
+
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 28px;
+            --radius-full: 9999px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+        body {
+            font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            margin: 0;
+            padding: 16px;
+            background: var(--surface-dim);
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ========== Animated Floating Blobs ========== */
+        .bg-blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5; will-change: transform; }
+        .blob--blue   { width: 340px; height: 340px; background: var(--g-blue);   top: -10%; left: -5%; animation: blobMove1 14s ease-in-out infinite alternate; }
+        .blob--red    { width: 280px; height: 280px; background: var(--g-red);    bottom: -8%; right: -5%; animation: blobMove2 16s ease-in-out infinite alternate; }
+        .blob--yellow { width: 250px; height: 250px; background: var(--g-yellow); top: 50%; left: 60%; animation: blobMove3 18s ease-in-out infinite alternate; }
+        .blob--green  { width: 300px; height: 300px; background: var(--g-green);  bottom: 30%; left: -10%; animation: blobMove4 15s ease-in-out infinite alternate; }
+
+        @keyframes blobMove1 { 0%{transform:translate(0,0) scale(1)} 25%{transform:translate(30vw,20vh) scale(1.1)} 50%{transform:translate(50vw,40vh) scale(0.9)} 75%{transform:translate(20vw,60vh) scale(1.05)} 100%{transform:translate(60vw,30vh) scale(1)} }
+        @keyframes blobMove2 { 0%{transform:translate(0,0) scale(1)} 25%{transform:translate(-40vw,-20vh) scale(1.15)} 50%{transform:translate(-20vw,-50vh) scale(0.85)} 75%{transform:translate(-50vw,-30vh) scale(1.1)} 100%{transform:translate(-30vw,-60vh) scale(0.95)} }
+        @keyframes blobMove3 { 0%{transform:translate(0,0) scale(1)} 25%{transform:translate(-30vw,-25vh) scale(0.9)} 50%{transform:translate(10vw,-40vh) scale(1.1)} 75%{transform:translate(-20vw,10vh) scale(1)} 100%{transform:translate(-40vw,-15vh) scale(0.85)} }
+        @keyframes blobMove4 { 0%{transform:translate(0,0) scale(1)} 25%{transform:translate(40vw,-15vh) scale(1.1)} 50%{transform:translate(25vw,20vh) scale(0.95)} 75%{transform:translate(55vw,-25vh) scale(1.05)} 100%{transform:translate(35vw,35vh) scale(1)} }
+
+        @media (max-width: 600px) {
+            .blob { filter: blur(60px); opacity: 0.4; }
+            .blob--blue   { width: 200px; height: 200px; }
+            .blob--red    { width: 180px; height: 180px; }
+            .blob--yellow { width: 160px; height: 160px; }
+            .blob--green  { width: 190px; height: 190px; }
+        }
+
+        /* ========== Google Dots ========== */
+        .google-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+        .google-dots span { width: 10px; height: 10px; border-radius: var(--radius-full); display: inline-block; animation: dotPulse 2s ease-in-out infinite; }
+        .google-dots span:nth-child(1) { background: var(--g-blue);   animation-delay: 0s; }
+        .google-dots span:nth-child(2) { background: var(--g-red);    animation-delay: 0.15s; }
+        .google-dots span:nth-child(3) { background: var(--g-yellow); animation-delay: 0.3s; }
+        .google-dots span:nth-child(4) { background: var(--g-green);  animation-delay: 0.45s; }
+        @keyframes dotPulse { 0%,100%{transform:scale(1);opacity:0.7} 50%{transform:scale(1.35);opacity:1} }
+
+        /* ========== Card ========== */
+        .card {
+            background: var(--surface);
+            padding: 40px 32px 36px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 92%;
+            max-width: 420px;
+            position: relative;
+            z-index: 1;
+            border: 1px solid var(--outline-variant);
+            animation: cardEntry 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            opacity: 0;
+            transform: translateY(24px) scale(0.97);
+        }
+        @keyframes cardEntry { to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            background: linear-gradient(90deg, var(--g-blue) 0%, var(--g-red) 30%, var(--g-yellow) 60%, var(--g-green) 100%);
+        }
+
+        /* ========== Typography ========== */
+        h2 { color: var(--on-surface); font-weight: 700; font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 6px; }
+        .subtitle { color: var(--on-surface-variant); font-size: 0.95rem; font-weight: 400; line-height: 1.5; margin-bottom: 28px; }
+
+        /* ========== Loading Spinner ========== */
+        .spinner {
+            width: 44px; height: 44px;
+            border: 3px solid var(--outline);
+            border-top-color: var(--g-blue);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 4px auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: var(--on-surface-variant); font-size: 0.9rem; }
+
+        /* ========== Star Rating ========== */
+        .stars-container {
+            background: var(--surface-dim);
+            border-radius: var(--radius-md);
+            padding: 20px 12px;
+            margin: 0 -4px 8px;
+            border: 1px solid var(--outline-variant);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stars-container:hover {
+            border-color: rgba(66,133,244,0.5);
+            box-shadow: 0 0 0 3px rgba(66,133,244,0.15);
+        }
+        .stars-label { font-size: 0.75rem; font-weight: 500; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; display: block; }
+        .stars { font-size: 2.75rem; display: flex; justify-content: center; gap: 10px; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: manipulation; }
+        .stars button {
+            cursor: pointer; color: var(--outline); background: none; border: none; padding: 0;
+            font: inherit; font-size: inherit;
+            transition: color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            line-height: 1; display: flex; align-items: center; justify-content: center;
+            width: 52px; height: 52px; border-radius: var(--radius-full); position: relative;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        }
+        .stars button::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: transparent; transition: background 0.2s ease; }
+        .stars button:hover::before { background: rgba(251, 188, 5, 0.12); }
+        .stars button:hover  { transform: scale(1.15); }
+        .stars button:active { transform: scale(0.95); }
+        .stars button.active { color: var(--g-yellow); filter: drop-shadow(0 2px 6px rgba(251, 188, 5, 0.35)); }
+        .stars button.hovered { color: var(--g-yellow); }
+        .star-text { height: 24px; margin-top: 14px; font-size: 0.85rem; font-weight: 500; color: var(--g-blue-dark); transition: opacity 0.25s ease; opacity: 0; }
+        .star-text.visible { opacity: 1; }
+
+        /* ========== Feedback Step ========== */
+        .feedback-icon { width: 64px; height: 64px; border-radius: var(--radius-full); background: linear-gradient(135deg, rgba(234,67,53,0.15) 0%, rgba(251,188,5,0.15) 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 1.75rem; }
+        textarea {
+            width: 100%; height: 130px; padding: 16px;
+            border-radius: var(--radius-md); border: 1.5px solid var(--outline);
+            font-family: inherit; font-size: 0.95rem; line-height: 1.5;
+            color: var(--on-surface); background: var(--surface-dim);
+            resize: none; transition: border-color 0.3s ease, box-shadow 0.3s ease; outline: none;
+        }
+        textarea::placeholder { color: var(--on-surface-variant); opacity: 0.7; }
+        textarea:focus { border-color: var(--g-blue); box-shadow: 0 0 0 3px rgba(66,133,244,0.25); background: var(--surface-container); }
+
+        /* ========== Button ========== */
+        .btn-primary {
+            background: var(--g-blue); color: white; border: none;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            padding: 14px 24px; border-radius: var(--radius-full);
+            font-family: inherit; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.01em;
+            cursor: pointer; margin-top: 16px; width: 100%;
+            transition: background 0.2s ease, box-shadow 0.3s ease, transform 0.15s ease;
+            position: relative; overflow: hidden;
+        }
+        .btn-primary::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%); pointer-events: none; }
+        .btn-primary:hover { background: var(--g-blue-dark); box-shadow: 0 4px 16px rgba(26,115,232,0.35); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0) scale(0.98); box-shadow: var(--shadow-sm); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* ========== Success State ========== */
+        .success-icon { width: 72px; height: 72px; border-radius: var(--radius-full); background: linear-gradient(135deg, var(--g-green) 0%, var(--g-green-light) 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; animation: successPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .success-icon svg { width: 36px; height: 36px; stroke: white; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .success-icon svg path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: checkDraw 0.5s 0.3s ease forwards; }
+        @keyframes successPop { 0%{transform:scale(0)} 100%{transform:scale(1)} }
+        @keyframes checkDraw  { to { stroke-dashoffset: 0; } }
+        .success-text { color: var(--g-green); font-weight: 700; }
+
+        /* ========== Error State ========== */
+        .error-icon { font-size: 3rem; margin-bottom: 16px; }
+
+        /* ========== Utilities ========== */
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(16px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+        /* ========== Footer ========== */
+        .footer { margin-top: 24px; font-size: 0.72rem; color: var(--on-surface-variant); opacity: 0.5; letter-spacing: 0.02em; }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 600px) {
+            body { padding: 12px; align-items: flex-start; padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+            .card { width: 100%; padding: 32px 20px 28px; border-radius: var(--radius-md); margin-top: auto; margin-bottom: auto; }
+            h2 { font-size: 1.3rem; }
+            .subtitle { font-size: 0.88rem; margin-bottom: 20px; }
+            .stars { font-size: 2.4rem; gap: 6px; }
+            .stars-container { padding: 16px 8px; margin: 0 -2px 8px; }
+            textarea { height: 110px; font-size: 1rem; padding: 14px; }
+            .btn-primary { padding: 16px 24px; font-size: 1rem; }
+        }
+        @media (max-width: 380px) {
+            .card { padding: 28px 16px 24px; }
+            .stars { font-size: 2rem; gap: 4px; }
+            .google-dots { margin-bottom: 18px; gap: 6px; }
+            .google-dots span { width: 8px; height: 8px; }
+        }
+        @media (max-height: 500px) {
+            body { padding: 8px; }
+            .card { padding: 20px 16px; max-height: 95vh; max-height: 95dvh; overflow-y: auto; }
+            .google-dots { margin-bottom: 12px; }
+            .stars-container { padding: 12px 8px; }
+            .star-text { margin-top: 8px; }
+            textarea { height: 80px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animated background blobs -->
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob--blue"></div>
+        <div class="blob blob--red"></div>
+        <div class="blob blob--yellow"></div>
+        <div class="blob blob--green"></div>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div class="card" id="loading-step">
+        <div class="spinner"></div>
+        <p class="loading-text">Loading…</p>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div class="card hidden" id="error-step">
+        <div class="error-icon">😕</div>
+        <h2>Link Not Found</h2>
+        <p class="subtitle">This review link is invalid or has been deactivated. Please contact the restaurant for a new link.</p>
+        <div class="footer">Powered by Google Reviews</div>
+    </div>
+
+    <!-- STEP 1: Star Rating (hidden until client loads) -->
+    <div class="card hidden" id="rating-step">
+        <div class="google-dots">
+            <span></span><span></span><span></span><span></span>
+        </div>
+        <h2 id="rating-title">How was your visit?</h2>
+        <p class="subtitle">Tap a star to rate your experience</p>
+
+        <div class="stars-container">
+            <span class="stars-label">Your rating</span>
+            <div class="stars" id="stars-row">
+                <button type="button" id="star-1" aria-label="Rate 1 star">★</button>
+                <button type="button" id="star-2" aria-label="Rate 2 stars">★</button>
+                <button type="button" id="star-3" aria-label="Rate 3 stars">★</button>
+                <button type="button" id="star-4" aria-label="Rate 4 stars">★</button>
+                <button type="button" id="star-5" aria-label="Rate 5 stars">★</button>
+            </div>
+            <div class="star-text" id="star-text"></div>
+        </div>
+
+        <div class="footer">Powered by Google Reviews</div>
+    </div>
+
+    <!-- STEP 2: Private Feedback Form -->
+    <div class="card hidden" id="feedback-step">
+        <div class="feedback-icon">💬</div>
+        <h2>We'd love to improve</h2>
+        <p class="subtitle">Your feedback goes directly to our team — it won't be posted publicly.</p>
+        <textarea id="private-feedback" placeholder="Tell us how we can do better next time…"></textarea>
+        <button class="btn-primary" id="submit-feedback-btn">Send Feedback</button>
+        <div class="footer">Your response is private and confidential</div>
+    </div>
+
+    <script>
+        // ============================================================
+        // CONFIGURATION — Replace with your Supabase project details
+        // Find these in: Supabase Dashboard → Settings → API
+        // ============================================================
+        const SUPABASE_URL      = 'https://tldzmrghbvqfaclantlr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
+
+        // ============================================================
+        const { createClient } = supabase;
+        const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const starLabels = [
+            '',
+            'Poor — we can do better',
+            'Fair — room for improvement',
+            'Good — but not great',
+            'Great — glad you enjoyed it!',
+            'Excellent — thank you! 🎉'
+        ];
+
+        let clientId       = null;
+        let googleReviewURL = null;
+        let selectedRating = 0;
+
+        // ── Step helpers ─────────────────────────────────────────────
+        function showStep(id) {
+            ['loading-step', 'error-step', 'rating-step', 'feedback-step'].forEach(s => {
+                document.getElementById(s).classList.add('hidden');
+            });
+            const el = document.getElementById(id);
+            el.classList.remove('hidden');
+            el.classList.add('fade-in');
+        }
+
+        // ── Load client from Supabase ─────────────────────────────────
+        async function loadClient() {
+            const slug = new URLSearchParams(window.location.search).get('c');
+
+            if (!slug) {
+                showStep('error-step');
+                return;
+            }
+
+            const { data, error } = await sb
+                .from('clients')
+                .select('id, name, google_review_url')
+                .eq('slug', slug)
+                .eq('active', true)
+                .maybeSingle();
+
+            if (error || !data) {
+                showStep('error-step');
+                return;
+            }
+
+            clientId        = data.id;
+            googleReviewURL = data.google_review_url;
+            document.title  = `Rate ${data.name}`;
+
+            showStep('rating-step');
+        }
+
+        // ── Star rating UI ────────────────────────────────────────────
+        document.querySelectorAll('.stars button').forEach((btn, index) => {
+            const starValue = index + 1;
+            btn.addEventListener('click',       (e) => { e.preventDefault(); submitRating(starValue); });
+            btn.addEventListener('mouseenter',  () => hoverStars(starValue));
+            btn.addEventListener('mouseleave',  () => resetHover());
+        });
+
+        function hoverStars(count) {
+            if (selectedRating > 0) return;
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById('star-' + i).classList.toggle('hovered', i <= count);
+            }
+            const t = document.getElementById('star-text');
+            t.textContent = starLabels[count];
+            t.classList.add('visible');
+        }
+
+        function resetHover() {
+            if (selectedRating > 0) return;
+            for (let i = 1; i <= 5; i++) document.getElementById('star-' + i).classList.remove('hovered');
+            document.getElementById('star-text').classList.remove('visible');
+        }
+
+        function submitRating(stars) {
+            selectedRating = stars;
+            for (let i = 1; i <= 5; i++) {
+                const star = document.getElementById('star-' + i);
+                star.classList.remove('hovered');
+                star.classList.toggle('active', i <= stars);
+            }
+            const t = document.getElementById('star-text');
+            t.textContent = starLabels[stars];
+            t.classList.add('visible');
+
+            setTimeout(() => {
+                if (stars >= 4) {
+                    window.location.href = googleReviewURL;
+                } else {
+                    showStep('feedback-step');
+                }
+            }, 500);
+        }
+
+        // ── Feedback submission ───────────────────────────────────────
+        document.getElementById('submit-feedback-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await sendFeedback();
+        });
+
+        async function sendFeedback() {
+            const ta   = document.getElementById('private-feedback');
+            const text = ta.value.trim();
+            const btn  = document.getElementById('submit-feedback-btn');
+
+            if (!text) {
+                ta.style.borderColor = 'var(--g-red)';
+                ta.style.boxShadow   = '0 0 0 3px rgba(234,67,53,0.15)';
+                ta.placeholder       = 'Please share some details before submitting…';
+                setTimeout(() => { ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+                return;
+            }
+
+            btn.disabled    = true;
+            btn.textContent = 'Sending…';
+
+            const { error } = await sb.from('feedback').insert({
+                client_id:     clientId,
+                rating:        selectedRating,
+                feedback_text: text
+            });
+
+            if (error) {
+                btn.disabled    = false;
+                btn.textContent = 'Send Feedback';
+                ta.style.borderColor = 'var(--g-red)';
+                ta.style.boxShadow   = '0 0 0 3px rgba(234,67,53,0.15)';
+                setTimeout(() => { ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+                return;
+            }
+
+            document.getElementById('feedback-step').innerHTML = `
+                <div class="fade-in">
+                    <div class="success-icon">
+                        <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <h2 class="success-text">Thank you!</h2>
+                    <p class="subtitle">Your feedback has been sent privately to our management team. We truly appreciate your honesty.</p>
+                    <div class="google-dots" style="margin-top: 24px; margin-bottom: 0;">
+                        <span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ── Init ──────────────────────────────────────────────────────
+        loadClient();
+    </script>
+
+</body>
+</html>

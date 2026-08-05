@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — Review Platform</title>
+    <meta name="description" content="Admin management panel for the review platform.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --g-blue: #4285F4;
+            --g-blue-dark: #1A73E8;
+            --g-red: #EA4335;
+            --g-yellow: #FBBC05;
+            --g-green: #34A853;
+            --g-green-light: #81C995;
+
+            --surface: #1E1E1E;
+            --surface-dim: #121212;
+            --surface-container: #2A2A2E;
+            --surface-bright: #28282C;
+            --on-surface: #E8EAED;
+            --on-surface-variant: #9AA0A6;
+            --outline: #3C4043;
+            --outline-variant: #303134;
+
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.35);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.4);
+
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-full: 9999px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Google Sans', 'Inter', sans-serif; background: var(--surface-dim); color: var(--on-surface); min-height: 100vh; }
+
+        /* ── AUTH SCREEN ───────────────────────────────────── */
+        .auth-screen {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 16px;
+            position: relative; overflow: hidden;
+        }
+        .bg-blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.3; }
+        .blob--blue { width: 350px; height: 350px; background: var(--g-blue); top: -10%; left: -5%; animation: bA 14s ease-in-out infinite alternate; }
+        .blob--red  { width: 280px; height: 280px; background: var(--g-red);  bottom: -10%; right: -5%; animation: bB 16s ease-in-out infinite alternate; }
+        @keyframes bA { 0%{transform:translate(0,0)} 100%{transform:translate(35vw,45vh)} }
+        @keyframes bB { 0%{transform:translate(0,0)} 100%{transform:translate(-30vw,-40vh)} }
+
+        .auth-card {
+            background: var(--surface); border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+            width: 100%; max-width: 380px; padding: 40px 32px;
+            position: relative; z-index: 1;
+            animation: cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+        .auth-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            background: linear-gradient(90deg, var(--g-blue) 0%, var(--g-red) 50%, var(--g-yellow) 100%);
+        }
+        @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+
+        .auth-logo  { font-size: 2rem; margin-bottom: 8px; }
+        .auth-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+        .auth-sub   { font-size: 0.85rem; color: var(--on-surface-variant); margin-bottom: 28px; }
+
+        .form-group  { margin-bottom: 16px; text-align: left; }
+        .form-label  { display: block; font-size: 0.78rem; font-weight: 500; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+        .form-input  {
+            width: 100%; padding: 12px 14px;
+            background: var(--surface-dim); border: 1.5px solid var(--outline);
+            border-radius: var(--radius-sm); color: var(--on-surface);
+            font-family: inherit; font-size: 0.95rem; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input::placeholder { color: var(--on-surface-variant); opacity: 0.6; }
+        .form-input:focus { border-color: var(--g-blue); box-shadow: 0 0 0 3px rgba(66,133,244,0.2); }
+
+        .form-hint { font-size: 0.76rem; color: var(--on-surface-variant); margin-top: 4px; }
+
+        .btn-primary {
+            width: 100%; padding: 13px; margin-top: 8px;
+            background: var(--g-blue); color: white; border: none;
+            border-radius: var(--radius-full); font-family: inherit;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .btn-primary::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg,rgba(255,255,255,0.12),transparent 60%); pointer-events: none; }
+        .btn-primary:hover  { background: var(--g-blue-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(26,115,232,0.35); }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .auth-error { background: rgba(234,67,53,0.12); border: 1px solid rgba(234,67,53,0.3); color: #f28b82; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.85rem; margin-top: 14px; display: none; }
+        .auth-error.visible { display: block; }
+
+        /* ── ADMIN SCREEN ─────────────────────────────────── */
+        .admin-screen { display: none; flex-direction: column; min-height: 100vh; }
+
+        /* Navbar */
+        .navbar {
+            background: var(--surface); border-bottom: 1px solid var(--outline-variant);
+            padding: 0 28px; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .navbar-brand { display: flex; align-items: center; gap: 10px; }
+        .navbar-logo  { font-size: 1.3rem; }
+        .navbar-title { font-size: 1rem; font-weight: 700; }
+        .navbar-tag   { background: rgba(66,133,244,0.15); color: var(--g-blue); font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); letter-spacing: 0.05em; }
+        .btn-logout   { background: var(--surface-container); border: 1px solid var(--outline-variant); color: var(--on-surface-variant); padding: 7px 14px; border-radius: var(--radius-full); font-family: inherit; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: background 0.2s, color 0.2s; }
+        .btn-logout:hover { background: var(--outline-variant); color: var(--on-surface); }
+
+        /* Main layout */
+        .admin-body { display: flex; flex: 1; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 220px; flex-shrink: 0;
+            background: var(--surface);
+            border-right: 1px solid var(--outline-variant);
+            padding: 20px 12px;
+            display: flex; flex-direction: column; gap: 4px;
+            position: sticky; top: 60px; height: calc(100vh - 60px);
+        }
+        .sidebar-section { font-size: 0.7rem; font-weight: 600; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 12px; margin-top: 8px; margin-bottom: 2px; }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: var(--radius-sm);
+            cursor: pointer; color: var(--on-surface-variant);
+            font-size: 0.9rem; font-weight: 500;
+            transition: background 0.15s, color 0.15s;
+            border: none; background: none; font-family: inherit; width: 100%; text-align: left;
+        }
+        .nav-item:hover  { background: var(--surface-container); color: var(--on-surface); }
+        .nav-item.active { background: rgba(66,133,244,0.12); color: var(--g-blue); }
+        .nav-item .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+        .nav-badge { margin-left: auto; background: var(--g-blue); color: white; font-size: 0.68rem; font-weight: 700; padding: 1px 6px; border-radius: var(--radius-full); }
+
+        /* Content */
+        .content { flex: 1; padding: 28px; overflow-y: auto; }
+
+        /* Page header */
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .page-title  { font-size: 1.3rem; font-weight: 700; }
+        .page-sub    { font-size: 0.85rem; color: var(--on-surface-variant); margin-top: 2px; }
+
+        .btn-add {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 18px; background: var(--g-blue); color: white;
+            border: none; border-radius: var(--radius-full);
+            font-family: inherit; font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; transition: background 0.2s, transform 0.15s;
+        }
+        .btn-add:hover  { background: var(--g-blue-dark); transform: translateY(-1px); }
+        .btn-add:active { transform: scale(0.98); }
+
+        /* Summary stats */
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+        .summary-card { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius-md); padding: 20px; }
+        .summary-label { font-size: 0.75rem; font-weight: 500; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+        .summary-value { font-size: 2rem; font-weight: 700; }
+        .summary-value.blue   { color: var(--g-blue); }
+        .summary-value.yellow { color: var(--g-yellow); }
+        .summary-value.green  { color: var(--g-green); }
+
+        /* Restaurant cards grid */
+        .restaurants-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+        .restaurant-card {
+            background: var(--surface); border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-md); padding: 20px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .restaurant-card:hover { border-color: rgba(66,133,244,0.4); box-shadow: 0 0 0 2px rgba(66,133,244,0.1); }
+        .restaurant-card.inactive { opacity: 0.5; }
+
+        .rc-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+        .rc-name   { font-size: 1rem; font-weight: 700; }
+        .rc-slug   { font-size: 0.78rem; color: var(--on-surface-variant); margin-top: 2px; font-family: monospace; }
+        .rc-status { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: var(--radius-full); }
+        .rc-status.active   { background: rgba(52,168,83,0.15); color: var(--g-green); }
+        .rc-status.inactive { background: rgba(234,67,53,0.12); color: var(--g-red); }
+
+        .rc-stats { display: flex; gap: 16px; }
+        .rc-stat  { text-align: center; }
+        .rc-stat-val   { font-size: 1.1rem; font-weight: 700; }
+        .rc-stat-label { font-size: 0.7rem; color: var(--on-surface-variant); }
+
+        .rc-link { font-size: 0.75rem; color: var(--on-surface-variant); background: var(--surface-dim); border: 1px solid var(--outline-variant); border-radius: var(--radius-sm); padding: 6px 10px; font-family: monospace; word-break: break-all; }
+
+        .rc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-sm {
+            padding: 6px 14px; border-radius: var(--radius-full);
+            font-family: inherit; font-size: 0.8rem; font-weight: 500;
+            cursor: pointer; border: 1px solid var(--outline); background: none;
+            color: var(--on-surface-variant); transition: all 0.2s;
+        }
+        .btn-sm:hover        { background: var(--surface-container); color: var(--on-surface); }
+        .btn-sm.view         { border-color: var(--g-blue);  color: var(--g-blue); }
+        .btn-sm.view:hover   { background: rgba(66,133,244,0.1); }
+        .btn-sm.danger       { border-color: var(--g-red);   color: var(--g-red); }
+        .btn-sm.danger:hover { background: rgba(234,67,53,0.1); }
+        .btn-sm.success      { border-color: var(--g-green); color: var(--g-green); }
+        .btn-sm.success:hover{ background: rgba(52,168,83,0.1); }
+
+        /* Feedback panel (slide-in from right) */
+        .feedback-panel {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 420px; max-width: 95vw;
+            background: var(--surface-bright);
+            border-left: 1px solid var(--outline-variant);
+            box-shadow: var(--shadow-lg);
+            z-index: 200;
+            display: flex; flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .feedback-panel.open { transform: translateX(0); }
+
+        .panel-header { padding: 20px 24px; border-bottom: 1px solid var(--outline-variant); display: flex; align-items: center; justify-content: space-between; }
+        .panel-title  { font-size: 1rem; font-weight: 700; }
+        .panel-sub    { font-size: 0.8rem; color: var(--on-surface-variant); }
+        .btn-close    { background: var(--surface-container); border: 1px solid var(--outline-variant); color: var(--on-surface-variant); width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .btn-close:hover { background: var(--outline); }
+
+        .panel-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+        .panel-card { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius-md); padding: 16px; }
+        .panel-card.unread { border-left: 3px solid var(--g-blue); }
+        .pc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .pc-stars  { color: var(--g-yellow); font-size: 0.9rem; }
+        .pc-date   { font-size: 0.75rem; color: var(--on-surface-variant); }
+        .pc-text   { font-size: 0.88rem; color: var(--on-surface); line-height: 1.6; }
+
+        .panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; display: none; }
+        .panel-overlay.open { display: block; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            z-index: 300; display: flex; align-items: center; justify-content: center;
+            padding: 16px; opacity: 0; pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal {
+            background: var(--surface); border: 1px solid var(--outline-variant);
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+            width: 100%; max-width: 480px; padding: 32px;
+            transform: scale(0.95); transition: transform 0.25s ease;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal-overlay.open .modal { transform: scale(1); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .modal-title  { font-size: 1.1rem; font-weight: 700; }
+
+        .modal-success { text-align: center; padding: 20px 0; }
+        .modal-success-icon { font-size: 3rem; margin-bottom: 12px; }
+        .modal-success-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: var(--g-green); }
+        .modal-success-sub   { font-size: 0.88rem; color: var(--on-surface-variant); line-height: 1.6; }
+        .link-box { background: var(--surface-dim); border: 1px solid var(--outline-variant); border-radius: var(--radius-sm); padding: 12px 14px; font-family: monospace; font-size: 0.82rem; word-break: break-all; margin: 12px 0; color: var(--g-blue); }
+
+        /* State */
+        .state-box { text-align: center; padding: 60px 20px; color: var(--on-surface-variant); }
+        .state-icon  { font-size: 3rem; margin-bottom: 12px; }
+        .state-title { font-size: 1rem; font-weight: 600; margin-bottom: 6px; color: var(--on-surface); }
+        .state-sub   { font-size: 0.85rem; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--outline); border-top-color: var(--g-blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.3s ease forwards; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+        /* Copy link button */
+        .btn-copy { background: none; border: none; cursor: pointer; color: var(--g-blue); font-size: 0.8rem; padding: 4px 8px; border-radius: var(--radius-sm); transition: background 0.2s; }
+        .btn-copy:hover { background: rgba(66,133,244,0.1); }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .summary-grid { grid-template-columns: 1fr 1fr; }
+            .content { padding: 16px; }
+            .navbar { padding: 0 16px; }
+        }
+        @media (max-width: 500px) {
+            .summary-grid { grid-template-columns: 1fr; }
+            .restaurants-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background blobs (auth only) -->
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob--blue"></div>
+        <div class="blob blob--red"></div>
+    </div>
+
+    <!-- ══════════════ AUTH SCREEN ══════════════ -->
+    <div class="auth-screen" id="auth-screen">
+        <div class="auth-card">
+            <div class="auth-logo">🛠️</div>
+            <h1 class="auth-title">Admin Panel</h1>
+            <p class="auth-sub">Sign in with your admin account to manage restaurants and feedback.</p>
+
+            <div class="form-group">
+                <label class="form-label" for="admin-email">Email</label>
+                <input class="form-input" type="email" id="admin-email" placeholder="admin@yourdomain.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="admin-password">Password</label>
+                <input class="form-input" type="password" id="admin-password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <button class="btn-primary" id="btn-admin-login" onclick="handleLogin()">Sign In</button>
+            <div class="auth-error" id="auth-error"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ ADMIN SCREEN ══════════════ -->
+    <div class="admin-screen" id="admin-screen">
+
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <span class="navbar-logo">🛠️</span>
+                <span class="navbar-title">Review Platform</span>
+                <span class="navbar-tag">ADMIN</span>
+            </div>
+            <button class="btn-logout" onclick="handleLogout()">Log out</button>
+        </nav>
+
+        <div class="admin-body">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <span class="sidebar-section">Menu</span>
+                <button class="nav-item active" id="nav-restaurants" onclick="showView('restaurants')">
+                    <span class="nav-icon">🍽️</span> Restaurants
+                    <span class="nav-badge hidden" id="nav-count"></span>
+                </button>
+                <button class="nav-item" id="nav-feedback" onclick="showView('feedback')">
+                    <span class="nav-icon">💬</span> All Feedback
+                </button>
+            </aside>
+
+            <!-- Content -->
+            <main class="content" id="main-content">
+                <div class="state-box">
+                    <div class="spinner"></div>
+                    <div class="state-title">Loading…</div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ══════════════ FEEDBACK PANEL ══════════════ -->
+    <div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
+    <aside class="feedback-panel" id="feedback-panel">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title" id="panel-title">Feedback</div>
+                <div class="panel-sub"  id="panel-sub">—</div>
+            </div>
+            <button class="btn-close" onclick="closePanel()">✕</button>
+        </div>
+        <div class="panel-body" id="panel-body"></div>
+    </aside>
+
+    <!-- ══════════════ ADD RESTAURANT MODAL ══════════════ -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="modal-title">Add Restaurant</span>
+                <button class="btn-close" onclick="closeModal()">✕</button>
+            </div>
+            <div id="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="r-name">Restaurant Name</label>
+                    <input class="form-input" type="text" id="r-name" placeholder="e.g. Burger Palace">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="r-slug">Restaurant Code (URL slug)</label>
+                    <input class="form-input" type="text" id="r-slug" placeholder="e.g. burger-palace" oninput="sanitizeSlug(this)">
+                    <p class="form-hint">Lowercase letters, numbers, and hyphens only. This appears in the review URL.</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="r-url">Google Review URL</label>
+                    <input class="form-input" type="url" id="r-url" placeholder="https://g.page/r/YOUR_ID/review">
+                </div>
+                <button class="btn-primary" id="btn-save" onclick="saveRestaurant()">Create Restaurant</button>
+                <div class="auth-error" id="modal-error"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // CONFIGURATION — Replace with your Supabase project details
+        // Find these in: Supabase Dashboard → Settings → API
+        // ============================================================
+        const SUPABASE_URL      = 'https://tldzmrghbvqfaclantlr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
+
+        // The base URL of your hosted site (used to generate review links)
+        const SITE_URL = window.location.origin;
+
+        // ============================================================
+        const { createClient } = supabase;
+        const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let allClients  = [];
+        let allFeedback = [];
+        let currentView = 'restaurants';
+
+        // ── Auth ──────────────────────────────────────────────────────
+        async function handleLogin() {
+            const email    = document.getElementById('admin-email').value.trim();
+            const password = document.getElementById('admin-password').value;
+            const btn      = document.getElementById('btn-admin-login');
+            const errEl    = document.getElementById('auth-error');
+
+            if (!email || !password) { showError(errEl, 'Please fill in all fields.'); return; }
+
+            btn.disabled    = true;
+            btn.textContent = 'Signing in…';
+            errEl.classList.remove('visible');
+
+            const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                showError(errEl, 'Incorrect email or password.');
+                btn.disabled    = false;
+                btn.textContent = 'Sign In';
+                return;
+            }
+
+            // Verify admin role
+            const { data: roleData } = await sb
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', data.user.id)
+                .maybeSingle();
+
+            if (!roleData || roleData.role !== 'admin') {
+                await sb.auth.signOut();
+                showError(errEl, 'This account does not have admin access.');
+                btn.disabled    = false;
+                btn.textContent = 'Sign In';
+                return;
+            }
+
+            enterAdmin();
+        }
+
+        async function handleLogout() {
+            await sb.auth.signOut();
+            document.getElementById('admin-screen').style.display = 'none';
+            document.getElementById('auth-screen').style.display  = 'flex';
+        }
+
+        function showError(el, msg) { el.textContent = msg; el.classList.add('visible'); }
+
+        // ── Admin init ────────────────────────────────────────────────
+        async function enterAdmin() {
+            document.getElementById('auth-screen').style.display  = 'none';
+            document.getElementById('admin-screen').style.display = 'flex';
+            await loadData();
+            showView('restaurants');
+        }
+
+        async function loadData() {
+            // Load all clients
+            const { data: clients } = await sb
+                .from('clients')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            // Load all feedback
+            const { data: feedback } = await sb
+                .from('feedback')
+                .select('*')
+                .order('submitted_at', { ascending: false });
+
+            allClients  = clients  || [];
+            allFeedback = feedback || [];
+
+            // Update sidebar badge
+            const badge = document.getElementById('nav-count');
+            badge.textContent = allClients.length;
+            badge.classList.toggle('hidden', allClients.length === 0);
+        }
+
+        // ── Views ─────────────────────────────────────────────────────
+        function showView(view) {
+            currentView = view;
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('nav-' + view).classList.add('active');
+            view === 'restaurants' ? renderRestaurants() : renderAllFeedback();
+        }
+
+        // ── Restaurants view ─────────────────────────────────────────
+        function renderRestaurants() {
+            const content = document.getElementById('main-content');
+
+            const totalFeedback = allFeedback.length;
+            const avgRating     = totalFeedback > 0
+                ? (allFeedback.reduce((s, f) => s + f.rating, 0) / totalFeedback).toFixed(1)
+                : '—';
+            const unreadCount   = allFeedback.filter(f => !f.is_read).length;
+
+            content.innerHTML = `
+                <div class="page-header">
+                    <div>
+                        <div class="page-title">Restaurants</div>
+                        <div class="page-sub">${allClients.length} client${allClients.length !== 1 ? 's' : ''} registered</div>
+                    </div>
+                    <button class="btn-add" onclick="openModal()">＋ Add Restaurant</button>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-label">Restaurants</div>
+                        <div class="summary-value blue">${allClients.length}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">Total Feedback</div>
+                        <div class="summary-value yellow">${totalFeedback}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">Unread</div>
+                        <div class="summary-value green">${unreadCount}</div>
+                    </div>
+                </div>
+
+                ${allClients.length === 0
+                    ? `<div class="state-box fade-in">
+                           <div class="state-icon">🍽️</div>
+                           <div class="state-title">No restaurants yet</div>
+                           <div class="state-sub">Click "Add Restaurant" to create your first client.</div>
+                       </div>`
+                    : `<div class="restaurants-grid fade-in">
+                           ${allClients.map(renderCard).join('')}
+                       </div>`
+                }
+            `;
+        }
+
+        function renderCard(c) {
+            const clientFeedback = allFeedback.filter(f => f.client_id === c.id);
+            const count  = clientFeedback.length;
+            const avg    = count > 0 ? (clientFeedback.reduce((s,f) => s + f.rating, 0) / count).toFixed(1) : '—';
+            const unread = clientFeedback.filter(f => !f.is_read).length;
+            const link   = `${SITE_URL}/review.html?c=${c.slug}`;
+
+            return `
+                <div class="restaurant-card ${c.active ? '' : 'inactive'} fade-in">
+                    <div class="rc-header">
+                        <div>
+                            <div class="rc-name">${escHtml(c.name)}</div>
+                            <div class="rc-slug">${escHtml(c.slug)}</div>
+                        </div>
+                        <span class="rc-status ${c.active ? 'active' : 'inactive'}">${c.active ? 'Active' : 'Paused'}</span>
+                    </div>
+
+                    <div class="rc-stats">
+                        <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-blue)">${count}</div><div class="rc-stat-label">Reviews</div></div>
+                        <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-yellow)">${avg !== '—' ? '★'+avg : '—'}</div><div class="rc-stat-label">Avg</div></div>
+                        <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-green)">${unread}</div><div class="rc-stat-label">Unread</div></div>
+                    </div>
+
+                    <div class="rc-link">${link}</div>
+
+                    <div class="rc-actions">
+                        <button class="btn-sm view"    onclick="openPanel('${c.id}')">View Feedback</button>
+                        <button class="btn-sm"         onclick="copyLink('${link}', this)">Copy Link</button>
+                        <button class="btn-sm ${c.active ? 'danger' : 'success'}"
+                                onclick="toggleActive('${c.id}', ${c.active})">
+                            ${c.active ? 'Pause' : 'Activate'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ── All feedback view ─────────────────────────────────────────
+        function renderAllFeedback() {
+            const content = document.getElementById('main-content');
+
+            if (allFeedback.length === 0) {
+                content.innerHTML = `
+                    <div class="page-header"><div><div class="page-title">All Feedback</div></div></div>
+                    <div class="state-box fade-in">
+                        <div class="state-icon">💬</div>
+                        <div class="state-title">No feedback yet</div>
+                        <div class="state-sub">Customer feedback will appear here once submitted.</div>
+                    </div>`;
+                return;
+            }
+
+            const rows = allFeedback.map(f => {
+                const client = allClients.find(c => c.id === f.client_id);
+                const name   = client ? escHtml(client.name) : 'Unknown';
+                const stars  = '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating);
+                const date   = new Date(f.submitted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                return `
+                    <div class="panel-card ${f.is_read ? '' : 'unread'} fade-in">
+                        <div class="pc-header">
+                            <div>
+                                <div style="font-size:0.78rem;color:var(--on-surface-variant);margin-bottom:4px;">🍽️ ${name}</div>
+                                <span class="pc-stars">${stars}</span>
+                            </div>
+                            <span class="pc-date">${date}</span>
+                        </div>
+                        <p class="pc-text">${escHtml(f.feedback_text)}</p>
+                    </div>`;
+            }).join('');
+
+            content.innerHTML = `
+                <div class="page-header">
+                    <div>
+                        <div class="page-title">All Feedback</div>
+                        <div class="page-sub">${allFeedback.length} total · ${allFeedback.filter(f=>!f.is_read).length} unread</div>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;">${rows}</div>
+            `;
+        }
+
+        // ── Feedback panel ────────────────────────────────────────────
+        function openPanel(clientId) {
+            const client   = allClients.find(c => c.id === clientId);
+            const feedback = allFeedback.filter(f => f.client_id === clientId);
+
+            document.getElementById('panel-title').textContent = client ? client.name : 'Feedback';
+            document.getElementById('panel-sub').textContent   = `${feedback.length} review${feedback.length !== 1 ? 's' : ''}`;
+
+            const body = document.getElementById('panel-body');
+
+            if (feedback.length === 0) {
+                body.innerHTML = `<div class="state-box"><div class="state-icon">💬</div><div class="state-title">No feedback yet</div><div class="state-sub">Feedback will appear here when customers submit private comments.</div></div>`;
+            } else {
+                body.innerHTML = feedback.map(f => {
+                    const stars = '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating);
+                    const date  = new Date(f.submitted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    return `
+                        <div class="panel-card ${f.is_read ? '' : 'unread'}">
+                            <div class="pc-header">
+                                <span class="pc-stars">${stars}</span>
+                                <span class="pc-date">${date}</span>
+                            </div>
+                            <p class="pc-text">${escHtml(f.feedback_text)}</p>
+                        </div>`;
+                }).join('');
+            }
+
+            document.getElementById('feedback-panel').classList.add('open');
+            document.getElementById('panel-overlay').classList.add('open');
+        }
+
+        function closePanel() {
+            document.getElementById('feedback-panel').classList.remove('open');
+            document.getElementById('panel-overlay').classList.remove('open');
+        }
+
+        // ── Add restaurant modal ──────────────────────────────────────
+        function openModal() {
+            document.getElementById('r-name').value = '';
+            document.getElementById('r-slug').value = '';
+            document.getElementById('r-url').value  = '';
+            document.getElementById('modal-error').classList.remove('visible');
+            document.getElementById('modal-title').textContent  = 'Add Restaurant';
+            document.getElementById('modal-body').style.display = 'block';
+            document.getElementById('add-modal').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('add-modal').classList.remove('open');
+        }
+
+        // Auto-sanitize slug input
+        function sanitizeSlug(input) {
+            input.value = input.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-{2,}/g, '-');
+        }
+
+        // Auto-generate slug from name
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameInput = document.getElementById('r-name');
+            const slugInput = document.getElementById('r-slug');
+            if (nameInput && slugInput) {
+                nameInput.addEventListener('input', () => {
+                    if (!slugInput.dataset.edited) {
+                        slugInput.value = nameInput.value.toLowerCase()
+                            .replace(/[^a-z0-9\s-]/g, '')
+                            .trim()
+                            .replace(/\s+/g, '-')
+                            .replace(/-{2,}/g, '-');
+                    }
+                });
+                slugInput.addEventListener('input', () => { slugInput.dataset.edited = '1'; });
+            }
+        });
+
+        async function saveRestaurant() {
+            const name   = document.getElementById('r-name').value.trim();
+            const slug   = document.getElementById('r-slug').value.trim();
+            const url    = document.getElementById('r-url').value.trim();
+            const btn    = document.getElementById('btn-save');
+            const errEl  = document.getElementById('modal-error');
+
+            if (!name || !slug || !url) { showError(errEl, 'Please fill in all fields.'); return; }
+            if (!/^[a-z0-9-]+$/.test(slug)) { showError(errEl, 'Code can only contain lowercase letters, numbers, and hyphens.'); return; }
+            if (!url.startsWith('http')) { showError(errEl, 'Please enter a valid URL starting with https://'); return; }
+
+            btn.disabled    = true;
+            btn.textContent = 'Creating…';
+            errEl.classList.remove('visible');
+
+            const { error } = await sb.from('clients').insert({ name, slug, google_review_url: url });
+
+            if (error) {
+                const msg = error.code === '23505' ? 'A restaurant with that code already exists.' : 'Failed to create restaurant. Please try again.';
+                showError(errEl, msg);
+                btn.disabled    = false;
+                btn.textContent = 'Create Restaurant';
+                return;
+            }
+
+            // Show success with the owner instructions
+            const reviewLink = `${SITE_URL}/review.html?c=${slug}`;
+            document.getElementById('modal-title').textContent  = '';
+            document.getElementById('modal-body').innerHTML = `
+                <div class="modal-success">
+                    <div class="modal-success-icon">🎉</div>
+                    <div class="modal-success-title">Restaurant Created!</div>
+                    <div class="modal-success-sub">
+                        Share the <strong>review link</strong> with customers and the <strong>restaurant code</strong> with the owner so they can register.
+                    </div>
+                    <div style="margin-top:20px;text-align:left;">
+                        <div class="form-label" style="display:block;margin-bottom:6px;">Customer Review Link</div>
+                        <div class="link-box">${reviewLink}</div>
+                        <div class="form-label" style="display:block;margin-top:16px;margin-bottom:6px;">Restaurant Code (for owner registration)</div>
+                        <div class="link-box">${slug}</div>
+                        <div class="form-hint" style="margin-top:8px;">The owner visits dashboard.html → Register → enters their email, password, and this code.</div>
+                    </div>
+                    <button class="btn-primary" style="margin-top:20px;" onclick="closeModal();location.reload()">Done</button>
+                </div>
+            `;
+
+            await loadData();
+        }
+
+        // ── Toggle active ─────────────────────────────────────────────
+        async function toggleActive(clientId, isActive) {
+            await sb.from('clients').update({ active: !isActive }).eq('id', clientId);
+            await loadData();
+            showView(currentView);
+        }
+
+        // ── Copy link ─────────────────────────────────────────────────
+        async function copyLink(link, btn) {
+            try {
+                await navigator.clipboard.writeText(link);
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                btn.classList.add('success');
+                setTimeout(() => { btn.textContent = orig; btn.classList.remove('success'); }, 2000);
+            } catch {
+                btn.textContent = 'Copy failed';
+            }
+        }
+
+        // ── Utility ───────────────────────────────────────────────────
+        function escHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── Init: check existing session ─────────────────────────────
+        (async () => {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                const { data: roleData } = await sb
+                    .from('user_roles')
+                    .select('role')
+                    .eq('user_id', session.user.id)
+                    .maybeSingle();
+
+                if (roleData?.role === 'admin') {
+                    enterAdmin();
+                } else {
+                    await sb.auth.signOut();
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

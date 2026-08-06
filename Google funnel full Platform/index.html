@@ -613,11 +613,11 @@
             
             <div class="stars-container" style="max-width:360px;margin:0 auto">
                 <div class="stars" id="demo-stars" onmouseleave="demoResetHover()">
-                    <button type="button" onclick="demoSelect(1)" onmouseenter="demoHover(1)" title="1 Star">&#9733;</button>
-                    <button type="button" onclick="demoSelect(2)" onmouseenter="demoHover(2)" title="2 Stars">&#9733;</button>
-                    <button type="button" onclick="demoSelect(3)" onmouseenter="demoHover(3)" title="3 Stars">&#9733;</button>
-                    <button type="button" onclick="demoSelect(4)" onmouseenter="demoHover(4)" title="4 Stars">&#9733;</button>
-                    <button type="button" onclick="demoSelect(5)" onmouseenter="demoHover(5)" title="5 Stars">&#9733;</button>
+                    <button type="button" onclick="runInteractiveDemo(1)" onmouseenter="demoHover(1)" title="1 Star">&#9733;</button>
+                    <button type="button" onclick="runInteractiveDemo(2)" onmouseenter="demoHover(2)" title="2 Stars">&#9733;</button>
+                    <button type="button" onclick="runInteractiveDemo(3)" onmouseenter="demoHover(3)" title="3 Stars">&#9733;</button>
+                    <button type="button" onclick="runInteractiveDemo(4)" onmouseenter="demoHover(4)" title="4 Stars">&#9733;</button>
+                    <button type="button" onclick="runInteractiveDemo(5)" onmouseenter="demoHover(5)" title="5 Stars">&#9733;</button>
                 </div>
             </div>
 
@@ -903,21 +903,46 @@ let currentDemoRating = 0;
 function demoHover(n) {
     const btns = document.querySelectorAll('#demo-stars button');
     btns.forEach((btn, i) => {
-        btn.classList.toggle('hovered', i < n);
+        if (i < n) {
+            btn.style.color = '#FBBC05';
+            btn.style.textShadow = '0 0 14px rgba(251,188,5,0.95)';
+        } else if (!btn.classList.contains('active')) {
+            btn.style.color = '#3C4043';
+            btn.style.textShadow = 'none';
+        }
     });
 }
 
 function demoResetHover() {
     const btns = document.querySelectorAll('#demo-stars button');
-    btns.forEach(btn => btn.classList.remove('hovered'));
+    btns.forEach(btn => {
+        if (btn.classList.contains('active')) {
+            btn.style.color = '#FBBC05';
+            btn.style.textShadow = '0 0 14px rgba(251,188,5,0.95)';
+        } else {
+            btn.style.color = '#3C4043';
+            btn.style.textShadow = 'none';
+        }
+    });
 }
 
 function demoSelect(n) {
+    runInteractiveDemo(n);
+}
+
+function runInteractiveDemo(n) {
     currentDemoRating = n;
     const btns = document.querySelectorAll('#demo-stars button');
     btns.forEach((btn, i) => {
-        btn.classList.remove('hovered');
-        btn.classList.toggle('active', i < n);
+        if (i < n) {
+            btn.classList.add('active');
+            btn.style.color = '#FBBC05';
+            btn.style.textShadow = '0 0 14px rgba(251,188,5,0.95)';
+        } else {
+            btn.classList.remove('active');
+            btn.style.color = '#3C4043';
+            btn.style.textShadow = 'none';
+        }
     });
 
     const stepTap = document.getElementById('step-tap');

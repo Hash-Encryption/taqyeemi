@@ -437,14 +437,59 @@
             margin-bottom: 16px;
         }
         .demo-result-box {
-            margin-top: 24px;
-            padding: 20px;
+            margin-top: 20px;
+            padding: 0;
             border-radius: var(--radius-md);
-            background: var(--surface-dim);
-            border: 1px solid var(--outline);
+            background: transparent;
             font-size: 0.95rem;
             display: none;
             animation: cardIn 0.35s ease forwards;
+        }
+
+        /* FUNNEL FLOW DIAGRAM */
+        .funnel-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 24px 0 16px;
+            flex-wrap: wrap;
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: var(--radius-full);
+            background: var(--surface-dim);
+            border: 1px solid var(--outline);
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--on-surface-variant);
+            transition: all 0.3s ease;
+        }
+        .flow-step.active-step {
+            border-color: var(--g-blue);
+            background: rgba(66, 133, 244, 0.15);
+            color: var(--g-blue);
+            box-shadow: 0 0 12px rgba(66, 133, 244, 0.25);
+        }
+        .flow-step.active-google {
+            border-color: var(--g-green);
+            background: rgba(52, 168, 83, 0.15);
+            color: var(--g-green);
+            box-shadow: 0 0 12px rgba(52, 168, 83, 0.25);
+        }
+        .flow-step.active-private {
+            border-color: var(--g-yellow);
+            background: rgba(251, 188, 5, 0.15);
+            color: var(--g-yellow);
+            box-shadow: 0 0 12px rgba(251, 188, 5, 0.25);
+        }
+        .flow-arrow {
+            color: var(--on-surface-variant);
+            font-size: 0.8rem;
+            opacity: 0.5;
         }
 
         /* FEATURES GRID */
@@ -567,15 +612,25 @@
             <p style="color:var(--on-surface-variant);font-size:.9rem;margin-bottom:24px">Tap a star below to simulate what happens when a customer reviews your restaurant:</p>
             
             <div class="stars-container" style="max-width:360px;margin:0 auto">
-                <div class="stars" id="demo-stars">
-                    <button type="button" onclick="demoSelect(1)" title="1 Star">&#9733;</button>
-                    <button type="button" onclick="demoSelect(2)" title="2 Stars">&#9733;</button>
-                    <button type="button" onclick="demoSelect(3)" title="3 Stars">&#9733;</button>
-                    <button type="button" onclick="demoSelect(4)" title="4 Stars">&#9733;</button>
-                    <button type="button" onclick="demoSelect(5)" title="5 Stars">&#9733;</button>
+                <div class="stars" id="demo-stars" onmouseleave="demoResetHover()">
+                    <button type="button" onclick="demoSelect(1)" onmouseenter="demoHover(1)" title="1 Star">&#9733;</button>
+                    <button type="button" onclick="demoSelect(2)" onmouseenter="demoHover(2)" title="2 Stars">&#9733;</button>
+                    <button type="button" onclick="demoSelect(3)" onmouseenter="demoHover(3)" title="3 Stars">&#9733;</button>
+                    <button type="button" onclick="demoSelect(4)" onmouseenter="demoHover(4)" title="4 Stars">&#9733;</button>
+                    <button type="button" onclick="demoSelect(5)" onmouseenter="demoHover(5)" title="5 Stars">&#9733;</button>
                 </div>
             </div>
 
+            <!-- Animated Funnel Flow Diagram -->
+            <div class="funnel-flow">
+                <div class="flow-step" id="step-tap"><span>1️⃣</span> Star Rating</div>
+                <span class="flow-arrow">&rarr;</span>
+                <div class="flow-step" id="step-shield"><span>2️⃣</span> Smart Shield</div>
+                <span class="flow-arrow">&rarr;</span>
+                <div class="flow-step" id="step-outcome"><span>3️⃣</span> Tap a star to test...</div>
+            </div>
+
+            <!-- Inline Contained Simulation Box -->
             <div class="demo-result-box" id="demo-result"></div>
         </div>
     </section>
@@ -843,15 +898,100 @@ function showView(id) {
     });
 }
 
+let currentDemoRating = 0;
+
+function demoHover(n) {
+    const btns = document.querySelectorAll('#demo-stars button');
+    btns.forEach((btn, i) => {
+        btn.classList.toggle('hovered', i < n);
+    });
+}
+
+function demoResetHover() {
+    const btns = document.querySelectorAll('#demo-stars button');
+    btns.forEach(btn => btn.classList.remove('hovered'));
+}
+
 function demoSelect(n) {
+    currentDemoRating = n;
+    const btns = document.querySelectorAll('#demo-stars button');
+    btns.forEach((btn, i) => {
+        btn.classList.remove('hovered');
+        btn.classList.toggle('active', i < n);
+    });
+
+    const stepTap = document.getElementById('step-tap');
+    const stepShield = document.getElementById('step-shield');
+    const stepOutcome = document.getElementById('step-outcome');
     const res = document.getElementById('demo-result');
+
+    if (stepTap) stepTap.className = 'flow-step active-step';
+    if (stepShield) stepShield.className = 'flow-step active-step';
+
     res.style.display = 'block';
-    const stars = '\u2605'.repeat(n) + '\u2606'.repeat(5-n);
+    const stars = '★'.repeat(n) + '☆'.repeat(5-n);
+
     if (n >= 4) {
-        res.innerHTML = '<div style="color:var(--g-green);font-weight:600;margin-bottom:4px">\uD83F\uDFE2 ' + stars + ' Selected \u2014 Direct Redirect!</div><div style="color:var(--on-surface-variant);font-size:.85rem">Customer is immediately sent to your public Google Maps review page to boost your star rating online.</div>';
+        if (stepOutcome) {
+            stepOutcome.className = 'flow-step active-google';
+            stepOutcome.innerHTML = '<span>3️⃣</span> Public Google Review 🚀';
+        }
+
+        res.innerHTML = `
+            <div style="background: rgba(52, 168, 83, 0.08); border: 1px solid rgba(52, 168, 83, 0.3); border-radius: var(--radius-md); padding: 22px; text-align: left; animation: cardIn 0.35s ease forwards;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="background:var(--g-green); color:white; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:12px;">Google Route</span>
+                        <strong style="color:var(--g-green); font-size:1rem;">${stars} Rating</strong>
+                    </div>
+                    <span style="font-size:0.78rem; color:var(--g-green-light); font-weight:600;">⚡ Instant Redirect</span>
+                </div>
+                <h4 style="font-size:1.1rem; font-weight:700; margin-bottom:6px; color:var(--on-surface);">Public Google Review Unlocked! 🎉</h4>
+                <p style="color:var(--on-surface-variant); font-size:0.88rem; line-height:1.5; margin-bottom:16px;">
+                    The customer is delighted with your service! The Smart Shield instantly forwards them directly to your public Google Maps profile to post their 5-star rating.
+                </p>
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    <button class="btn-sm success" onclick="alert('Demo Simulator: Customer is now redirected directly to Google Maps Review Page!')" style="padding:10px 20px; font-weight:600; background:var(--g-green); color:white; border:none; cursor:pointer;">Simulate Google Redirect ➔</button>
+                    <span style="font-size:0.8rem; color:var(--g-green-light); font-weight:500;">+1 Verified Public Review</span>
+                </div>
+            </div>
+        `;
     } else {
-        res.innerHTML = '<div style="color:var(--g-yellow);font-weight:600;margin-bottom:4px">\uD83D\uDFE1 ' + stars + ' Selected \u2014 Intercepted Privately!</div><div style="color:var(--on-surface-variant);font-size:.85rem">Customer opens an internal private manager form. Feedback goes directly to your dashboard without hitting Google.</div>';
+        if (stepOutcome) {
+            stepOutcome.className = 'flow-step active-private';
+            stepOutcome.innerHTML = '<span>3️⃣</span> Private Manager Feedback 🛡️';
+        }
+
+        res.innerHTML = `
+            <div style="background: rgba(251, 188, 5, 0.08); border: 1px solid rgba(251, 188, 5, 0.3); border-radius: var(--radius-md); padding: 22px; text-align: left; animation: cardIn 0.35s ease forwards;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="background:var(--g-yellow); color:#1e1e1e; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:12px;">Smart Shield Active</span>
+                        <strong style="color:var(--g-yellow); font-size:1rem;">${stars} Intercepted</strong>
+                    </div>
+                    <span style="font-size:0.78rem; color:var(--g-yellow); font-weight:600;">🔒 100% Private</span>
+                </div>
+                <h4 style="font-size:1.1rem; font-weight:700; margin-bottom:6px; color:var(--on-surface);">Public Google Page Shielded 🛡️</h4>
+                <p style="color:var(--on-surface-variant); font-size:0.88rem; line-height:1.5; margin-bottom:14px;">
+                    Instead of exposing a low rating on Google Maps, the customer is shown an internal feedback note sent straight to your Owner Dashboard.
+                </p>
+                <div id="demo-feedback-form">
+                    <textarea class="rv-textarea" id="demo-msg" placeholder="Type test feedback (e.g. 'Long wait time at table')..." style="height:75px; margin-bottom:12px; font-size:0.88rem; border-color:rgba(251,188,5,0.4);"></textarea>
+                    <button class="btn-sm primary" onclick="submitDemoFeedback()" style="padding:9px 20px; font-weight:600; background:var(--g-blue); color:white; border:none; cursor:pointer;">Send Private Feedback Note</button>
+                </div>
+                <div id="demo-feedback-success" class="hidden" style="color:var(--g-green); font-size:0.9rem; font-weight:600; margin-top:10px; background:rgba(52,168,83,0.12); padding:12px 16px; border-radius:8px; border:1px solid rgba(52,168,83,0.3);">
+                    ✅ Sent privately to owner inbox! Zero public complaints created on Google Maps.
+                </div>
+            </div>
+        `;
     }
+}
+
+function submitDemoFeedback() {
+    const form = document.getElementById('demo-feedback-form');
+    const succ = document.getElementById('demo-feedback-success');
+    if (form) form.classList.add('hidden');
+    if (succ) succ.classList.remove('hidden');
 }
 
 (async () => {

@@ -1,5 +1,5 @@
-name = "muhab"
+name = "review-platform"
 compatibility_date = "2025-01-01"
 
 [assets]
-directory = "."
+directory = "./dist"

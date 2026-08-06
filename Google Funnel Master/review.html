@@ -365,29 +365,56 @@
         function hoverStars(count) {
             if (selectedRating > 0) return;
             for (let i = 1; i <= 5; i++) {
-                document.getElementById('star-' + i).classList.toggle('hovered', i <= count);
+                const star = document.getElementById('star-' + i);
+                if (star) {
+                    const isHover = i <= count;
+                    star.classList.toggle('hovered', isHover);
+                    if (isHover) {
+                        star.style.color = '#FBBC05';
+                        star.style.textShadow = '0 0 14px rgba(251,188,5,0.95)';
+                    } else {
+                        star.style.color = '';
+                        star.style.textShadow = '';
+                    }
+                }
             }
             const t = document.getElementById('star-text');
-            t.textContent = starLabels[count];
-            t.classList.add('visible');
+            if (t) { t.textContent = starLabels[count]; t.classList.add('visible'); }
         }
 
         function resetHover() {
             if (selectedRating > 0) return;
-            for (let i = 1; i <= 5; i++) document.getElementById('star-' + i).classList.remove('hovered');
-            document.getElementById('star-text').classList.remove('visible');
+            for (let i = 1; i <= 5; i++) {
+                const star = document.getElementById('star-' + i);
+                if (star) {
+                    star.classList.remove('hovered');
+                    star.style.color = '';
+                    star.style.textShadow = '';
+                }
+            }
+            const t = document.getElementById('star-text');
+            if (t) t.classList.remove('visible');
         }
 
         function submitRating(stars) {
             selectedRating = stars;
             for (let i = 1; i <= 5; i++) {
                 const star = document.getElementById('star-' + i);
-                star.classList.remove('hovered');
-                star.classList.toggle('active', i <= stars);
+                if (star) {
+                    star.classList.remove('hovered');
+                    const isActive = i <= stars;
+                    star.classList.toggle('active', isActive);
+                    if (isActive) {
+                        star.style.color = '#FBBC05';
+                        star.style.textShadow = '0 0 14px rgba(251,188,5,0.95)';
+                    } else {
+                        star.style.color = '';
+                        star.style.textShadow = '';
+                    }
+                }
             }
             const t = document.getElementById('star-text');
-            t.textContent = starLabels[stars];
-            t.classList.add('visible');
+            if (t) { t.textContent = starLabels[stars]; t.classList.add('visible'); }
 
             setTimeout(() => {
                 if (stars >= 4) {

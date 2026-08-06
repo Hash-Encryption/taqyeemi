@@ -1158,18 +1158,52 @@ document.querySelectorAll('#rv-stars button').forEach((btn, i) => {
 
 function rvHover(n) {
     if (rvRating > 0) return;
-    for (let i = 1; i <= 5; i++) document.getElementById('star-'+i).classList.toggle('hovered', i <= n);
-    const t = document.getElementById('rv-star-text'); t.textContent = rvLabels[n]; t.classList.add('visible');
+    for (let i = 1; i <= 5; i++) {
+        const s = document.getElementById('star-'+i);
+        if (s) {
+            const isHover = i <= n;
+            s.classList.toggle('hovered', isHover);
+            if (isHover) {
+                s.style.color = '#FBBC05';
+                s.style.textShadow = '0 0 14px rgba(251,188,5,0.95)';
+            } else {
+                s.style.color = '';
+                s.style.textShadow = '';
+            }
+        }
+    }
+    const t = document.getElementById('rv-star-text'); if(t) { t.textContent = rvLabels[n]; t.classList.add('visible'); }
 }
 function rvResetHover() {
     if (rvRating > 0) return;
-    for (let i = 1; i <= 5; i++) document.getElementById('star-'+i).classList.remove('hovered');
-    document.getElementById('rv-star-text').classList.remove('visible');
+    for (let i = 1; i <= 5; i++) {
+        const s = document.getElementById('star-'+i);
+        if (s) {
+            s.classList.remove('hovered');
+            s.style.color = '';
+            s.style.textShadow = '';
+        }
+    }
+    const t = document.getElementById('rv-star-text'); if(t) t.classList.remove('visible');
 }
 function rvSelect(n) {
     rvRating = n;
-    for (let i = 1; i <= 5; i++) { const s = document.getElementById('star-'+i); s.classList.remove('hovered'); s.classList.toggle('active', i <= n); }
-    const t = document.getElementById('rv-star-text'); t.textContent = rvLabels[n]; t.classList.add('visible');
+    for (let i = 1; i <= 5; i++) {
+        const s = document.getElementById('star-'+i);
+        if (s) {
+            s.classList.remove('hovered');
+            const isActive = i <= n;
+            s.classList.toggle('active', isActive);
+            if (isActive) {
+                s.style.color = '#FBBC05';
+                s.style.textShadow = '0 0 14px rgba(251,188,5,0.95)';
+            } else {
+                s.style.color = '';
+                s.style.textShadow = '';
+            }
+        }
+    }
+    const t = document.getElementById('rv-star-text'); if(t) { t.textContent = rvLabels[n]; t.classList.add('visible'); }
     // SECURITY: validate URL scheme before redirect to prevent open-redirect abuse
     setTimeout(() => { n >= 4 ? (rvGoogleURL && rvGoogleURL.startsWith('https://') ? window.location.href = rvGoogleURL : rvShow('rv-feedback')) : rvShow('rv-feedback'); }, 500);
 }

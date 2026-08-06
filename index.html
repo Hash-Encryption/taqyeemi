@@ -1421,17 +1421,19 @@
                 <div class="vc-biz-type">Pharmacy · Open now</div>
               </div>
             </div>
-            <div class="vc-stars-row">
-              <span class="vc-star">★</span>
-              <span class="vc-star">★</span>
-              <span class="vc-star">★</span>
-              <span class="vc-star">★</span>
-              <span class="vc-star">★</span>
+            <div class="vc-stars-row" id="main-demo-stars" onmouseleave="vcResetHover()">
+              <span class="vc-star active" onclick="vcSelectStar(1)" onmouseenter="vcHoverStar(1)" title="1 Star">★</span>
+              <span class="vc-star active" onclick="vcSelectStar(2)" onmouseenter="vcHoverStar(2)" title="2 Stars">★</span>
+              <span class="vc-star active" onclick="vcSelectStar(3)" onmouseenter="vcHoverStar(3)" title="3 Stars">★</span>
+              <span class="vc-star active" onclick="vcSelectStar(4)" onmouseenter="vcHoverStar(4)" title="4 Stars">★</span>
+              <span class="vc-star active" onclick="vcSelectStar(5)" onmouseenter="vcHoverStar(5)" title="5 Stars">★</span>
             </div>
+            <div style="font-size:0.75rem; color:var(--slate-dim); margin-bottom:12px; font-weight:500;">👈 Click any star to test the interactive demo</div>
             <div class="vc-rating-line">
               <div class="vc-rating-big">4.9</div>
               <div class="vc-rating-meta">out of 5<br><span style="color: var(--slate-dim)">287 reviews</span></div>
             </div>
+            <div id="main-demo-result" style="display:none; margin-bottom:20px; text-align:left;"></div>
             <div class="vc-bar-group">
               <div class="vc-bar-row">
                 <div class="vc-bar-label">5 ★</div>
@@ -1666,24 +1668,102 @@
       });
     });
 
-    // ── Interactive Stars ─────────────────────────
-    const vcStars = document.querySelectorAll('.vc-star');
-    if (vcStars.length) {
-      vcStars.forEach((star, i) => {
-        star.classList.add('active'); // default all 5 active
-        star.addEventListener('mouseenter', () => {
-          vcStars.forEach((s, idx) => s.classList.toggle('hovered', idx <= i));
-        });
-        star.addEventListener('click', () => {
-          vcStars.forEach((s, idx) => s.classList.toggle('active', idx <= i));
-        });
+    // ── Interactive Demo Simulation ─────────────────────────
+    let currentVcRating = 5;
+
+    function vcHoverStar(n) {
+      const stars = document.querySelectorAll('.vc-star');
+      stars.forEach((s, idx) => s.classList.toggle('hovered', idx < n));
+    }
+
+    function vcResetHover() {
+      const stars = document.querySelectorAll('.vc-star');
+      stars.forEach(s => s.classList.remove('hovered'));
+    }
+
+    function vcSelectStar(n) {
+      currentVcRating = n;
+      const stars = document.querySelectorAll('.vc-star');
+      stars.forEach((s, idx) => {
+        s.classList.remove('hovered');
+        s.classList.toggle('active', idx < n);
       });
-      const starRow = document.querySelector('.vc-stars-row');
-      if (starRow) {
-        starRow.addEventListener('mouseleave', () => {
-          vcStars.forEach(s => s.classList.remove('hovered'));
-        });
+
+      const res = document.getElementById('main-demo-result');
+      if (!res) return;
+      res.style.display = 'block';
+      const starStr = '★'.repeat(n) + '☆'.repeat(5-n);
+
+      if (n >= 4) {
+        res.innerHTML = `
+          <div style="background: #111520; border: 1px solid rgba(37,99,255,0.3); border-radius: var(--r-md); padding: 18px; margin-top:12px; animation: fadeIn 0.3s ease;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.31 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.99 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.69 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+                <span style="font-weight:700; font-size:0.9rem; color:var(--white);">Google Maps Review Screen</span>
+              </div>
+              <span style="background:rgba(34,197,94,0.15); color:#4ADE80; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:10px;">🟢 Public Google Access</span>
+            </div>
+            <div style="margin-bottom:12px; background:var(--bg); padding:10px 14px; border-radius:8px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.8rem; color:var(--slate);">Rating:</span>
+              <span style="color:#FBBF24; font-size:1.1rem; letter-spacing:2px;">${starStr}</span>
+            </div>
+            <div id="main-google-form">
+              <textarea id="main-google-msg" placeholder="Share details of your experience..." style="width:100%; height:70px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px; color:var(--white); font-family:inherit; font-size:0.85rem; margin-bottom:10px; resize:none; outline:none;"></textarea>
+              <button onclick="submitMainGoogle()" style="background:var(--blue); color:white; border:none; padding:8px 18px; border-radius:6px; font-size:0.82rem; font-weight:600; cursor:pointer;">Post Review to Google</button>
+            </div>
+            <div id="main-google-success" style="display:none; text-align:center; padding:10px;">
+              <div style="font-size:1.4rem; color:#4ADE80; margin-bottom:4px;">✓</div>
+              <div style="font-weight:700; color:#4ADE80; font-size:0.95rem;">Review Published on Google Maps!</div>
+              <p style="font-size:0.8rem; color:var(--slate); margin-top:4px;">Your 5-star rating is live online.</p>
+            </div>
+          </div>
+        `;
+      } else {
+        res.innerHTML = `
+          <div style="background: #111520; border: 1px solid rgba(251,191,36,0.3); border-radius: var(--r-md); padding: 18px; margin-top:12px; animation: fadeIn 0.3s ease;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:1rem;">🛡️</span>
+                <span style="font-weight:700; font-size:0.9rem; color:var(--white);">Private Manager Feedback Form</span>
+              </div>
+              <span style="background:rgba(251,191,36,0.15); color:#FBBF24; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:10px;">🔒 Intercepted (Private)</span>
+            </div>
+            <div id="main-private-form">
+              <div style="margin-bottom:10px; background:var(--bg); padding:10px 14px; border-radius:8px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.8rem; color:var(--slate);">Intercepted Rating:</span>
+                <span style="color:#FBBF24; font-size:1.1rem; letter-spacing:2px;">${starStr}</span>
+              </div>
+              <textarea id="main-private-msg" placeholder="Type your comment here (e.g. 'Wait time was slow today')..." style="width:100%; height:75px; background:var(--bg); border:1px solid rgba(251,191,36,0.3); border-radius:8px; padding:10px; color:var(--white); font-family:inherit; font-size:0.85rem; margin-bottom:10px; resize:none; outline:none;"></textarea>
+              <button onclick="submitMainPrivate('${starStr}')" style="background:var(--blue); color:white; border:none; padding:9px 18px; border-radius:6px; font-size:0.82rem; font-weight:600; cursor:pointer; width:100%;">Submit Private Note to Management ➔</button>
+            </div>
+            <div id="main-private-dash" style="display:none; animation: fadeIn 0.3s ease;">
+              <div style="background:var(--bg); border:1px solid rgba(37,99,255,0.4); border-radius:8px; padding:12px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--slate); margin-bottom:6px;">
+                  <strong style="color:var(--white);">📊 Owner Dashboard — Inbox</strong>
+                  <span style="background:var(--blue); color:white; padding:1px 6px; border-radius:4px; font-size:0.65rem;">1 NEW UNREAD</span>
+                </div>
+                <div style="font-size:0.85rem; color:var(--white); font-style:italic;" id="main-dash-text">"Wait time was slow today"</div>
+              </div>
+              <div style="color:#4ADE80; font-size:0.78rem; font-weight:600; text-align:center;">🛡️ Result: Zero negative reviews posted to Google Maps!</div>
+            </div>
+          </div>
+        `;
       }
+    }
+
+    function submitMainGoogle() {
+      document.getElementById('main-google-form').style.display = 'none';
+      document.getElementById('main-google-success').style.display = 'block';
+    }
+
+    function submitMainPrivate(starStr) {
+      const input = document.getElementById('main-private-msg');
+      const txt = (input && input.value.trim()) ? input.value.trim() : "Wait time was slow today";
+      document.getElementById('main-private-form').style.display = 'none';
+      const dash = document.getElementById('main-private-dash');
+      dash.style.display = 'block';
+      document.getElementById('main-dash-text').textContent = '"' + txt + '"';
     }
   </script>
 </body>

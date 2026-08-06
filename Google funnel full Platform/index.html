@@ -1085,15 +1085,15 @@ function resetDemoSim() {
 
 (async () => {
     await initConfig();
-    if (!sb) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;padding:20px;color:var(--on-surface)"><div style="background:var(--surface);padding:40px;border-radius:16px;border:1px solid var(--g-red)"><h2 style="margin-bottom:16px;color:var(--g-red)">Failed to load configuration</h2><p>Please check your server setup and try refreshing.</p></div></div>'; return; }
+    if (!sb) { console.warn('Supabase not connected. Running in static demo mode.'); }
     const p = new URLSearchParams(window.location.search);
     const slug = p.get('c'), view = p.get('view');
-    if (slug) { showView('review'); rvInit(slug); }
-    else if (view === 'dashboard') {
+    if (slug && sb) { showView('review'); rvInit(slug); }
+    else if (view === 'dashboard' && sb) {
         showView('dashboard');
         const { data: { session } } = await sb.auth.getSession();
         if (session) dbEnter(session.user); else document.getElementById('db-auth').classList.remove('hidden');
-    } else if (view === 'admin') {
+    } else if (view === 'admin' && sb) {
         showView('admin');
         const { data: { session } } = await sb.auth.getSession();
         if (session) {

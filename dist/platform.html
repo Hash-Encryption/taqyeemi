@@ -608,10 +608,10 @@
     <section class="demo-section" id="demo-section">
         <div class="demo-card">
             <span class="demo-card-tag">Interactive Funnel Simulator</span>
-            <h3 style="font-size:1.35rem;font-weight:700;margin-bottom:8px">Test The Customer Experience</h3>
-            <p style="color:var(--on-surface-variant);font-size:.9rem;margin-bottom:24px">Tap a star below to simulate what happens when a customer reviews your restaurant:</p>
+            <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:8px">Test The Customer Experience</h3>
+            <p style="color:var(--on-surface-variant);font-size:.92rem;margin-bottom:20px">Tap any star below to simulate how Review Funnel routes customer reviews in real-time:</p>
             
-            <div class="stars-container" style="max-width:360px;margin:0 auto">
+            <div class="stars-container" style="max-width:400px;margin:0 auto">
                 <div class="stars" id="demo-stars" onmouseleave="demoResetHover()">
                     <button type="button" onclick="runInteractiveDemo(1)" onmouseenter="demoHover(1)" title="1 Star">&#9733;</button>
                     <button type="button" onclick="runInteractiveDemo(2)" onmouseenter="demoHover(2)" title="2 Stars">&#9733;</button>
@@ -619,6 +619,7 @@
                     <button type="button" onclick="runInteractiveDemo(4)" onmouseenter="demoHover(4)" title="4 Stars">&#9733;</button>
                     <button type="button" onclick="runInteractiveDemo(5)" onmouseenter="demoHover(5)" title="5 Stars">&#9733;</button>
                 </div>
+                <div id="demo-star-hint" style="font-size:0.85rem; font-weight:600; color:var(--g-yellow); min-height:22px; margin-top:8px; opacity:0; transition:opacity 0.2s ease;"></div>
             </div>
 
             <!-- Animated Funnel Flow Diagram -->
@@ -899,31 +900,45 @@ function showView(id) {
 }
 
 let currentDemoRating = 0;
+const demoLabels = {
+    1: '★ 1 Star · Disappointed (Intercepted Privately)',
+    2: '★★ 2 Stars · Below Average (Intercepted Privately)',
+    3: '★★★ 3 Stars · Average Service (Intercepted Privately)',
+    4: '★★★★ 4 Stars · Great Experience! (Direct to Google Maps)',
+    5: '★★★★★ 5 Stars · Outstanding! (Direct to Google Maps)'
+};
 
 function demoHover(n) {
+    if (currentDemoRating > 0) return;
     const btns = document.querySelectorAll('#demo-stars button');
     btns.forEach((btn, i) => {
         if (i < n) {
             btn.style.color = '#FBBC05';
             btn.style.textShadow = '0 0 14px rgba(251,188,5,0.95)';
-        } else if (!btn.classList.contains('active')) {
-            btn.style.color = '#3C4043';
+            btn.style.transform = 'scale(1.15)';
+        } else {
+            btn.style.color = 'var(--outline)';
             btn.style.textShadow = 'none';
+            btn.style.transform = 'scale(1)';
         }
     });
+    const hint = document.getElementById('demo-star-hint');
+    if (hint) {
+        hint.textContent = demoLabels[n] || '';
+        hint.style.opacity = '1';
+    }
 }
 
 function demoResetHover() {
+    if (currentDemoRating > 0) return;
     const btns = document.querySelectorAll('#demo-stars button');
     btns.forEach(btn => {
-        if (btn.classList.contains('active')) {
-            btn.style.color = '#FBBC05';
-            btn.style.textShadow = '0 0 14px rgba(251,188,5,0.95)';
-        } else {
-            btn.style.color = '#3C4043';
-            btn.style.textShadow = 'none';
-        }
+        btn.style.color = 'var(--outline)';
+        btn.style.textShadow = 'none';
+        btn.style.transform = 'scale(1)';
     });
+    const hint = document.getElementById('demo-star-hint');
+    if (hint) hint.style.opacity = '0';
 }
 
 function demoSelect(n) {
@@ -938,12 +953,20 @@ function runInteractiveDemo(n) {
             btn.classList.add('active');
             btn.style.color = '#FBBC05';
             btn.style.textShadow = '0 0 14px rgba(251,188,5,0.95)';
+            btn.style.transform = 'scale(1.1)';
         } else {
             btn.classList.remove('active');
-            btn.style.color = '#3C4043';
+            btn.style.color = 'var(--outline)';
             btn.style.textShadow = 'none';
+            btn.style.transform = 'scale(1)';
         }
     });
+
+    const hint = document.getElementById('demo-star-hint');
+    if (hint) {
+        hint.textContent = demoLabels[n] || '';
+        hint.style.opacity = '1';
+    }
 
     const stepTap = document.getElementById('step-tap');
     const stepShield = document.getElementById('step-shield');
@@ -953,8 +976,9 @@ function runInteractiveDemo(n) {
     if (stepTap) stepTap.className = 'flow-step active-step';
     if (stepShield) stepShield.className = 'flow-step active-step';
 
+    if (!res) return;
     res.style.display = 'block';
-    const stars = '★'.repeat(n) + '☆'.repeat(5-n);
+    const stars = '★'.repeat(n) + '☆'.repeat(5 - n);
 
     if (n >= 4) {
         if (stepOutcome) {
@@ -963,46 +987,63 @@ function runInteractiveDemo(n) {
         }
 
         res.innerHTML = `
-            <div style="background: #181A20; border: 1px solid #303440; border-radius: var(--radius-md); padding: 24px; text-align: left; animation: cardIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
-                <!-- Google Header -->
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid #2A2E3D; padding-bottom:14px; flex-wrap:wrap; gap:8px;">
+            <div style="background: #16181E; border: 1.5px solid rgba(52, 168, 83, 0.4); border-radius: var(--radius-md); padding: 24px; text-align: left; animation: cardIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; box-shadow: 0 12px 36px rgba(0,0,0,0.45); margin-top: 16px;">
+                <!-- Google Maps Header -->
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid #282C38; padding-bottom:14px; flex-wrap:wrap; gap:8px;">
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.31 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.99 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.69 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
-                        <span style="font-weight:700; font-size:0.95rem; color:var(--on-surface);">Google Maps Review Screen</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.31 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.99 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.69 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+                        <span style="font-weight:700; font-size:1rem; color:var(--on-surface);">Google Maps Review Interface</span>
                     </div>
-                    <span style="background:rgba(52, 168, 83, 0.18); color:var(--g-green); font-size:0.72rem; font-weight:700; padding:4px 10px; border-radius:12px; border:1px solid rgba(52, 168, 83, 0.3);">🟢 Direct Public Google Access</span>
+                    <span style="background:rgba(52, 168, 83, 0.2); color:var(--g-green-light); font-size:0.75rem; font-weight:700; padding:4px 12px; border-radius:12px; border:1px solid rgba(52, 168, 83, 0.35);">🟢 DIRECT PUBLIC GOOGLE ACCESS</span>
                 </div>
 
                 <!-- Business info -->
-                <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-                    <div style="width:40px; height:40px; border-radius:50%; background:var(--g-blue); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">MP</div>
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; background:#101216; padding:12px 14px; border-radius:10px; border:1px solid #232733;">
+                    <div style="width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, var(--g-blue) 0%, #1a73e8 100%); color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.05rem;">MP</div>
                     <div>
                         <div style="font-weight:700; font-size:0.98rem; color:var(--on-surface);">Mohamed's Pharmacy</div>
-                        <div style="font-size:0.78rem; color:var(--on-surface-variant);">Posting publicly on Google</div>
+                        <div style="font-size:0.78rem; color:var(--on-surface-variant);">123 Main Street · Google Verified Business</div>
                     </div>
                 </div>
 
-                <!-- Star rating display -->
-                <div style="margin-bottom:16px; background:#111318; padding:12px 16px; border-radius:10px; border:1px solid #2A2E3D; display:flex; align-items:center; justify-content:space-between;">
-                    <span style="font-size:0.85rem; color:var(--on-surface-variant);">Selected Rating:</span>
-                    <span style="color:var(--g-yellow); font-size:1.3rem; letter-spacing:2px;">${stars}</span>
-                </div>
-
-                <!-- Simulated review text box -->
+                <!-- Form container -->
                 <div id="google-sim-form">
-                    <textarea id="google-sim-msg" class="rv-textarea" placeholder="Share details of your experience (e.g. 'Excellent service and super helpful staff!')..." style="height:80px; margin-bottom:14px; background:#111318; border-color:#2A2E3D; font-size:0.88rem;"></textarea>
+                    <div style="margin-bottom:14px; background:#101216; padding:12px 16px; border-radius:10px; border:1px solid #232733; display:flex; align-items:center; justify-content:space-between;">
+                        <span style="font-size:0.85rem; color:var(--on-surface-variant);">Customer Selected Rating:</span>
+                        <span style="color:var(--g-yellow); font-size:1.3rem; letter-spacing:2px; text-shadow:0 0 10px rgba(251,188,5,0.7);">${stars}</span>
+                    </div>
+
+                    <!-- Quick suggestion chips -->
+                    <div style="margin-bottom:12px;">
+                        <div style="font-size:0.75rem; color:var(--on-surface-variant); margin-bottom:6px;">Quick Review Ideas (Click to test):</div>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button type="button" onclick="selectSimChip('google-sim-msg', '⭐ Exceptional service and super helpful staff! Highly recommend.')" style="background:#1E222D; border:1px solid #323848; color:var(--on-surface); font-size:0.75rem; padding:4px 10px; border-radius:12px; cursor:pointer;">⚡ Fast Service</button>
+                            <button type="button" onclick="selectSimChip('google-sim-msg', '⭐ Top quality care and great prices!')" style="background:#1E222D; border:1px solid #323848; color:var(--on-surface); font-size:0.75rem; padding:4px 10px; border-radius:12px; cursor:pointer;">😊 Friendly Staff</button>
+                            <button type="button" onclick="selectSimChip('google-sim-msg', '⭐ Clean store, easy parking, overall 5/5!')" style="background:#1E222D; border:1px solid #323848; color:var(--on-surface); font-size:0.75rem; padding:4px 10px; border-radius:12px; cursor:pointer;">🏆 Clean & Organized</button>
+                        </div>
+                    </div>
+
+                    <textarea id="google-sim-msg" class="rv-textarea" placeholder="Write details of your 5-star experience for Google Maps..." style="height:85px; margin-bottom:14px; background:#101216; border-color:#232733; font-size:0.88rem;"></textarea>
+
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                        <span style="font-size:0.78rem; color:var(--on-surface-variant);">Simulating Google Maps interface</span>
-                        <button class="btn-primary" onclick="submitGoogleSim()" style="width:auto; padding:10px 24px; font-size:0.88rem; background:var(--g-blue); border-radius:var(--radius-full);">Post Review to Google</button>
+                        <span style="font-size:0.78rem; color:var(--on-surface-variant);">Simulating Google Maps public API route</span>
+                        <button type="button" class="btn-primary" onclick="submitGoogleSim()" style="width:auto; padding:11px 24px; font-size:0.9rem; background:var(--g-blue); border-radius:var(--radius-full);">Publish Review to Google Maps 🚀</button>
                     </div>
                 </div>
 
-                <!-- Simulated Google Success screen -->
-                <div id="google-sim-success" class="hidden" style="text-align:center; padding:16px 8px; animation:cardIn 0.3s ease;">
-                    <div style="width:54px; height:54px; border-radius:50%; background:rgba(52,168,83,0.15); color:var(--g-green); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 12px; border:1px solid rgba(52,168,83,0.3);">✓</div>
-                    <h4 style="font-size:1.15rem; font-weight:700; color:var(--g-green); margin-bottom:6px;">Review Published on Google Maps!</h4>
-                    <p style="font-size:0.88rem; color:var(--on-surface-variant); margin-bottom:16px; line-height:1.5;">Your 5-star review is now live on Google, helping boost search ranking and local trust.</p>
-                    <button class="btn-sm primary" onclick="resetDemoSim()" style="padding:8px 18px; border-color:var(--outline); color:var(--on-surface); cursor:pointer;">← Reset Simulator</button>
+                <!-- Google Loading / Success State -->
+                <div id="google-sim-success" style="display:none; text-align:center; padding:16px 8px; animation:cardIn 0.3s ease;">
+                    <div style="width:60px; height:60px; border-radius:50%; background:rgba(52,168,83,0.15); color:var(--g-green-light); display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 12px; border:1.5px solid rgba(52,168,83,0.4); box-shadow:0 0 20px rgba(52,168,83,0.3);">✓</div>
+                    <h4 style="font-size:1.2rem; font-weight:700; color:var(--g-green-light); margin-bottom:6px;">Review Published on Google Maps!</h4>
+                    <p style="font-size:0.88rem; color:var(--on-surface-variant); margin-bottom:16px; line-height:1.5;">Your positive ${n}-star customer review has been instantly routed and posted directly to Google Maps, boosting your local SEO &amp; customer trust.</p>
+                    
+                    <div style="background:#101216; border:1px solid rgba(52,168,83,0.3); border-radius:10px; padding:12px; margin-bottom:16px; font-size:0.85rem; color:var(--on-surface); display:flex; justify-content:space-around; align-items:center;">
+                        <div><div style="font-size:0.75rem; color:var(--on-surface-variant);">Previous Rating</div><strong style="color:var(--on-surface-variant);">4.8 ★</strong></div>
+                        <div style="font-size:1.2rem; color:var(--g-green-light);">&rarr;</div>
+                        <div><div style="font-size:0.75rem; color:var(--on-surface-variant);">New Google Score</div><strong style="color:var(--g-green-light);">4.9 ★ (Boosted!)</strong></div>
+                    </div>
+
+                    <button type="button" class="btn-primary" onclick="resetDemoSim()" style="width:auto; padding:10px 24px; font-size:0.88rem; background:var(--surface-dim); border:1px solid var(--outline); color:var(--on-surface); cursor:pointer;">↺ Test Another Star Rating</button>
                 </div>
             </div>
         `;
@@ -1013,55 +1054,72 @@ function runInteractiveDemo(n) {
         }
 
         res.innerHTML = `
-            <div style="background: #181A20; border: 1px solid #303440; border-radius: var(--radius-md); padding: 24px; text-align: left; animation: cardIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
-                <!-- Shield Header -->
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid #2A2E3D; padding-bottom:14px; flex-wrap:wrap; gap:8px;">
+            <div style="background: #16181E; border: 1.5px solid rgba(251, 188, 5, 0.4); border-radius: var(--radius-md); padding: 24px; text-align: left; animation: cardIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; box-shadow: 0 12px 36px rgba(0,0,0,0.45); margin-top: 16px;">
+                <!-- Intercept Header -->
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid #282C38; padding-bottom:14px; flex-wrap:wrap; gap:8px;">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:1.2rem;">🛡️</span>
-                        <span style="font-weight:700; font-size:0.95rem; color:var(--on-surface);">Private Manager Feedback Form</span>
+                        <span style="font-size:1.3rem;">🛡️</span>
+                        <span style="font-weight:700; font-size:1rem; color:var(--on-surface);">Private Feedback Interceptor</span>
                     </div>
-                    <span style="background:rgba(251, 188, 5, 0.15); color:var(--g-yellow); font-size:0.75rem; font-weight:700; padding:4px 10px; border-radius:12px; border:1px solid rgba(251, 188, 5, 0.3);">🔒 Intercepted (Not Google)</span>
+                    <span style="background:rgba(251, 188, 5, 0.2); color:var(--g-yellow); font-size:0.75rem; font-weight:700; padding:4px 12px; border-radius:12px; border:1px solid rgba(251, 188, 5, 0.35);">🔒 INTERCEPTED (BLOCKED FROM GOOGLE)</span>
                 </div>
 
                 <div id="private-sim-form">
-                    <p style="font-size:0.88rem; color:var(--on-surface-variant); margin-bottom:14px; line-height:1.5;">
-                        We're sorry your experience wasn't 5 stars! Please let management know what went wrong so we can resolve it directly:
-                    </p>
-                    <div style="margin-bottom:14px; background:#111318; padding:10px 14px; border-radius:10px; border:1px solid #2A2E3D; display:flex; align-items:center; justify-content:space-between;">
-                        <span style="font-size:0.82rem; color:var(--on-surface-variant);">Rating Intercepted:</span>
-                        <span style="color:var(--g-yellow); font-size:1.1rem; letter-spacing:2px;">${stars}</span>
+                    <div style="background:rgba(251, 188, 5, 0.08); border:1px solid rgba(251,188,5,0.25); border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:0.86rem; color:var(--on-surface); line-height:1.5;">
+                        <strong>Smart Shield Active:</strong> This ${n}-star review was automatically intercepted before reaching Google Maps. The customer is prompted to send direct, private feedback to your management team instead.
                     </div>
-                    <textarea id="private-sim-msg" class="rv-textarea" placeholder="Type your test comment here (e.g. 'Wait time was too long at the counter')..." style="height:85px; margin-bottom:14px; background:#111318; border-color:rgba(251,188,5,0.3); font-size:0.88rem;"></textarea>
-                    <button class="btn-primary" onclick="submitPrivateSim(${n})" style="width:100%; padding:11px; font-size:0.9rem; background:var(--g-blue); border-radius:var(--radius-full);">Submit Private Note to Management ➔</button>
+
+                    <div style="margin-bottom:14px; background:#101216; padding:10px 14px; border-radius:10px; border:1px solid #232733; display:flex; align-items:center; justify-content:space-between;">
+                        <span style="font-size:0.82rem; color:var(--on-surface-variant);">Rating Intercepted:</span>
+                        <span style="color:var(--g-yellow); font-size:1.2rem; letter-spacing:2px;">${stars}</span>
+                    </div>
+
+                    <!-- Quick issue tags -->
+                    <div style="margin-bottom:12px;">
+                        <div style="font-size:0.75rem; color:var(--on-surface-variant); margin-bottom:6px;">Select Test Category:</div>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button type="button" onclick="selectSimChip('private-sim-msg', 'Wait time was longer than expected at the counter.')" style="background:#1E222D; border:1px solid #323848; color:var(--on-surface); font-size:0.75rem; padding:4px 10px; border-radius:12px; cursor:pointer;">⏳ Long Wait Time</button>
+                            <button type="button" onclick="selectSimChip('private-sim-msg', 'Order was missing an item.')" style="background:#1E222D; border:1px solid #323848; color:var(--on-surface); font-size:0.75rem; padding:4px 10px; border-radius:12px; cursor:pointer;">📦 Order Issue</button>
+                            <button type="button" onclick="selectSimChip('private-sim-msg', 'Customer service could be improved.')" style="background:#1E222D; border:1px solid #323848; color:var(--on-surface); font-size:0.75rem; padding:4px 10px; border-radius:12px; cursor:pointer;">😒 Staff Issue</button>
+                        </div>
+                    </div>
+
+                    <textarea id="private-sim-msg" class="rv-textarea" placeholder="Type test feedback for management (e.g. 'Wait time was too long at the counter')..." style="height:85px; margin-bottom:14px; background:#101216; border-color:rgba(251,188,5,0.3); font-size:0.88rem;"></textarea>
+
+                    <button type="button" class="btn-primary" onclick="submitPrivateSim(${n})" style="width:100%; padding:12px; font-size:0.92rem; background:var(--g-blue); border-radius:var(--radius-full);">Send Private Feedback to Owner Dashboard ➔</button>
                 </div>
 
                 <!-- Simulated Owner Dashboard Inbox Screen -->
-                <div id="private-sim-dashboard" class="hidden" style="animation:cardIn 0.35s ease;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; background:#111318; padding:12px 16px; border-radius:10px; border:1px solid rgba(66,133,244,0.3); flex-wrap:wrap; gap:8px;">
+                <div id="private-sim-dashboard" style="display:none; animation:cardIn 0.35s ease;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; background:#101216; padding:12px 16px; border-radius:10px; border:1px solid rgba(66,133,244,0.3); flex-wrap:wrap; gap:8px;">
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-size:1.1rem;">📊</span>
-                            <span style="font-weight:700; font-size:0.92rem; color:var(--on-surface);">Owner Dashboard — Private Inbox</span>
+                            <span style="font-size:1.2rem;">📊</span>
+                            <span style="font-weight:700; font-size:0.95rem; color:var(--on-surface);">Owner Private Dashboard — Live Inbox</span>
                         </div>
-                        <span style="background:var(--g-blue); color:white; font-size:0.7rem; font-weight:700; padding:2px 10px; border-radius:10px;">1 NEW UNREAD NOTE</span>
+                        <span style="background:var(--g-blue); color:white; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:10px;">1 NEW INTERCEPTED NOTE</span>
                     </div>
 
-                    <div style="background:#111318; border:1px dashed rgba(251,188,5,0.4); border-radius:12px; padding:16px; margin-bottom:16px;">
+                    <div style="background:#101216; border:1px dashed rgba(251,188,5,0.45); border-radius:12px; padding:16px; margin-bottom:16px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span style="color:var(--g-yellow); font-size:0.92rem; font-weight:700;">${stars} Intercepted Feedback</span>
-                            <span style="font-size:0.75rem; color:var(--on-surface-variant);">Just Now · Private</span>
+                            <span style="color:var(--g-yellow); font-size:0.95rem; font-weight:700;">${stars} Intercepted Feedback</span>
+                            <span style="font-size:0.75rem; color:var(--on-surface-variant);">Just Now · Private Note</span>
                         </div>
-                        <div style="font-size:0.9rem; color:var(--on-surface); font-style:italic; line-height:1.4;" id="dash-comment-text">
+                        <div style="font-size:0.92rem; color:var(--on-surface); font-style:italic; line-height:1.5; background:#16181E; padding:10px 12px; border-radius:8px; margin-bottom:10px;" id="dash-comment-text">
                             "Wait time was too long at the counter"
                         </div>
+                        <div style="display:flex; gap:10px; font-size:0.78rem;">
+                            <span style="color:var(--g-green-light);">✓ Shielded from public web</span>
+                            <span style="color:var(--on-surface-variant);">· Customer email captured</span>
+                        </div>
                     </div>
 
-                    <div style="background:rgba(52, 168, 83, 0.1); border:1px solid rgba(52, 168, 83, 0.25); border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:0.84rem; color:var(--g-green-light); display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:1.1rem;">🛡️</span>
-                        <span><strong>Shield Result:</strong> Zero negative reviews reached Google Maps!</span>
+                    <div style="background:rgba(52, 168, 83, 0.12); border:1px solid rgba(52, 168, 83, 0.3); border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:0.86rem; color:var(--g-green-light); display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.3rem;">🛡️</span>
+                        <span><strong>Result:</strong> 0 negative reviews reached Google Maps! Your 4.9★ rating remains protected.</span>
                     </div>
 
                     <div style="text-align:center;">
-                        <button class="btn-sm primary" onclick="resetDemoSim()" style="padding:8px 20px; border-color:var(--outline); color:var(--on-surface); cursor:pointer;">← Reset Simulator</button>
+                        <button type="button" class="btn-primary" onclick="resetDemoSim()" style="width:auto; padding:10px 24px; font-size:0.88rem; background:var(--surface-dim); border:1px solid var(--outline); color:var(--on-surface); cursor:pointer;">↺ Test Another Star Rating</button>
                     </div>
                 </div>
             </div>
@@ -1069,31 +1127,43 @@ function runInteractiveDemo(n) {
     }
 }
 
+function selectSimChip(textareaId, text) {
+    const el = document.getElementById(textareaId);
+    if (el) el.value = text;
+}
+
 function submitGoogleSim() {
     const form = document.getElementById('google-sim-form');
     const succ = document.getElementById('google-sim-success');
-    if (form) form.classList.add('hidden');
-    if (succ) succ.classList.remove('hidden');
+    if (form) form.style.display = 'none';
+    if (succ) succ.style.display = 'block';
 }
 
 function submitPrivateSim(rating) {
     const msgInput = document.getElementById('private-sim-msg');
-    const txt = (msgInput && msgInput.value.trim()) ? msgInput.value.trim() : "Service was slower than expected today.";
+    const txt = (msgInput && msgInput.value.trim()) ? msgInput.value.trim() : "Wait time was longer than expected at the counter.";
     
     const form = document.getElementById('private-sim-form');
     const dash = document.getElementById('private-sim-dashboard');
     const commentEl = document.getElementById('dash-comment-text');
 
     if (commentEl) commentEl.textContent = '"' + txt + '"';
-    if (form) form.classList.add('hidden');
-    if (dash) dash.classList.remove('hidden');
+    if (form) form.style.display = 'none';
+    if (dash) dash.style.display = 'block';
 }
 
 function resetDemoSim() {
-    demoResetHover();
     currentDemoRating = 0;
     const btns = document.querySelectorAll('#demo-stars button');
-    btns.forEach(btn => btn.classList.remove('active', 'hovered'));
+    btns.forEach(btn => {
+        btn.classList.remove('active', 'hovered');
+        btn.style.color = 'var(--outline)';
+        btn.style.textShadow = 'none';
+        btn.style.transform = 'scale(1)';
+    });
+    const hint = document.getElementById('demo-star-hint');
+    if (hint) hint.style.opacity = '0';
+
     const res = document.getElementById('demo-result');
     if (res) res.style.display = 'none';
 

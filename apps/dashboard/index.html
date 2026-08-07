@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src  'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+        style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src    https://fonts.gstatic.com;
+        connect-src https://*.supabase.co;
+        img-src     'self' data:;
+    ">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Portal — Taqyeemi</title>
+    <meta name="description" content="Taqyeemi Owner Portal for reviewing private customer feedback and complaints.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Readex+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --g-blue:#4285F4;--g-blue-dark:#1A73E8;--g-red:#EA4335;
+            --g-yellow:#FBBC05;--g-green:#34A853;--g-green-light:#81C995;
+            --surface:#1E1E22;--surface-dim:#111114;--surface-container:#26262B;
+            --surface-bright:#2C2C32;--on-surface:#E8EAED;
+            --on-surface-variant:#9AA0A6;--outline:#3C4043;--outline-variant:#2C2F33;
+            --shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow-md:0 4px 16px rgba(0,0,0,.4);
+            --shadow-lg:0 8px 40px rgba(0,0,0,.5);
+            --radius-sm:10px;--radius-md:16px;--radius-lg:24px;--radius-full:9999px;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html{font-size:16px;-webkit-font-smoothing:antialiased}
+        body{font-family:'Inter','Readex Pro',sans-serif;background:var(--surface-dim);color:var(--on-surface);min-height:100vh;display:flex;flex-direction:column}
+
+        /* BG BLOBS */
+        .bg-blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+        .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.28}
+        .blob--blue{width:380px;height:380px;background:var(--g-blue);top:-8%;left:-6%;animation:bA 15s ease-in-out infinite alternate}
+        .blob--red{width:300px;height:300px;background:var(--g-red);bottom:-10%;right:-6%;animation:bB 17s ease-in-out infinite alternate}
+        @keyframes bA{0%{transform:translate(0,0)}100%{transform:translate(30vw,35vh)}}
+        @keyframes bB{0%{transform:translate(0,0)}100%{transform:translate(-30vw,-35vh)}}
+
+        /* AUTH CARD */
+        .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;position:relative;z-index:1}
+        .auth-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:440px;padding:40px 32px;position:relative;text-align:left}
+        html[dir="rtl"] .auth-card { text-align: right; }
+        .auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;background:linear-gradient(90deg,var(--g-blue),var(--g-green))}
+        .auth-logo{font-size:2.2rem;margin-bottom:8px;text-align:center}
+        .auth-title{font-size:1.4rem;font-weight:700;margin-bottom:4px;text-align:center}
+        .auth-sub{font-size:.85rem;color:var(--on-surface-variant);margin-bottom:24px;line-height:1.6;text-align:center}
+
+        .auth-top-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+        .btn-lang-toggle {
+            background: var(--surface-container); color: var(--on-surface); border: 1px solid var(--outline);
+            padding: 4px 12px; border-radius: var(--radius-full); font-weight: 600; font-size: 0.78rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-lang-toggle:hover { border-color: var(--g-blue); color: var(--g-blue); }
+
+        /* FORMS */
+        .form-group{margin-bottom:16px;text-align:left}
+        html[dir="rtl"] .form-group { text-align: right; }
+        .form-label{display:block;font-size:.76rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px}
+        .form-input{width:100%;padding:12px 14px;background:var(--surface-dim);border:1.5px solid var(--outline);border-radius:var(--radius-sm);color:var(--on-surface);font-family:inherit;font-size:.92rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+        .form-input:focus{border-color:var(--g-blue);box-shadow:0 0 0 3px rgba(66,133,244,.2)}
+        .btn-primary{width:100%;padding:13px;margin-top:8px;background:var(--g-blue);color:white;border:none;border-radius:var(--radius-full);font-family:inherit;font-size:.95rem;font-weight:600;cursor:pointer;transition:background .2s,transform .15s}
+        .btn-primary:hover{background:var(--g-blue-dark);transform:translateY(-1px)}
+        .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .err-box{background:rgba(234,67,53,.12);border:1px solid rgba(234,67,53,.3);color:#f28b82;padding:10px 14px;border-radius:var(--radius-sm);font-size:.85rem;margin-top:14px;display:none;}
+        .err-box.show{display:block}
+
+        /* NAVBAR */
+        .navbar{background:var(--surface);border-bottom:1px solid var(--outline-variant);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .navbar-left{display:flex;align-items:center;gap:10px}
+        .navbar-icon{font-size:1.3rem}
+        .navbar-name{font-size:1rem;font-weight:700}
+        .navbar-badge{background:var(--g-blue);color:white;font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:var(--radius-full)}
+        .navbar-right{display:flex;align-items:center;gap:10px}
+        .btn-logout{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface-variant);padding:7px 16px;border-radius:var(--radius-full);font-family:inherit;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s}
+        .btn-logout:hover{background:rgba(234,67,53,.15);color:#f28b82;border-color:rgba(234,67,53,.3)}
+
+        /* DASHBOARD SCREEN */
+        #db-screen{display:flex;flex-direction:column;flex:1;position:relative;z-index:1}
+        .db-stats{padding:20px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+        .db-stat{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:18px 20px;text-align:left}
+        html[dir="rtl"] .db-stat { text-align: right; }
+        .db-stat-label{font-size:.76rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+        .db-stat-value{font-size:1.85rem;font-weight:700;line-height:1}
+        .db-stat-sub{font-size:.75rem;color:var(--on-surface-variant);margin-top:6px}
+        .db-filters{padding:0 24px 16px;display:flex;gap:8px;flex-wrap:wrap}
+        .db-filter{padding:7px 16px;border:1px solid var(--outline);border-radius:var(--radius-full);background:none;color:var(--on-surface-variant);font-family:inherit;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s}
+        .db-filter.active{background:var(--g-blue);border-color:var(--g-blue);color:white}
+        .db-filter:hover:not(.active){border-color:var(--g-blue);color:var(--on-surface)}
+        .db-list{padding:0 24px 40px;display:flex;flex-direction:column;gap:14px}
+        .db-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:20px 22px;transition:border-color .2s;text-align:left}
+        html[dir="rtl"] .db-card { text-align: right; }
+        .db-card:hover{border-color:rgba(66,133,244,.35)}
+        .db-card.unread{border-left:4px solid var(--g-blue)}
+        html[dir="rtl"] .db-card.unread{border-left:none;border-right:4px solid var(--g-blue)}
+        .db-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+        .db-card-stars{color:var(--g-yellow);font-size:1.1rem;letter-spacing:1px;direction:ltr}
+        .db-card-date{font-size:.78rem;color:var(--on-surface-variant)}
+        .db-card-text{font-size:.95rem;color:var(--on-surface);line-height:1.7;margin-bottom:14px}
+        .db-card-footer{display:flex;justify-content:flex-end}
+        .btn-mark-read{background:none;border:1px solid var(--outline);color:var(--on-surface-variant);padding:6px 14px;border-radius:var(--radius-full);font-family:inherit;font-size:.8rem;cursor:pointer;transition:all .2s}
+        .btn-mark-read:hover{border-color:var(--g-green);color:var(--g-green)}
+        .read-badge{font-size:.78rem;color:var(--on-surface-variant);opacity:.6}
+
+        .spinner{width:36px;height:36px;border:3px solid var(--outline);border-top-color:var(--g-blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .state-box{text-align:center;padding:60px 20px;color:var(--on-surface-variant)}
+        .state-icon{font-size:3rem;margin-bottom:12px}
+        .state-title{font-size:1.05rem;font-weight:600;margin-bottom:6px;color:var(--on-surface)}
+        .state-sub{font-size:.88rem;line-height:1.6}
+        .hidden{display:none !important}
+    </style>
+</head>
+<body>
+
+<div class="bg-blobs" aria-hidden="true">
+    <div class="blob blob--blue"></div>
+    <div class="blob blob--red"></div>
+</div>
+
+<!-- LOGIN SCREEN (Enforced Auth Guard) -->
+<div class="auth-wrap" id="db-auth">
+    <div class="auth-card">
+        <div class="auth-top-row">
+            <button class="btn-lang-toggle" onclick="toggleLanguage()" id="db-lang-btn">🌐 العربية</button>
+        </div>
+        <div class="auth-logo">&#x1F37D;&#xFE0F;</div>
+        <h1 class="auth-title" id="txt-auth-title">Owner Portal</h1>
+        <p class="auth-sub" id="txt-auth-sub">Sign in to review private customer feedback and manager alerts.</p>
+
+        <div class="auth-tabs" style="display:flex;gap:0;margin-bottom:20px;background:var(--surface-dim);border-radius:var(--radius-sm);padding:3px;">
+            <button type="button" class="auth-tab active" id="db-tab-login" onclick="dbSwitchTab('login')" style="flex:1;padding:8px;border:none;background:var(--surface);border-radius:6px;color:var(--on-surface);font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;">Log In</button>
+            <button type="button" class="auth-tab" id="db-tab-activate" onclick="dbSwitchTab('activate')" style="flex:1;padding:8px;border:none;background:none;border-radius:6px;color:var(--on-surface-variant);font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;">First-Time Activation</button>
+        </div>
+
+        <div id="db-form-login">
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-login-email">Approved Email</label>
+                <input class="form-input" type="email" id="db-email" placeholder="owner@business.com" required dir="ltr">
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-login-pass">Password</label>
+                <input class="form-input" type="password" id="db-password" placeholder="••••••••" required dir="ltr">
+            </div>
+            <button class="btn-primary" id="db-btn-login" onclick="dbLogin()">Sign In to Dashboard &rarr;</button>
+            <div class="err-box" id="db-login-err"></div>
+        </div>
+
+        <div id="db-form-activate" class="hidden">
+            <p class="form-hint" style="margin-bottom:14px;color:var(--on-surface-variant);font-size:0.84rem;line-height:1.5;" id="txt-act-hint">
+                If your business email was provisioned by Taqyeemi Admin, enter it below to set your password and activate your portal.
+            </p>
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-act-email">Approved Email</label>
+                <input class="form-input" type="email" id="db-act-email" placeholder="owner@business.com" required dir="ltr">
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-act-pass">Set Password</label>
+                <input class="form-input" type="password" id="db-act-pass" placeholder="Min. 8 characters" required minlength="8" dir="ltr">
+            </div>
+            <button class="btn-primary" id="db-btn-activate" onclick="dbActivate()">Activate Account &rarr;</button>
+            <div class="err-box" id="db-act-err"></div>
+        </div>
+    </div>
+</div>
+
+<!-- PROTECTED OWNER DASHBOARD SCREEN -->
+<div id="db-screen" class="hidden">
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-icon">&#x1F37D;&#xFE0F;</span>
+            <span class="navbar-name" id="db-rest-name">My Business</span>
+            <span class="navbar-badge hidden" id="db-unread-badge">0</span>
+        </div>
+        <div class="navbar-right">
+            <button class="btn-lang-toggle" onclick="toggleLanguage()" id="db-nav-lang-btn">🌐 العربية</button>
+            <button class="btn-logout" onclick="dbLogout()" id="txt-btn-logout">Log Out</button>
+        </div>
+    </nav>
+    <div class="db-stats">
+        <div class="db-stat">
+            <div class="db-stat-label" id="txt-stat-lbl-total">Total Reviews</div>
+            <div class="db-stat-value" id="db-stat-total" style="color:var(--g-blue)">&#x2014;</div>
+            <div class="db-stat-sub" id="txt-stat-sub-total">Customer notes</div>
+        </div>
+        <div class="db-stat">
+            <div class="db-stat-label" id="txt-stat-lbl-avg">Average Rating</div>
+            <div class="db-stat-value" id="db-stat-avg" style="color:var(--g-yellow)">&#x2014;</div>
+            <div class="db-stat-sub" id="txt-stat-sub-avg">Out of 5 stars</div>
+        </div>
+        <div class="db-stat">
+            <div class="db-stat-label" id="txt-stat-lbl-unread">Unread</div>
+            <div class="db-stat-value" id="db-stat-unread" style="color:var(--g-green)">&#x2014;</div>
+            <div class="db-stat-sub" id="txt-stat-sub-unread">New items</div>
+        </div>
+    </div>
+    <div class="db-filters">
+        <button class="db-filter active" data-f="all" onclick="dbFilter('all')" id="txt-flt-all">All</button>
+        <button class="db-filter" data-f="unread" onclick="dbFilter('unread')" id="txt-flt-unread">Unread</button>
+        <button class="db-filter" data-f="1" onclick="dbFilter('1')">&#9733; 1 Star</button>
+        <button class="db-filter" data-f="2" onclick="dbFilter('2')">&#9733;&#9733; 2 Stars</button>
+        <button class="db-filter" data-f="3" onclick="dbFilter('3')">&#9733;&#9733;&#9733; 3 Stars</button>
+    </div>
+    <div class="db-list" id="db-list">
+        <div class="state-box"><div class="spinner"></div><div class="state-title" id="txt-loading-title">Loading Customer Reviews...</div></div>
+    </div>
+</div>
+
+<script>
+let SUPABASE_URL = 'https://tldzmrghbvqfaclantlr.supabase.co';
+let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
+let sb = null;
+let dbFeedback = [], dbFilter_ = 'all', dbClientId_ = null;
+let currentLang = 'en';
+
+const i18n = {
+    en: {
+        langBtn: '🌐 العربية',
+        authTitle: 'Owner Portal',
+        authSub: 'Sign in to review private customer feedback and manager alerts.',
+        tabLogin: 'Log In',
+        tabActivate: 'First-Time Activation',
+        lblLoginEmail: 'Approved Email',
+        lblLoginPass: 'Password',
+        btnLogin: 'Sign In to Dashboard →',
+        actHint: 'If your business email was provisioned by Taqyeemi Admin, enter it below to set your password and activate your portal.',
+        lblActEmail: 'Approved Email',
+        lblActPass: 'Set Password',
+        btnActivate: 'Activate Account →',
+        btnLogout: 'Log Out',
+        statLblTotal: 'Total Reviews',
+        statSubTotal: 'Customer notes',
+        statLblAvg: 'Average Rating',
+        statSubAvg: 'Out of 5 stars',
+        statLblUnread: 'Unread',
+        statSubUnread: 'New items',
+        fltAll: 'All',
+        fltUnread: 'Unread',
+        loadingTitle: 'Loading Customer Reviews...',
+        markRead: '✓ Mark as Read',
+        readBadge: '✓ Read'
+    },
+    ar: {
+        langBtn: '🌐 English',
+        authTitle: 'لوحة تحكم تقييمي',
+        authSub: 'تابع ملاحظات وشكاوى العملاء الخاصة بنشاطك التجاري سرّاً.',
+        tabLogin: 'تسجيل الدخول',
+        tabActivate: 'تفعيل الحساب لأول مرة',
+        lblLoginEmail: 'البريد الإلكتروني المعتمد',
+        lblLoginPass: 'كلمة المرور',
+        btnLogin: 'تسجيل الدخول للوحة التحكم ←',
+        actHint: 'إذا تم اعتماد بريدك الإلكتروني من الإدارة، أدخل بريدك أدناه لإنشاء كلمة المرور وتفعيل لوحة التحكم.',
+        lblActEmail: 'البريد الإلكتروني المعتمد',
+        lblActPass: 'تعيين كلمة المرور',
+        btnActivate: 'تفعيل الحساب والدخول ←',
+        btnLogout: 'تسجيل الخروج',
+        statLblTotal: 'إجمالي التقييمات',
+        statSubTotal: 'تقييم وملاحظة',
+        statLblAvg: 'متوسط النجوم',
+        statSubAvg: 'من 5 نجوم',
+        statLblUnread: 'غير مقروءة',
+        statSubUnread: 'ملاحظة جديدة',
+        fltAll: 'الكل',
+        fltUnread: 'غير المقروءة',
+        loadingTitle: 'جاري تحميل ملاحظات العملاء...',
+        markRead: '✓ تحديد كمقروء',
+        readBadge: '✓ تم الاطلاع'
+    }
+};
+
+function setLanguage(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    const t = i18n[lang];
+
+    document.getElementById('db-lang-btn').textContent = t.langBtn;
+    document.getElementById('db-nav-lang-btn').textContent = t.langBtn;
+    document.getElementById('txt-auth-title').textContent = t.authTitle;
+    document.getElementById('txt-auth-sub').textContent = t.authSub;
+    document.getElementById('db-tab-login').textContent = t.tabLogin;
+    document.getElementById('db-tab-activate').textContent = t.tabActivate;
+    document.getElementById('txt-lbl-login-email').textContent = t.lblLoginEmail;
+    document.getElementById('txt-lbl-login-pass').textContent = t.lblLoginPass;
+    document.getElementById('db-btn-login').textContent = t.btnLogin;
+    document.getElementById('txt-act-hint').textContent = t.actHint;
+    document.getElementById('txt-lbl-act-email').textContent = t.lblActEmail;
+    document.getElementById('txt-lbl-act-pass').textContent = t.lblActPass;
+    document.getElementById('db-btn-activate').textContent = t.btnActivate;
+    document.getElementById('txt-btn-logout').textContent = t.btnLogout;
+    document.getElementById('txt-stat-lbl-total').textContent = t.statLblTotal;
+    document.getElementById('txt-stat-sub-total').textContent = t.statSubTotal;
+    document.getElementById('txt-stat-lbl-avg').textContent = t.statLblAvg;
+    document.getElementById('txt-stat-sub-avg').textContent = t.statSubAvg;
+    document.getElementById('txt-stat-lbl-unread').textContent = t.statLblUnread;
+    document.getElementById('txt-stat-sub-unread').textContent = t.statSubUnread;
+    document.getElementById('txt-flt-all').textContent = t.fltAll;
+    document.getElementById('txt-flt-unread').textContent = t.fltUnread;
+
+    localStorage.setItem('preferred_lang', lang);
+    if (dbFeedback.length > 0) dbRender();
+}
+
+function toggleLanguage() {
+    setLanguage(currentLang === 'en' ? 'ar' : 'en');
+}
+
+async function initConfig() {
+    try {
+        const res = await fetch('/api/config');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.SUPABASE_URL && data.SUPABASE_ANON_KEY) {
+                SUPABASE_URL = data.SUPABASE_URL;
+                SUPABASE_ANON_KEY = data.SUPABASE_ANON_KEY;
+            }
+        }
+    } catch(e) {}
+    if (window.supabase) {
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+}
+
+async function checkAuthSession() {
+    if (!sb) await initConfig();
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+        dbEnter(session.user);
+    } else {
+        document.getElementById('db-screen').classList.add('hidden');
+        document.getElementById('db-auth').classList.remove('hidden');
+    }
+}
+
+function dbSwitchTab(t) {
+    const isLogin = (t === 'login');
+    document.getElementById('db-tab-login').style.background = isLogin ? 'var(--surface)' : 'none';
+    document.getElementById('db-tab-login').style.color = isLogin ? 'var(--on-surface)' : 'var(--on-surface-variant)';
+    document.getElementById('db-tab-activate').style.background = isLogin ? 'none' : 'var(--surface)';
+    document.getElementById('db-tab-activate').style.color = isLogin ? 'var(--on-surface-variant)' : 'var(--on-surface)';
+    
+    document.getElementById('db-form-login').classList.toggle('hidden', !isLogin);
+    document.getElementById('db-form-activate').classList.toggle('hidden', isLogin);
+}
+
+async function dbActivate() {
+    const email = document.getElementById('db-act-email').value.trim().toLowerCase();
+    const pass = document.getElementById('db-act-pass').value;
+    const btn = document.getElementById('db-btn-activate'), err = document.getElementById('db-act-err');
+    
+    if (!email || !pass) { dbErr(err, currentLang === 'ar' ? 'يرجى إدخال البريد الإلكتروني وكلمة المرور.' : 'Please enter your email and password.'); return; }
+    if (pass.length < 8) { dbErr(err, currentLang === 'ar' ? 'كلمة المرور يجب أن تكون 8 خانات على الأقل.' : 'Password must be at least 8 characters.'); return; }
+    
+    btn.disabled = true; btn.textContent = currentLang === 'ar' ? 'جاري تفعيل الحساب...' : 'Activating account...'; err.classList.remove('show');
+    
+    const { data, error } = await sb.auth.signUp({ email, password: pass });
+    if (error) {
+        let msg = error.message;
+        if (msg.includes('Registration restricted')) {
+            msg = currentLang === 'ar' ? 'التسجيل مقيّد: هذا البريد الإلكتروني لم يتم اعتماده مسبقاً.' : 'Registration restricted: Email not pre-approved by Admin.';
+        }
+        dbErr(err, msg);
+        btn.disabled = false; btn.textContent = i18n[currentLang].btnActivate;
+        return;
+    }
+    if (data.session) {
+        dbEnter(data.session.user);
+    } else if (data.user) {
+        dbEnter(data.user);
+    }
+}
+
+async function dbLogin() {
+    const email = document.getElementById('db-email').value.trim(), pass = document.getElementById('db-password').value;
+    const btn = document.getElementById('db-btn-login'), err = document.getElementById('db-login-err');
+    if (!email || !pass) { dbErr(err, currentLang === 'ar' ? 'يرجى إدخال البريد الإلكتروني وكلمة المرور.' : 'Please enter your email and password.'); return; }
+    btn.disabled = true; btn.textContent = currentLang === 'ar' ? 'جاري التحقق...' : 'Signing in...'; err.classList.remove('show');
+    
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) {
+        dbErr(err, currentLang === 'ar' ? 'بيانات الدخول غير صحيحة. انقر على تفعيل الحساب لأول مرة إذا كانت هذه المرة الأولى لك.' : 'Invalid credentials. If this is your first time, click First-Time Activation.');
+        btn.disabled = false; btn.textContent = i18n[currentLang].btnLogin;
+        return;
+    }
+    dbEnter(data.user);
+}
+
+async function dbEnter(user) {
+    document.getElementById('db-auth').classList.add('hidden');
+    const s = document.getElementById('db-screen');
+    s.classList.remove('hidden');
+    
+    let { data: client } = await sb.from('clients').select('id,name').eq('owner_user_id', user.id).maybeSingle();
+    
+    if (!client && sb) {
+        try {
+            await sb.rpc('claim_restaurant');
+            const { data: claimed } = await sb.from('clients').select('id,name').eq('owner_user_id', user.id).maybeSingle();
+            client = claimed;
+        } catch(e) {}
+    }
+
+    if (!client && user.email) {
+        await sb.from('clients')
+            .update({ owner_user_id: user.id })
+            .ilike('owner_email', user.email.trim());
+
+        const { data: recheck } = await sb.from('clients').select('id,name').eq('owner_user_id', user.id).maybeSingle();
+        client = recheck;
+    }
+
+    if (!client) {
+        document.getElementById('db-list').innerHTML = '<div class="state-box"><div class="state-icon">\u26A0\uFE0F</div><div class="state-title">Account Not Linked</div><div class="state-sub">Your login is authenticated, but no pre-registered business record was found for "' + esc(user.email) + '". Please contact your Taqyeemi Administrator.</div></div>';
+        document.getElementById('db-rest-name').textContent = user.email;
+        return;
+    }
+    dbClientId_ = client.id;
+    document.getElementById('db-rest-name').textContent = client.name;
+    document.title = client.name + ' — Owner Portal';
+    await dbLoad();
+}
+
+async function dbLoad() {
+    const { data } = await sb.from('feedback').select('*').eq('client_id', dbClientId_).order('submitted_at', { ascending: false });
+    dbFeedback = data || [];
+    dbUpdateStats();
+    dbRender();
+}
+
+function dbUpdateStats() {
+    const total = dbFeedback.length, unread = dbFeedback.filter(f => !f.is_read).length;
+    const avg = total > 0 ? (dbFeedback.reduce((s,f) => s+f.rating, 0)/total).toFixed(1) : '—';
+    document.getElementById('db-stat-total').textContent = total;
+    document.getElementById('db-stat-avg').textContent = avg;
+    document.getElementById('db-stat-unread').textContent = unread;
+    const b = document.getElementById('db-unread-badge');
+    b.textContent = unread;
+    b.classList.toggle('hidden', unread === 0);
+}
+
+function dbFilter(f) {
+    dbFilter_ = f;
+    document.querySelectorAll('.db-filter').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+    dbRender();
+}
+
+function dbRender() {
+    const list = document.getElementById('db-list');
+    const items = dbFilter_ === 'all' ? dbFeedback : dbFilter_ === 'unread' ? dbFeedback.filter(f => !f.is_read) : dbFeedback.filter(f => f.rating === parseInt(dbFilter_));
+    if (!items.length) {
+        list.innerHTML = currentLang === 'ar'
+            ? '<div class="state-box"><div class="state-icon">\uD83D\uDCAC</div><div class="state-title">لا توجد ملاحظات حالياً</div><div class="state-sub">عندما يترك العملاء ملاحظات خاصة، ستظهر هنا في الوقت الفعلي.</div></div>'
+            : '<div class="state-box"><div class="state-icon">\uD83D\uDCAC</div><div class="state-title">No customer feedback yet</div><div class="state-sub">When customers submit private feedback, it will appear here in real-time.</div></div>';
+        return;
+    }
+    const t = i18n[currentLang];
+    list.innerHTML = items.map(f => {
+        const stars = '★'.repeat(f.rating) + '☆'.repeat(5-f.rating);
+        const date = new Date(f.submitted_at).toLocaleDateString(currentLang === 'ar' ? 'ar-SA' : 'en-US', { year:'numeric',month:'short',day:'numeric' });
+        return `<div class="db-card ${f.is_read ? '' : 'unread'}">
+            <div class="db-card-header"><span class="db-card-stars">${stars}</span><span class="db-card-date">${date}</span></div>
+            <p class="db-card-text">${esc(f.feedback_text)}</p>
+            <div class="db-card-footer">${f.is_read ? `<span class="read-badge">${t.readBadge}</span>` : `<button class="btn-mark-read" onclick="dbMarkRead('${f.id}')">${t.markRead}</button>`}</div>
+        </div>`;
+    }).join('');
+}
+
+async function dbMarkRead(id) {
+    await sb.from('feedback').update({ is_read: true }).eq('id', id);
+    const f = dbFeedback.find(x => x.id === id);
+    if (f) f.is_read = true;
+    dbUpdateStats();
+    dbRender();
+}
+
+async function dbLogout() {
+    await sb.auth.signOut();
+    dbFeedback = [];
+    document.getElementById('db-screen').classList.add('hidden');
+    document.getElementById('db-auth').classList.remove('hidden');
+}
+
+function dbErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+(async () => {
+    const savedLang = localStorage.getItem('preferred_lang') || 'en';
+    setLanguage(savedLang);
+    await checkAuthSession();
+    if (sb) {
+        sb.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                document.getElementById('db-screen').classList.add('hidden');
+                document.getElementById('db-auth').classList.remove('hidden');
+            }
+        });
+    }
+})();
+</script>
+</body>
+</html>

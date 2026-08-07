@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src  'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+        style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src    https://fonts.gstatic.com;
+        connect-src https://*.supabase.co;
+        img-src     'self' data:;
+    ">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — Taqyeemi Platform</title>
+    <meta name="description" content="Super-Admin Platform Panel for Taqyeemi">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --g-blue:#4285F4;--g-blue-dark:#1A73E8;--g-red:#EA4335;
+            --g-yellow:#FBBC05;--g-green:#34A853;--g-green-light:#81C995;
+            --surface:#1E1E22;--surface-dim:#111114;--surface-container:#26262B;
+            --surface-bright:#2C2C32;--on-surface:#E8EAED;
+            --on-surface-variant:#9AA0A6;--outline:#3C4043;--outline-variant:#2C2F33;
+            --shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow-md:0 4px 16px rgba(0,0,0,.4);
+            --shadow-lg:0 8px 40px rgba(0,0,0,.5);
+            --radius-sm:10px;--radius-md:16px;--radius-lg:24px;--radius-full:9999px;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html{font-size:16px;-webkit-font-smoothing:antialiased}
+        body{font-family:'Inter',sans-serif;background:var(--surface-dim);color:var(--on-surface);min-height:100vh;display:flex;flex-direction:column}
+
+        /* BG BLOBS */
+        .bg-blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+        .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.25}
+        .blob--blue{width:380px;height:380px;background:var(--g-blue);top:-8%;left:-6%}
+        .blob--red{width:300px;height:300px;background:var(--g-red);bottom:-10%;right:-6%}
+
+        /* AUTH CARD */
+        .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;position:relative;z-index:1}
+        .auth-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:400px;padding:40px 32px;position:relative}
+        .auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;background:linear-gradient(90deg,var(--g-blue),var(--g-red) 50%,var(--g-yellow))}
+        .auth-logo{font-size:2rem;margin-bottom:8px;text-align:center}
+        .auth-title{font-size:1.4rem;font-weight:700;margin-bottom:4px;text-align:center}
+        .auth-sub{font-size:.85rem;color:var(--on-surface-variant);margin-bottom:24px;line-height:1.5;text-align:center}
+
+        /* FORMS */
+        .form-group{margin-bottom:16px;text-align:left}
+        .form-label{display:block;font-size:.76rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+        .form-input{width:100%;padding:12px 14px;background:var(--surface-dim);border:1.5px solid var(--outline);border-radius:var(--radius-sm);color:var(--on-surface);font-family:inherit;font-size:.92rem;outline:none;transition:border-color .2s,box-shadow .2s}
+        .form-input:focus{border-color:var(--g-blue);box-shadow:0 0 0 3px rgba(66,133,244,.2)}
+        .btn-primary{width:100%;padding:13px;margin-top:8px;background:var(--g-blue);color:white;border:none;border-radius:var(--radius-full);font-family:inherit;font-size:.95rem;font-weight:600;cursor:pointer;transition:background .2s,transform .15s}
+        .btn-primary:hover{background:var(--g-blue-dark);transform:translateY(-1px)}
+        .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .err-box{background:rgba(234,67,53,.12);border:1px solid rgba(234,67,53,.3);color:#f28b82;padding:10px 14px;border-radius:var(--radius-sm);font-size:.85rem;margin-top:14px;display:none}
+        .err-box.show{display:block}
+
+        /* ADMIN SCREEN */
+        #mgr-screen{display:flex;flex-direction:column;flex:1;position:relative;z-index:1}
+        .navbar{background:var(--surface);border-bottom:1px solid var(--outline-variant);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .navbar-left{display:flex;align-items:center;gap:10px}
+        .navbar-icon{font-size:1.3rem}
+        .navbar-name{font-size:1rem;font-weight:700}
+        .navbar-tag{background:rgba(66,133,244,.15);color:var(--g-blue);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:var(--radius-full);letter-spacing:.05em}
+        .btn-logout{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface-variant);padding:7px 14px;border-radius:var(--radius-full);font-family:inherit;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s}
+        .btn-logout:hover{background:rgba(234,67,53,.15);color:#f28b82;border-color:rgba(234,67,53,.3)}
+
+        .admin-body{display:flex;flex:1}
+        .sidebar{width:240px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--outline-variant);padding:20px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
+        .sidebar-section{font-size:.7rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.08em;padding:4px 12px;margin-top:8px;margin-bottom:2px}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--on-surface-variant);font-size:.9rem;font-weight:500;transition:background .15s,color .15s;border:none;background:none;font-family:inherit;width:100%;text-align:left}
+        .nav-item:hover{background:var(--surface-container);color:var(--on-surface)}
+        .nav-item.active{background:rgba(66,133,244,.12);color:var(--g-blue)}
+        .nav-icon{font-size:1rem;width:20px;text-align:center}
+        .nav-badge{margin-left:auto;background:var(--g-blue);color:white;font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:var(--radius-full)}
+
+        .mgr-content{flex:1;padding:28px;overflow-y:auto}
+        .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+        .page-title{font-size:1.3rem;font-weight:700}
+        .page-sub{font-size:.85rem;color:var(--on-surface-variant);margin-top:2px}
+        .btn-add{display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--g-blue);color:white;border:none;border-radius:var(--radius-full);font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;transition:background .2s,transform .15s}
+        .btn-add:hover{background:var(--g-blue-dark);transform:translateY(-1px)}
+
+        /* TABLE & CARDS */
+        .leads-table-container{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);overflow:hidden;margin-top:16px}
+        .leads-table{width:100%;border-collapse:collapse;text-align:left;font-size:0.88rem}
+        .leads-table th{background:var(--surface-container);padding:12px 16px;color:var(--on-surface-variant);font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--outline-variant)}
+        .leads-table td{padding:14px 16px;border-bottom:1px solid var(--outline-variant);vertical-align:middle;color:var(--on-surface)}
+        .leads-table tr:last-child td{border-bottom:none}
+        .status-badge{font-size:0.72rem;font-weight:700;padding:3px 9px;border-radius:var(--radius-full);display:inline-block}
+        .status-badge.pending{background:rgba(251,188,5,0.15);color:var(--g-yellow)}
+        .status-badge.invited{background:rgba(52,168,83,0.15);color:var(--g-green)}
+        .status-badge.contacted{background:rgba(66,133,244,0.15);color:var(--g-blue)}
+        .resub-badge{background:rgba(234,67,53,0.15);color:#f28b82;font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:var(--radius-full);margin-left:6px}
+
+        .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+        .summary-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:20px}
+        .summary-label{font-size:.75rem;font-weight:500;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+        .summary-value{font-size:2rem;font-weight:700}
+
+        .rest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+        .rest-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:20px;display:flex;flex-direction:column;gap:12px}
+        .rc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+        .rc-name{font-size:1rem;font-weight:700}
+        .rc-slug{font-size:.78rem;color:var(--on-surface-variant);margin-top:2px;font-family:monospace}
+        .rc-status{flex-shrink:0;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:var(--radius-full)}
+        .rc-status.on{background:rgba(52,168,83,.15);color:var(--g-green)}
+        .rc-status.off{background:rgba(234,67,53,.12);color:var(--g-red)}
+        .rc-stats{display:flex;gap:16px}
+        .rc-stat{text-align:center}
+        .rc-stat-val{font-size:1.1rem;font-weight:700}
+        .rc-stat-label{font-size:.7rem;color:var(--on-surface-variant)}
+        .rc-link{font-size:.75rem;color:var(--on-surface-variant);background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:var(--radius-sm);padding:6px 10px;font-family:monospace;word-break:break-all}
+        .rc-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+        .btn-sm{padding:5px 12px;border-radius:var(--radius-full);font-family:inherit;font-size:.78rem;font-weight:500;cursor:pointer;border:1px solid var(--outline);background:none;color:var(--on-surface-variant);transition:all .2s}
+        .btn-sm:hover{background:var(--surface-container);color:var(--on-surface)}
+        .btn-sm.primary{border-color:var(--g-blue);color:var(--g-blue)}
+        .btn-sm.primary:hover{background:rgba(66,133,244,.1)}
+        .btn-sm.success{border-color:var(--g-green);color:var(--g-green)}
+        .btn-sm.success:hover{background:rgba(52,168,83,.1)}
+        .btn-sm.danger{border-color:var(--g-red);color:var(--g-red)}
+        .btn-sm.danger:hover{background:rgba(234,67,53,.1)}
+
+        /* MODAL */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+        .modal-overlay.open{opacity:1;pointer-events:all}
+        .modal{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:480px;padding:32px;transform:scale(.95);transition:transform .25s;max-height:90vh;overflow-y:auto}
+        .modal-overlay.open .modal{transform:scale(1)}
+        .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+        .modal-title{font-size:1.1rem;font-weight:700}
+        .btn-close{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface-variant);width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .link-box{background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:var(--radius-sm);padding:12px 14px;font-family:monospace;font-size:.82rem;word-break:break-all;margin:8px 0;color:var(--g-blue)}
+
+        .spinner{width:36px;height:36px;border:3px solid var(--outline);border-top-color:var(--g-blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .state-box{text-align:center;padding:60px 20px;color:var(--on-surface-variant)}
+        .state-icon{font-size:3rem;margin-bottom:12px}
+        .state-title{font-size:1rem;font-weight:600;margin-bottom:6px;color:var(--on-surface)}
+        .hidden{display:none !important}
+    </style>
+</head>
+<body>
+
+<div class="bg-blobs" aria-hidden="true">
+    <div class="blob blob--blue"></div>
+    <div class="blob blob--red"></div>
+</div>
+
+<!-- AUTH GUARD LOGIN SCREEN -->
+<div class="auth-wrap" id="mgr-auth">
+    <div class="auth-card">
+        <div class="auth-logo">&#x1F6E0;&#xFE0F;</div>
+        <h1 class="auth-title">Admin Panel</h1>
+        <p class="auth-sub">Sign in with an authorized Administrator account.</p>
+        <div class="form-group"><label class="form-label">Admin Email</label><input class="form-input" type="email" id="mgr-email" placeholder="admin@domain.com"></div>
+        <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="mgr-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"></div>
+        <button class="btn-primary" id="mgr-btn-login" onclick="mgrLogin()">Sign In to Panel &rarr;</button>
+        <div class="err-box" id="mgr-auth-err"></div>
+    </div>
+</div>
+
+<!-- PROTECTED SUPER-ADMIN SCREEN -->
+<div id="mgr-screen" class="hidden">
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-icon">&#x1F6E0;&#xFE0F;</span>
+            <span class="navbar-name">Taqyeemi Admin</span>
+            <span class="navbar-tag">SUPER-ADMIN</span>
+        </div>
+        <button class="btn-logout" onclick="mgrLogout()">Sign Out</button>
+    </nav>
+    <div class="admin-body">
+        <aside class="sidebar">
+            <span class="sidebar-section">Management</span>
+            <button class="nav-item active" id="nav-leads" onclick="mgrView('leads')">
+                <span class="nav-icon">&#x1F4CB;</span> Lead Requests
+                <span class="nav-badge hidden" id="mgr-leads-count">0</span>
+            </button>
+            <button class="nav-item" id="nav-restaurants" onclick="mgrView('restaurants')">
+                <span class="nav-icon">&#x1F37D;&#xFE0F;</span> Active Clients
+                <span class="nav-badge hidden" id="mgr-count">0</span>
+            </button>
+            <button class="nav-item" id="nav-feedback" onclick="mgrView('feedback')">
+                <span class="nav-icon">&#x1F4AC;</span> All Feedback
+            </button>
+        </aside>
+        <main class="mgr-content" id="mgr-content">
+            <div class="state-box"><div class="spinner"></div><div class="state-title">Loading admin dashboard&hellip;</div></div>
+        </main>
+    </div>
+</div>
+
+<!-- ADD / INVITE RESTAURANT MODAL -->
+<div class="modal-overlay" id="mgr-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="mgr-modal-title">Provision Client Access</span>
+            <button class="btn-close" onclick="mgrCloseModal()">&#x2715;</button>
+        </div>
+        <div id="mgr-modal-body">
+            <div class="form-group"><label class="form-label">Business Name</label><input class="form-input" type="text" id="r-name" placeholder="e.g. Grand Bistro"></div>
+            <div class="form-group"><label class="form-label">Owner Email (Pre-Registration)</label><input class="form-input" type="email" id="r-email" placeholder="owner@business.com"></div>
+            <div class="form-group"><label class="form-label">URL Slug</label><input class="form-input" type="text" id="r-slug" placeholder="e.g. grand-bistro"></div>
+            <div class="form-group"><label class="form-label">Google Review URL</label><input class="form-input" type="url" id="r-url" placeholder="https://g.page/r/.../review"></div>
+            <button class="btn-primary" id="mgr-btn-save" onclick="mgrSave()">Provision Access & Send Invite &rarr;</button>
+            <div class="err-box" id="mgr-modal-err"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+let SUPABASE_URL = 'https://tldzmrghbvqfaclantlr.supabase.co';
+let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
+let sb = null;
+
+let mgrClients = [], mgrFeedback = [], mgrLeads = [], mgrCurrentView = 'leads';
+
+async function initConfig() {
+    try {
+        const res = await fetch('/api/config');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.SUPABASE_URL && data.SUPABASE_ANON_KEY) {
+                SUPABASE_URL = data.SUPABASE_URL;
+                SUPABASE_ANON_KEY = data.SUPABASE_ANON_KEY;
+            }
+        }
+    } catch(e) {}
+    if (window.supabase) {
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+}
+
+async function mgrLogin() {
+    const email = document.getElementById('mgr-email').value.trim(), pass = document.getElementById('mgr-password').value;
+    const btn = document.getElementById('mgr-btn-login'), err = document.getElementById('mgr-auth-err');
+    if (!email || !pass) { mgrErr(err, 'Please enter email and password.'); return; }
+    btn.disabled = true; btn.textContent = 'Authenticating...'; err.classList.remove('show');
+    
+    if (!sb) await initConfig();
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) { mgrErr(err, 'Invalid credentials.'); btn.disabled = false; btn.textContent = 'Sign In to Panel \u2192'; return; }
+    
+    // Strict Auth Guard & Role Verification
+    const { data: roleData } = await sb.from('user_roles').select('role').eq('user_id', data.user.id).maybeSingle();
+    if (roleData?.role !== 'admin') {
+        await sb.auth.signOut();
+        mgrErr(err, 'Unauthorized Admin Access: Your account does not have admin permissions.');
+        btn.disabled = false; btn.textContent = 'Sign In to Panel \u2192';
+        return;
+    }
+    mgrEnter();
+}
+
+async function mgrEnter() {
+    document.getElementById('mgr-auth').classList.add('hidden');
+    const s = document.getElementById('mgr-screen'); s.classList.remove('hidden');
+    await mgrLoad();
+    mgrView('leads');
+}
+
+async function mgrLoad() {
+    const [{ data: clients }, { data: feedback }, { data: leads }] = await Promise.all([
+        sb.from('clients').select('*').order('created_at', { ascending: false }),
+        sb.from('feedback').select('*').order('submitted_at', { ascending: false }),
+        sb.from('lead_submissions').select('*').order('updated_at', { ascending: false })
+    ]);
+    mgrClients = clients || [];
+    mgrFeedback = feedback || [];
+    mgrLeads = leads || [];
+    
+    document.getElementById('mgr-count').textContent = mgrClients.length;
+    document.getElementById('mgr-count').classList.toggle('hidden', mgrClients.length === 0);
+    
+    const pendingCount = mgrLeads.filter(l => l.status === 'pending').length;
+    document.getElementById('mgr-leads-count').textContent = pendingCount;
+    document.getElementById('mgr-leads-count').classList.toggle('hidden', pendingCount === 0);
+}
+
+function mgrView(v) {
+    mgrCurrentView = v;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const activeNav = document.getElementById('nav-' + v);
+    if (activeNav) activeNav.classList.add('active');
+
+    if (v === 'leads') mgrRenderLeads();
+    else if (v === 'restaurants') mgrRenderRestaurants();
+    else mgrRenderFeedback();
+}
+
+function mgrRenderLeads() {
+    const el = document.getElementById('mgr-content');
+    const pending = mgrLeads.filter(l => l.status === 'pending').length;
+    
+    el.innerHTML = `
+        <div class="page-header">
+            <div>
+                <div class="page-title">Lead Submissions</div>
+                <div class="page-sub">${mgrLeads.length} total applications · ${pending} pending review</div>
+            </div>
+            <button class="btn-add" onclick="mgrOpenModal()">＋ <span>Invite Client</span></button>
+        </div>
+        ${mgrLeads.length === 0 ? '<div class="state-box"><div class="state-icon">📋</div><div class="state-title">No lead submissions yet</div></div>' : `
+            <div class="leads-table-container">
+                <table class="leads-table">
+                    <thead>
+                        <tr>
+                            <th>Business / Decision Maker</th>
+                            <th>Email & Phone</th>
+                            <th>Counters</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${mgrLeads.map(l => {
+                            const date = new Date(l.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+                            const isResub = l.submission_count > 1;
+                            return `
+                                <tr>
+                                    <td>
+                                        <strong>${esc(l.business_name)}</strong>
+                                        ${isResub ? `<span class="resub-badge">Resubmitted: ${l.submission_count}x</span>` : ''}
+                                        <br><span style="font-size:0.8rem;color:var(--on-surface-variant)">👤 ${esc(l.decision_maker_name)}</span>
+                                        <br><a href="${esc(l.google_maps_link)}" target="_blank" style="color:var(--g-blue);font-size:0.75rem">📍 Maps Link</a>
+                                    </td>
+                                    <td>
+                                        <strong>${esc(l.email)}</strong>
+                                        <br><span style="font-size:0.8rem;color:var(--on-surface-variant)">📞 ${esc(l.phone_number)}</span>
+                                    </td>
+                                    <td><strong>${l.counter_count}</strong></td>
+                                    <td><span class="status-badge ${l.status}">${l.status.toUpperCase()}</span></td>
+                                    <td style="font-size:0.8rem;color:var(--on-surface-variant)">${date}</td>
+                                    <td>
+                                        ${l.status === 'invited' ? '<span style="font-size:0.78rem;color:var(--g-green-light)">✓ Provisioned</span>' : `
+                                            <button class="btn-sm success" onclick="inviteLead('${l.id}', '${esc(l.email)}', '${esc(l.business_name)}', '${esc(l.google_maps_link)}', ${l.counter_count})">⚡ Invite & Provision</button>
+                                        `}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `}
+    `;
+}
+
+async function inviteLead(leadId, email, businessName, mapsUrl, counters) {
+    if (!confirm(`Provision account and send invitation email to ${email} for "${businessName}"?`)) return;
+    
+    const clientSlug = businessName.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
+    let provisioned = false;
+
+    try {
+        const res = await fetch('/api/invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lead_id: leadId,
+                email: email,
+                business_name: businessName,
+                google_maps_link: mapsUrl,
+                counter_count: counters,
+                slug: clientSlug
+            })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) provisioned = true;
+        }
+    } catch(err) {
+        console.warn('API invite endpoint fallback to direct Supabase insert:', err);
+    }
+
+    // Direct Supabase Fallback if API server endpoint was unreachable
+    if (!provisioned && sb) {
+        try {
+            // 1. Insert pre-registered client record
+            const { error: clientErr } = await sb.from('clients').insert({
+                name: businessName,
+                slug: clientSlug,
+                owner_email: email.toLowerCase(),
+                google_review_url: mapsUrl || 'https://g.page/r/review',
+                active: true
+            });
+            if (clientErr && !clientErr.message.includes('duplicate') && clientErr.code !== '23505') {
+                alert(`Notice: ${clientErr.message}`);
+            }
+
+            // 2. Mark lead as invited
+            if (leadId) {
+                await sb.from('lead_submissions').update({ status: 'invited', updated_at: new Date().toISOString() }).eq('id', leadId);
+            }
+            provisioned = true;
+        } catch (e) {
+            alert(`Provisioning error: ${e.message}`);
+            return;
+        }
+    }
+
+    if (provisioned) {
+        alert(`✅ Client successfully provisioned!\nPre-registered email: ${email}\nReview Slug: ${clientSlug}\n\nThe owner can now sign in at the Owner Dashboard.`);
+        await mgrLoad();
+        mgrRenderLeads();
+    }
+}
+
+function mgrRenderRestaurants() {
+    const total = mgrFeedback.length, unread = mgrFeedback.filter(f => !f.is_read).length;
+    document.getElementById('mgr-content').innerHTML =
+        '<div class="page-header"><div><div class="page-title">Active Clients</div><div class="page-sub">' + mgrClients.length + ' client' + (mgrClients.length !== 1 ? 's' : '') + '</div></div><button class="btn-add" onclick="mgrOpenModal()">＋ <span>Add Client</span></button></div>' +
+        '<div class="summary-grid"><div class="summary-card"><div class="summary-label">Clients</div><div class="summary-value" style="color:var(--g-blue)">' + mgrClients.length + '</div></div><div class="summary-card"><div class="summary-label">Total Feedback</div><div class="summary-value" style="color:var(--g-yellow)">' + total + '</div></div><div class="summary-card"><div class="summary-label">Unread</div><div class="summary-value" style="color:var(--g-green)">' + unread + '</div></div></div>' +
+        (mgrClients.length === 0
+            ? '<div class="state-box"><div class="state-icon">🍽️</div><div class="state-title">No clients provisioned yet</div></div>'
+            : '<div class="rest-grid">' + mgrClients.map(mgrCard).join('') + '</div>');
+}
+
+function mgrCard(c) {
+    const fb = mgrFeedback.filter(f => f.client_id === c.id);
+    const cnt = fb.length, avg = cnt > 0 ? (fb.reduce((s,f) => s+f.rating,0)/cnt).toFixed(1) : '—', unread = fb.filter(f => !f.is_read).length;
+    const reviewLink = window.location.origin + '?c=' + c.slug;
+    const ownerEmail = c.owner_email ? esc(c.owner_email) : 'Unassigned';
+    const mapsUrl = c.google_review_url ? esc(c.google_review_url) : '';
+
+    return `
+        <div class="rest-card ${c.active ? '' : 'inactive'}" style="${c.active ? '' : 'opacity:0.65'}">
+            <div class="rc-header">
+                <div>
+                    <div class="rc-name">${esc(c.name)}</div>
+                    <div class="rc-slug">${esc(c.slug)} &bull; ${ownerEmail}</div>
+                </div>
+                <span class="rc-status ${c.active ? 'on' : 'off'}">${c.active ? 'Active' : 'Paused'}</span>
+            </div>
+            <div class="rc-stats">
+                <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-blue)">${cnt}</div><div class="rc-stat-label">Reviews</div></div>
+                <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-yellow)">${avg !== '—' ? '★' + avg : '—'}</div><div class="rc-stat-label">Avg</div></div>
+                <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-green)">${unread}</div><div class="rc-stat-label">Unread</div></div>
+            </div>
+            
+            <div class="rc-link" style="margin-bottom:6px;">
+                <span style="color:var(--on-surface-variant);font-size:0.7rem;display:block;">Customer Link:</span>
+                ${esc(reviewLink)}
+            </div>
+
+            <div style="font-size:0.78rem;color:var(--g-blue);margin-bottom:10px;word-break:break-all;">
+                📍 <strong>Google Maps URL:</strong> <a href="${mapsUrl}" target="_blank" style="color:var(--g-blue);">${mapsUrl ? 'Open Google Link ↗' : 'None Set'}</a>
+            </div>
+
+            <div class="rc-actions">
+                <button class="btn-sm primary" onclick="mgrEditUrl('${c.id}', '${esc(c.google_review_url || '')}')">✏️ Edit Google URL</button>
+                <button class="btn-sm ${c.active ? 'danger' : 'success'}" onclick="mgrToggleActive('${c.id}', ${c.active})">${c.active ? 'Pause' : 'Activate'}</button>
+            </div>
+        </div>
+    `;
+}
+
+async function mgrEditUrl(clientId, currentUrl) {
+    const newUrl = prompt('Enter the updated Google Maps Review URL for this client:', currentUrl || 'https://g.page/r/.../review');
+    if (!newUrl || newUrl.trim() === currentUrl) return;
+    
+    if (!newUrl.startsWith('http://') && !newUrl.startsWith('https://')) {
+        alert('Please enter a valid URL starting with https://');
+        return;
+    }
+
+    try {
+        const { error } = await sb.from('clients').update({ google_review_url: newUrl.trim() }).eq('id', clientId);
+        if (error) throw error;
+        alert('✓ Google Maps Review URL updated successfully!');
+        await mgrLoad();
+        mgrRenderRestaurants();
+    } catch(err) {
+        alert('Failed to update URL: ' + err.message);
+    }
+}
+
+async function mgrToggleActive(clientId, isActive) {
+    try {
+        const { error } = await sb.from('clients').update({ active: !isActive }).eq('id', clientId);
+        if (error) throw error;
+        await mgrLoad();
+        mgrRenderRestaurants();
+    } catch(err) {
+        alert('Failed to update status: ' + err.message);
+    }
+}
+
+function mgrRenderFeedback() {
+    const el = document.getElementById('mgr-content');
+    if (!mgrFeedback.length) { el.innerHTML = '<div class="page-header"><div><div class="page-title">All Feedback</div></div></div><div class="state-box"><div class="state-icon">💬</div><div class="state-title">No feedback entries</div></div>'; return; }
+    el.innerHTML = '<div class="page-header"><div><div class="page-title">All Feedback</div><div class="page-sub">' + mgrFeedback.length + ' total entries</div></div></div><div style="display:flex;flex-direction:column;gap:12px">' +
+        mgrFeedback.map(f => {
+            const client = mgrClients.find(c => c.id === f.client_id);
+            const stars = '★'.repeat(f.rating)+'☆'.repeat(5-f.rating);
+            const date = new Date(f.submitted_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+            return `<div class="summary-card"><div style="font-size:0.8rem;color:var(--on-surface-variant);margin-bottom:4px">🍽️ ${client ? esc(client.name) : 'Unknown'} · <span style="color:var(--g-yellow)">${stars}</span> · ${date}</div><p style="margin:0">${esc(f.feedback_text)}</p></div>`;
+        }).join('') + '</div>';
+}
+
+function mgrOpenModal() {
+    ['r-name','r-email','r-slug','r-url'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('mgr-modal-err').classList.remove('show');
+    document.getElementById('mgr-modal').classList.add('open');
+}
+function mgrCloseModal() { document.getElementById('mgr-modal').classList.remove('open'); }
+
+async function mgrSave() {
+    const name = document.getElementById('r-name').value.trim();
+    const ownerEmail = document.getElementById('r-email').value.trim().toLowerCase();
+    const slug = document.getElementById('r-slug').value.trim() || name.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-');
+    const url = document.getElementById('r-url').value.trim() || 'https://g.page/r/review';
+    const btn = document.getElementById('mgr-btn-save'), err = document.getElementById('mgr-modal-err');
+
+    if (!name || !ownerEmail) { mgrErr(err, 'Please fill in Business Name and Owner Email.'); return; }
+    btn.disabled = true; btn.textContent = 'Provisioning...'; err.classList.remove('show');
+
+    let provisioned = false;
+
+    try {
+        const res = await fetch('/api/invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: ownerEmail, business_name: name, google_maps_link: url, slug: slug })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) provisioned = true;
+        }
+    } catch(e) {
+        console.warn('API endpoint fallback to direct Supabase insert:', e);
+    }
+
+    // Direct Supabase Fallback
+    if (!provisioned && sb) {
+        try {
+            const { error: clientErr } = await sb.from('clients').insert({
+                name: name,
+                slug: slug,
+                owner_email: ownerEmail,
+                google_review_url: url,
+                active: true
+            });
+            if (clientErr && !clientErr.message.includes('duplicate') && clientErr.code !== '23505') {
+                mgrErr(err, clientErr.message);
+                btn.disabled = false; btn.textContent = 'Provision Access & Send Invite \u2192';
+                return;
+            }
+            provisioned = true;
+        } catch(e) {
+            mgrErr(err, e.message);
+            btn.disabled = false; btn.textContent = 'Provision Access & Send Invite \u2192';
+            return;
+        }
+    }
+
+    if (provisioned) {
+        mgrCloseModal();
+        await mgrLoad();
+        mgrView('restaurants');
+        alert(`✓ Client provisioned! Owner email: ${ownerEmail}`);
+    } else {
+        mgrErr(err, 'Could not provision client.');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Provision Access & Send Invite \u2192';
+}
+
+async function mgrLogout() {
+    await sb.auth.signOut();
+    document.getElementById('mgr-screen').classList.add('hidden');
+    document.getElementById('mgr-auth').classList.remove('hidden');
+}
+
+function mgrErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+(async () => {
+    await initConfig();
+    if (sb) {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) {
+            const { data: roleData } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+            if (roleData?.role === 'admin') {
+                mgrEnter();
+            } else {
+                await sb.auth.signOut();
+            }
+        }
+    }
+})();
+</script>
+</body>
+</html>

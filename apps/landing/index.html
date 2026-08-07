@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src  'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+        style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src    https://fonts.gstatic.com;
+        connect-src https://*.supabase.co;
+        img-src     'self' data:;
+    ">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taqyeemi — Smart Google Review Funnel Platform</title>
+    <meta name="description" content="Automatically route 5-star customer reviews directly to Google Maps while privately intercepting negative feedback before it hits the web.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Readex+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --g-blue:#4285F4;--g-blue-dark:#1A73E8;--g-red:#EA4335;
+            --g-yellow:#FBBC05;--g-green:#34A853;--g-green-light:#81C995;
+            --surface:#1E1E22;--surface-dim:#111114;--surface-container:#26262B;
+            --surface-bright:#2C2C32;--on-surface:#E8EAED;
+            --on-surface-variant:#9AA0A6;--outline:#3C4043;--outline-variant:#2C2F33;
+            --shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow-md:0 4px 16px rgba(0,0,0,.4);
+            --shadow-lg:0 8px 40px rgba(0,0,0,.5);
+            --radius-sm:10px;--radius-md:16px;--radius-lg:24px;--radius-full:9999px;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html{font-size:16px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+        body{font-family:'Inter','Readex Pro',sans-serif;background:var(--surface-dim);color:var(--on-surface);min-height:100vh;display:flex;flex-direction:column}
+
+        /* BG BLOBS */
+        .bg-blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+        .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.28}
+        .blob--blue{width:380px;height:380px;background:var(--g-blue);top:-8%;left:-6%;animation:bA 15s ease-in-out infinite alternate}
+        .blob--red{width:300px;height:300px;background:var(--g-red);bottom:-10%;right:-6%;animation:bB 17s ease-in-out infinite alternate}
+        .blob--yellow{width:260px;height:260px;background:var(--g-yellow);top:45%;left:58%;animation:bC 19s ease-in-out infinite alternate}
+        .blob--green{width:320px;height:320px;background:var(--g-green);bottom:28%;left:-12%;animation:bD 16s ease-in-out infinite alternate}
+        @keyframes bA{0%{transform:translate(0,0) scale(1)}100%{transform:translate(32vw,38vh) scale(1.1)}}
+        @keyframes bB{0%{transform:translate(0,0)}100%{transform:translate(-28vw,-42vh)}}
+        @keyframes bC{0%{transform:translate(0,0)}100%{transform:translate(-32vw,-18vh)}}
+        @keyframes bD{0%{transform:translate(0,0)}100%{transform:translate(38vw,28vh)}}
+
+        /* TOP NAVIGATION */
+        .top-nav-bar {
+            position: fixed;top: 0; left: 0; right: 0; height: 64px;
+            background: rgba(17, 17, 20, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--outline-variant); z-index: 1000;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 clamp(16px, 4vw, 36px);
+        }
+        .top-nav-brand {
+            display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem;
+            color: var(--on-surface); text-decoration: none; cursor: pointer;
+        }
+        .top-nav-brand .brand-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: linear-gradient(135deg, var(--g-blue), var(--g-green));
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1rem; font-weight: 800;
+            box-shadow: 0 2px 10px rgba(66,133,244,0.35);
+        }
+        .top-nav-actions { display: flex; align-items: center; gap: 12px; }
+        .btn-lang-toggle {
+            background: var(--surface-container); color: var(--on-surface); border: 1px solid var(--outline);
+            padding: 6px 16px; border-radius: var(--radius-full); font-weight: 600; font-size: 0.82rem;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-lang-toggle:hover { border-color: var(--g-blue); color: var(--g-blue); }
+        .btn-client-login {
+            background: transparent; color: var(--on-surface); border: 1px solid var(--outline);
+            padding: 8px 18px; border-radius: var(--radius-full); font-weight: 600; font-size: 0.85rem;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .btn-client-login:hover { background: var(--surface-container); border-color: var(--g-blue); color: var(--g-blue); }
+        .btn-req-access-nav {
+            background: var(--g-blue); color: white; border: none;
+            padding: 8px 20px; border-radius: var(--radius-full); font-weight: 600; font-size: 0.85rem;
+            cursor: pointer; transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 2px 12px rgba(66, 133, 244, 0.35);
+        }
+        .btn-req-access-nav:hover { background: var(--g-blue-dark); transform: translateY(-1px); }
+
+        /* HERO SECTION */
+        #view-home { min-height: 100vh; padding-top: 80px; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; width: 100%; }
+        .hero-container { max-width: 920px; width: 100%; padding: 56px 24px 44px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(66, 133, 244, 0.12); border: 1px solid rgba(66, 133, 244, 0.3);
+            color: var(--g-blue); font-size: 0.82rem; font-weight: 600;
+            padding: 6px 18px; border-radius: var(--radius-full); margin-bottom: 24px; letter-spacing: 0.03em;
+        }
+        .hero-badge .dot-live { width: 8px; height: 8px; background: var(--g-green); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--g-green); }
+        .hero-title { font-size: clamp(2.3rem, 5.5vw, 3.8rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.025em; margin-bottom: 20px; color: var(--on-surface); }
+        .hero-title span { background: linear-gradient(135deg, var(--g-blue) 20%, var(--g-green) 80%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-sub { font-size: 1.15rem; color: var(--on-surface-variant); max-width: 680px; margin: 0 auto 36px; line-height: 1.6; }
+        .hero-actions { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+        .btn-hero-primary {
+            background: linear-gradient(135deg, var(--g-blue), var(--g-blue-dark)); color: white;
+            padding: 14px 32px; border-radius: var(--radius-full); font-weight: 600; font-size: 0.95rem; border: none;
+            cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 20px rgba(66, 133, 244, 0.35);
+        }
+        .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(66, 133, 244, 0.5); }
+        .btn-hero-secondary {
+            background: var(--surface); border: 1.5px solid var(--outline); color: var(--on-surface);
+            padding: 14px 28px; border-radius: var(--radius-full); font-weight: 600; font-size: 0.95rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-hero-secondary:hover { background: var(--surface-container); border-color: var(--on-surface-variant); }
+
+        /* DEMO SECTION */
+        .demo-section { width: 100%; max-width: 840px; padding: 0 24px 64px; }
+        .demo-card { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius-lg); padding: 36px 32px; box-shadow: var(--shadow-lg); text-align: center; position: relative; }
+        .demo-card-tag { display: inline-block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--g-yellow); background: rgba(251, 188, 5, 0.12); padding: 4px 14px; border-radius: var(--radius-full); margin-bottom: 16px; }
+        .stars-container { background: var(--surface-dim); border-radius: var(--radius-md); padding: 20px 12px; margin: 0 auto 12px; border: 1px solid var(--outline-variant); }
+        .stars { font-size: 2.75rem; display: flex; justify-content: center; gap: 10px; user-select: none; direction: ltr; }
+        .stars button { cursor: pointer; color: var(--outline); background: none; border: none; padding: 0; font: inherit; font-size: inherit; transition: color 0.2s, transform 0.2s; line-height: 1; display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: var(--radius-full); }
+        .stars button:hover { transform: scale(1.15); }
+        .stars button.active { color: #FBBC05 !important; text-shadow: 0 0 12px rgba(251,188,5,0.8); }
+        .demo-result-box { margin-top: 20px; border-radius: var(--radius-md); display: none; animation: fadeIn 0.35s ease forwards; }
+
+        /* FUNNEL FLOW DIAGRAM */
+        .funnel-flow { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 24px 0 16px; flex-wrap: wrap; }
+        .flow-step { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-full); background: var(--surface-dim); border: 1px solid var(--outline); font-size: 0.78rem; font-weight: 600; color: var(--on-surface-variant); transition: all 0.3s ease; }
+        .flow-step.active-step { border-color: var(--g-blue); background: rgba(66, 133, 244, 0.15); color: var(--g-blue); }
+        .flow-step.active-google { border-color: var(--g-green); background: rgba(52, 168, 83, 0.15); color: var(--g-green); }
+        .flow-step.active-private { border-color: var(--g-yellow); background: rgba(251, 188, 5, 0.15); color: var(--g-yellow); }
+
+        /* FEATURES GRID */
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; max-width: 960px; width: 100%; padding: 0 24px 64px; }
+        .feature-card { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius-md); padding: 32px 26px; text-align: left; transition: border-color 0.25s, transform 0.25s; }
+        html[dir="rtl"] .feature-card { text-align: right; }
+        .feature-card:hover { border-color: rgba(66, 133, 244, 0.4); transform: translateY(-3px); }
+        .feature-icon { font-size: 2.2rem; margin-bottom: 16px; }
+        .feature-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; color: var(--on-surface); }
+        .feature-desc { font-size: 0.9rem; color: var(--on-surface-variant); line-height: 1.6; }
+
+        /* LEAD CAPTURE MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal-card { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 100%; max-width: 500px; padding: 36px 32px; transform: scale(0.95); transition: transform 0.25s; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-overlay.open .modal-card { transform: scale(1); }
+        .modal-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; background: linear-gradient(90deg, var(--g-blue), var(--g-green)); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .modal-title { font-size: 1.3rem; font-weight: 700; }
+        .modal-sub { font-size: 0.88rem; color: var(--on-surface-variant); margin-bottom: 24px; line-height: 1.5; }
+        
+        .form-group { margin-bottom: 16px; text-align: left; }
+        html[dir="rtl"] .form-group { text-align: right; }
+        .form-label { display: block; font-size: 0.76rem; font-weight: 600; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+        .form-label span.req { color: var(--g-red); margin-left: 2px; }
+        .form-input { width: 100%; padding: 12px 14px; background: var(--surface-dim); border: 1.5px solid var(--outline); border-radius: var(--radius-sm); color: var(--on-surface); font-family: inherit; font-size: 0.93rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        .form-input:focus { border-color: var(--g-blue); box-shadow: 0 0 0 3px rgba(66,133,244,0.2); }
+        .btn-submit-lead { width: 100%; padding: 13px; margin-top: 10px; background: var(--g-blue); color: white; border: none; border-radius: var(--radius-full); font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.15s; }
+        .btn-submit-lead:hover { background: var(--g-blue-dark); transform: translateY(-1px); }
+        .btn-close { background: var(--surface-container); border: 1px solid var(--outline-variant); color: var(--on-surface-variant); width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        
+        .alert-box { padding: 14px; border-radius: var(--radius-sm); font-size: 0.88rem; margin-top: 16px; display: none; line-height: 1.5; }
+        .alert-box.success { background: rgba(52, 168, 83, 0.15); border: 1px solid rgba(52, 168, 83, 0.35); color: var(--g-green-light); display: block; }
+        .alert-box.error { background: rgba(234, 67, 53, 0.15); border: 1px solid rgba(234, 67, 53, 0.35); color: #f28b82; display: block; }
+
+        /* FOOTER */
+        .site-footer { width: 100%; text-align: center; padding: 32px 24px; border-top: 1px solid var(--outline-variant); margin-top: auto; font-size: 0.8rem; color: var(--on-surface-variant); opacity: 0.7; }
+        .hidden { display: none !important; }
+
+        /* REVIEW VIEW (WHEN ?c=slug IS PASSED) */
+        #view-review { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; position: relative; z-index: 10; }
+        .rv-card { background: var(--surface); padding: 40px 32px 36px; border-radius: 28px; box-shadow: var(--shadow-lg); width: 92%; max-width: 420px; border: 1px solid var(--outline-variant); text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="bg-blobs" aria-hidden="true">
+    <div class="blob blob--blue"></div>
+    <div class="blob blob--red"></div>
+    <div class="blob blob--yellow"></div>
+    <div class="blob blob--green"></div>
+</div>
+
+<!-- GLOBAL NAVIGATION BAR -->
+<nav class="top-nav-bar" id="global-nav">
+    <a class="top-nav-brand" href="/">
+        <div class="brand-icon">&#x2B50;</div>
+        <span id="txt-brand-name">Taqyeemi</span>
+    </a>
+    <div class="top-nav-actions">
+        <button class="btn-lang-toggle" onclick="toggleLanguage()" id="lang-btn">🌐 العربية</button>
+        <a href="https://app-taqyeemi-btl-pages.pages.dev" class="btn-client-login" id="client-login-link">Client Login</a>
+        <button class="btn-req-access-nav" onclick="openLeadModal()" id="txt-nav-req">Request Access</button>
+    </div>
+</nav>
+
+<!-- LANDING PAGE VIEW -->
+<div id="view-home">
+    <section class="hero-container">
+        <div class="hero-badge"><span class="dot-live"></span> <span id="txt-hero-badge">Smart Google Review Funnel Platform</span></div>
+        <h1 class="hero-title" id="txt-hero-title">More 5-Star Google Reviews.<br><span>Zero Public Complaints.</span></h1>
+        <p class="hero-sub" id="txt-hero-sub">Automatically route 4 &amp; 5-star customer reviews directly to your Google Maps profile, while privately intercepting 1 to 3-star feedback before it hits the web.</p>
+        <div class="hero-actions">
+            <button class="btn-hero-primary" onclick="openLeadModal()" id="txt-btn-hero-primary">Request Access for Your Business &rarr;</button>
+            <button class="btn-hero-secondary" onclick="document.getElementById('demo-section').scrollIntoView({behavior:'smooth'})" id="txt-btn-hero-secondary">Try Live Simulator &darr;</button>
+        </div>
+    </section>
+
+    <!-- Interactive Live Demo Widget -->
+    <section class="demo-section" id="demo-section">
+        <div class="demo-card">
+            <span class="demo-card-tag" id="txt-demo-tag">Interactive Funnel Simulator</span>
+            <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:8px" id="txt-demo-title">Test The Customer Experience</h3>
+            <p style="color:var(--on-surface-variant);font-size:.92rem;margin-bottom:20px" id="txt-demo-sub">Tap any star below to simulate how Taqyeemi routes customer reviews in real-time:</p>
+            
+            <div class="stars-container" style="max-width:400px;margin:0 auto">
+                <div class="stars" id="demo-stars">
+                    <button type="button" onclick="runDemo(1)" title="1 Star">&#9733;</button>
+                    <button type="button" onclick="runDemo(2)" title="2 Stars">&#9733;</button>
+                    <button type="button" onclick="runDemo(3)" title="3 Stars">&#9733;</button>
+                    <button type="button" onclick="runDemo(4)" title="4 Stars">&#9733;</button>
+                    <button type="button" onclick="runDemo(5)" title="5 Stars">&#9733;</button>
+                </div>
+                <div id="demo-hint" style="font-size:0.85rem; font-weight:600; color:var(--g-yellow); min-height:22px; margin-top:8px; opacity:0; transition:opacity 0.2s;"></div>
+            </div>
+
+            <!-- Animated Funnel Flow Diagram -->
+            <div class="funnel-flow">
+                <div class="flow-step" id="step-tap"><span>1️⃣</span> <span id="txt-step1">Star Rating</span></div>
+                <span class="flow-arrow">&rarr;</span>
+                <div class="flow-step" id="step-shield"><span>2️⃣</span> <span id="txt-step2">Smart Shield</span></div>
+                <span class="flow-arrow">&rarr;</span>
+                <div class="flow-step" id="step-outcome"><span>3️⃣</span> <span id="txt-step3">Tap a star to test...</span></div>
+            </div>
+
+            <div class="demo-result-box" id="demo-result"></div>
+        </div>
+    </section>
+
+    <!-- Feature Grid -->
+    <section class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">&#x1F3AF;</div>
+            <h4 class="feature-title" id="txt-feat1-title">Smart Review Shield</h4>
+            <p class="feature-desc" id="txt-feat1-desc">Happy customers (4 &amp; 5 stars) are instantly directed to Google Maps. Constructive feedback (1-3 stars) stays 100% private to management.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">&#x1F50F;</div>
+            <h4 class="feature-title" id="txt-feat2-title">Strict Invite Provisioning</h4>
+            <p class="feature-desc" id="txt-feat2-desc">Restricted access control ensures only pre-approved business client emails can log into the Owner Dashboard.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">&#x1F4C8;</div>
+            <h4 class="feature-title" id="txt-feat3-title">Real-Time Owner Portal</h4>
+            <p class="feature-desc" id="txt-feat3-desc">Business owners get a private portal to review incoming customer notes, mark items as read, and track average star trends.</p>
+        </div>
+    </section>
+
+    <footer class="site-footer" id="txt-footer">
+        &copy; 2026 Taqyeemi. All rights reserved. &bull; Powered by Google Reviews Platform
+    </footer>
+</div>
+
+<!-- LEAD CAPTURE FORM MODAL -->
+<div class="modal-overlay" id="lead-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title" id="txt-modal-title">Request Access</h3>
+            <button class="btn-close" onclick="closeLeadModal()">&#x2715;</button>
+        </div>
+        <p class="modal-sub" id="txt-modal-sub">Submit your business details below. Our team will review your application and provision your Taqyeemi portal access.</p>
+        
+        <form id="lead-form" onsubmit="handleLeadSubmit(event)">
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-business">Business Name <span class="req">*</span></label>
+                <input class="form-input" type="text" id="lead-business" placeholder="e.g. Grand Bistro" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-maps">Google Maps Link <span class="req">*</span></label>
+                <input class="form-input" type="url" id="lead-maps" placeholder="https://maps.google.com/..." required dir="ltr">
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-name">Decision Maker Name <span class="req">*</span></label>
+                <input class="form-input" type="text" id="lead-name" placeholder="e.g. Sarah Johnson" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-email">Email Address <span class="req">*</span></label>
+                <input class="form-input" type="email" id="lead-email" placeholder="owner@business.com" required dir="ltr">
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-phone">Phone Number <span class="req">*</span></label>
+                <input class="form-input" type="tel" id="lead-phone" placeholder="+1 (555) 019-2834" required pattern=".{7,}" dir="ltr">
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-counters">Checkout Counters / Tables Count <span class="req">*</span></label>
+                <input class="form-input" type="number" id="lead-counters" min="1" max="500" value="4" required dir="ltr">
+            </div>
+
+            <button type="submit" class="btn-submit-lead" id="btn-lead-submit">Submit Application &rarr;</button>
+            <div class="alert-box" id="lead-alert"></div>
+        </form>
+    </div>
+</div>
+
+<!-- REVIEW VIEW (Triggered when URL has ?c=slug) -->
+<div id="view-review" class="hidden">
+    <div class="rv-card" id="rv-card-content">
+        <div style="font-size:2rem;margin-bottom:12px">&#x2B50;</div>
+        <h2>Loading Review...</h2>
+    </div>
+</div>
+
+<script>
+let SUPABASE_URL = 'https://tldzmrghbvqfaclantlr.supabase.co';
+let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
+let sb = null;
+let currentLang = 'en';
+
+const i18n = {
+    en: {
+        brand: 'Taqyeemi',
+        navLogin: 'Client Login',
+        navReq: 'Request Access',
+        heroBadge: 'Smart Google Review Funnel Platform',
+        heroTitle: 'More 5-Star Google Reviews.<br><span>Zero Public Complaints.</span>',
+        heroSub: 'Automatically route 4 & 5-star customer reviews directly to your Google Maps profile, while privately intercepting 1 to 3-star feedback before it hits the web.',
+        btnHeroPrimary: 'Request Access for Your Business →',
+        btnHeroSecondary: 'Try Live Simulator ↓',
+        demoTag: 'Interactive Funnel Simulator',
+        demoTitle: 'Test The Customer Experience',
+        demoSub: 'Tap any star below to simulate how Taqyeemi routes customer reviews in real-time:',
+        step1: 'Star Rating',
+        step2: 'Smart Shield',
+        step3: 'Tap a star to test...',
+        feat1Title: 'Smart Review Shield',
+        feat1Desc: 'Happy customers (4 & 5 stars) are instantly directed to Google Maps. Constructive feedback (1-3 stars) stays 100% private to management.',
+        feat2Title: 'Strict Invite Provisioning',
+        feat2Desc: 'Restricted access control ensures only pre-approved business client emails can log into the Owner Dashboard.',
+        feat3Title: 'Real-Time Owner Portal',
+        feat3Desc: 'Business owners get a private portal to review incoming customer notes, mark items as read, and track average star trends.',
+        footer: '© 2026 Taqyeemi. All rights reserved. • Powered by Google Reviews Platform',
+        modalTitle: 'Request Access',
+        modalSub: 'Submit your business details below. Our team will review your application and provision your Taqyeemi portal access.',
+        lblBusiness: 'Business Name *',
+        phBusiness: 'e.g. Grand Bistro',
+        lblMaps: 'Google Maps Link *',
+        lblName: 'Decision Maker Name *',
+        phName: 'e.g. Sarah Johnson',
+        lblEmail: 'Email Address *',
+        lblPhone: 'Phone Number *',
+        lblCounters: 'Checkout Counters / Tables Count *',
+        btnSubmitLead: 'Submit Application →',
+        langBtn: '🌐 العربية'
+    },
+    ar: {
+        brand: 'تقييمي',
+        navLogin: 'دخول العملاء',
+        navReq: 'طلب الانضمام',
+        heroBadge: 'منصة تحويل تقييمات جوجل الذكية',
+        heroTitle: 'المزيد من تقييمات 5 نجوم على جوجل..<br><span>وحصّن نشاطك التجاري من الشكاوى.</span>',
+        heroSub: 'توجيه التقييمات الإيجابية (4 و5 نجوم) تلقائياً إلى صفحتك في خرائط جوجل، وتحويل الملاحظات والشكاوى (1 إلى 3 نجوم) سرّاً إلى إدارتك قبل نشرها على الإنترنت.',
+        btnHeroPrimary: 'طلب الانضمام لنشاطك التجاري ←',
+        btnHeroSecondary: 'تجربة المحاكي التفاعلي ↓',
+        demoTag: 'محاكي تجربة العملاء التفاعلي',
+        demoTitle: 'جرّب كيفية عمل درع تقييمي',
+        demoSub: 'انقر على أي عدد من النجوم لاختبار توجيه التقييمات في الوقت الفعلي:',
+        step1: 'اختار النجوم',
+        step2: 'الدرع الذكي',
+        step3: 'انقر لاختبار التوجيه...',
+        feat1Title: 'درع التقييمات الذكي',
+        feat1Desc: 'توجيه التقييمات العالية (4 و 5 نجوم) مباشرة لخرائط جوجل. والاحتفاظ بالملاحظات البنّاءة (1-3 نجوم) سرّية 100% لدى الإدارة.',
+        feat2Title: 'انضمام مسبق الاعتماد',
+        feat2Desc: 'نظام حماية صارم يضمن أن البريد الإلكتروني المعتمد من الإدارة هو الوحيد القادر على تفعيل لوحة التحكم.',
+        feat3Title: 'لوحة تحكم مخصصة للأعمال',
+        feat3Desc: 'يحصل صاحب النشاط على لوحة تحكم خاصة لمراجعة ملاحظات العملاء، وتحديدها كمقروءة، ومتابعة متوسط النجوم.',
+        footer: '© 2026 تقييمي (Taqyeemi). جميع الحقوق محفوظة. • منصة إدارة تقييمات جوجل',
+        modalTitle: 'طلب الانضمام لمنصة تقييمي',
+        modalSub: 'أدخل بيانات نشاطك التجاري أدناه. سيقوم فريقنا بمراجعة طلبك وتزويدك بصلاحيات الدخول.',
+        lblBusiness: 'اسم النشاط التجاري *',
+        phBusiness: 'مثال: مطعم الفخامة',
+        lblMaps: 'رابط النشاط على خرائط جوجل *',
+        lblName: 'اسم صاحب القرار / المدير *',
+        phName: 'مثال: محمد العتيبي',
+        lblEmail: 'البريد الإلكتروني المعتمد *',
+        lblPhone: 'رقم الجوال / الهاتف *',
+        lblCounters: 'عدد نقاط البيع / الطاولات *',
+        btnSubmitLead: 'إرسال طلب الانضمام ←',
+        langBtn: '🌐 English'
+    }
+};
+
+function setLanguage(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    const t = i18n[lang];
+
+    document.getElementById('txt-brand-name').textContent = t.brand;
+    document.getElementById('client-login-link').textContent = t.navLogin;
+    document.getElementById('txt-nav-req').textContent = t.navReq;
+    document.getElementById('txt-hero-badge').textContent = t.heroBadge;
+    document.getElementById('txt-hero-title').innerHTML = t.heroTitle;
+    document.getElementById('txt-hero-sub').textContent = t.heroSub;
+    document.getElementById('txt-btn-hero-primary').textContent = t.btnHeroPrimary;
+    document.getElementById('txt-btn-hero-secondary').textContent = t.btnHeroSecondary;
+    document.getElementById('txt-demo-tag').textContent = t.demoTag;
+    document.getElementById('txt-demo-title').textContent = t.demoTitle;
+    document.getElementById('txt-demo-sub').textContent = t.demoSub;
+    document.getElementById('txt-step1').textContent = t.step1;
+    document.getElementById('txt-step2').textContent = t.step2;
+    document.getElementById('txt-step3').textContent = t.step3;
+    document.getElementById('txt-feat1-title').textContent = t.feat1Title;
+    document.getElementById('txt-feat1-desc').textContent = t.feat1Desc;
+    document.getElementById('txt-feat2-title').textContent = t.feat2Title;
+    document.getElementById('txt-feat2-desc').textContent = t.feat2Desc;
+    document.getElementById('txt-feat3-title').textContent = t.feat3Title;
+    document.getElementById('txt-feat3-desc').textContent = t.feat3Desc;
+    document.getElementById('txt-footer').textContent = t.footer;
+    document.getElementById('txt-modal-title').textContent = t.modalTitle;
+    document.getElementById('txt-modal-sub').textContent = t.modalSub;
+    document.getElementById('txt-lbl-business').innerHTML = t.lblBusiness;
+    document.getElementById('lead-business').placeholder = t.phBusiness;
+    document.getElementById('txt-lbl-maps').innerHTML = t.lblMaps;
+    document.getElementById('txt-lbl-name').innerHTML = t.lblName;
+    document.getElementById('lead-name').placeholder = t.phName;
+    document.getElementById('txt-lbl-email').innerHTML = t.lblEmail;
+    document.getElementById('txt-lbl-phone').innerHTML = t.lblPhone;
+    document.getElementById('txt-lbl-counters').innerHTML = t.lblCounters;
+    document.getElementById('btn-lead-submit').textContent = t.btnSubmitLead;
+    document.getElementById('lang-btn').textContent = t.langBtn;
+
+    localStorage.setItem('preferred_lang', lang);
+}
+
+function toggleLanguage() {
+    setLanguage(currentLang === 'en' ? 'ar' : 'en');
+}
+
+async function initConfig() {
+    try {
+        const res = await fetch('/api/config');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.SUPABASE_URL && data.SUPABASE_ANON_KEY) {
+                SUPABASE_URL = data.SUPABASE_URL;
+                SUPABASE_ANON_KEY = data.SUPABASE_ANON_KEY;
+            }
+            if (data.DASHBOARD_URL) {
+                const loginLink = document.getElementById('client-login-link');
+                if (loginLink) loginLink.href = data.DASHBOARD_URL;
+            }
+        }
+    } catch(e) {}
+    if (window.supabase) {
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+}
+
+function openLeadModal() { document.getElementById('lead-modal').classList.add('open'); }
+function closeLeadModal() { document.getElementById('lead-modal').classList.remove('open'); }
+
+async function handleLeadSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-lead-submit');
+    const alert = document.getElementById('lead-alert');
+    alert.className = 'alert-box';
+
+    const bName = document.getElementById('lead-business').value.trim();
+    const gMaps = document.getElementById('lead-maps').value.trim();
+    const dName = document.getElementById('lead-name').value.trim();
+    const email = document.getElementById('lead-email').value.trim().toLowerCase();
+    const phone = document.getElementById('lead-phone').value.trim();
+    const counters = parseInt(document.getElementById('lead-counters').value);
+
+    btn.disabled = true;
+    btn.textContent = currentLang === 'ar' ? 'جاري إرسال الطلب...' : 'Submitting...';
+
+    try {
+        if (!sb) await initConfig();
+        let isResub = false;
+        
+        const { data, error } = await sb.rpc('submit_lead', {
+            p_business_name: bName,
+            p_google_maps_link: gMaps,
+            p_decision_maker_name: dName,
+            p_email: email,
+            p_phone_number: phone,
+            p_counter_count: counters
+        });
+
+        if (error) {
+            if (error.message && (error.message.includes('Could not find the function') || error.message.includes('schema cache'))) {
+                const { error: insertErr } = await sb.from('lead_submissions').insert({
+                    business_name: bName,
+                    google_maps_link: gMaps,
+                    decision_maker_name: dName,
+                    email: email,
+                    phone_number: phone,
+                    counter_count: counters
+                });
+                if (insertErr) {
+                    if (insertErr.code === '23505' || insertErr.message.includes('duplicate') || insertErr.message.includes('unique')) {
+                        isResub = true;
+                    } else { throw insertErr; }
+                }
+            } else { throw error; }
+        } else {
+            isResub = data && data.submission_count > 1;
+        }
+
+        alert.className = 'alert-box success';
+        if (currentLang === 'ar') {
+            alert.innerHTML = isResub 
+                ? '<strong>✓ تم تحديث طلبك بنجاح!</strong> تم تسجيل تحديث البيانات. تواصل فريق الانضمام معك قريبًا.'
+                : '<strong>✓ تم استلام طلبك بنجاح!</strong> شكرًا لاهتمامك. سيقوم فريقنا بمراجعة الطلب والتواصل معك سريعا.';
+        } else {
+            alert.innerHTML = isResub 
+                ? '<strong>✓ Request Updated!</strong> We received your updated details. Our onboarding team will contact you shortly.'
+                : '<strong>✓ Application Received!</strong> Thank you for applying. Our team will review your request and contact you shortly.';
+        }
+
+        try {
+            fetch('/api/lead-notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    business_name: bName,
+                    google_maps_link: gMaps,
+                    decision_maker_name: dName,
+                    email: email,
+                    phone_number: phone,
+                    counter_count: counters,
+                    is_resubmission: isResub
+                })
+            });
+        } catch(e) {}
+
+        document.getElementById('lead-form').reset();
+    } catch (err) {
+        alert.className = 'alert-box error';
+        alert.textContent = err.message || (currentLang === 'ar' ? 'حدث خطأ أثناء إرسال الطلب.' : 'Submission failed.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = i18n[currentLang].btnSubmitLead;
+    }
+}
+
+// DEMO SIMULATOR
+const demoLabels = {
+    en: {
+        1: '★ 1 Star · Intercepted Privately',
+        2: '★★ 2 Stars · Intercepted Privately',
+        3: '★★★ 3 Stars · Intercepted Privately',
+        4: '★★★★ 4 Stars · Direct to Google Maps 🚀',
+        5: '★★★★★ 5 Stars · Direct to Google Maps 🚀'
+    },
+    ar: {
+        1: '★ 1 نجمة · ملاحظات خاصة للإدارة (محجوبة عن خرائط جوجل)',
+        2: '★★ 2 نجمتان · ملاحظات خاصة للإدارة (محجوبة عن خرائط جوجل)',
+        3: '★★★ 3 نجوم · ملاحظات خاصة للإدارة (محجوبة عن خرائط جوجل)',
+        4: '★★★★ 4 نجوم · تحويل مباشر لخرائط جوجل 🚀',
+        5: '★★★★★ 5 نجوم · تحويل مباشر لخرائط جوجل 🚀'
+    }
+};
+
+function runDemo(n) {
+    const btns = document.querySelectorAll('#demo-stars button');
+    btns.forEach((btn, i) => {
+        btn.style.color = (i < n) ? '#FBBC05' : 'var(--outline)';
+    });
+    const hint = document.getElementById('demo-hint');
+    hint.textContent = demoLabels[currentLang][n];
+    hint.style.opacity = '1';
+
+    const res = document.getElementById('demo-result');
+    res.style.display = 'block';
+    if (n >= 4) {
+        res.innerHTML = currentLang === 'ar'
+            ? '<div style="background:#16181E;border:1px solid rgba(52,168,83,0.4);border-radius:12px;padding:20px;margin-top:14px;color:var(--g-green-light);text-align:right;"><strong>🟢 توجيه مباشر لخرائط جوجل</strong><br>التقييم الممتاز يُوجَّه تلقائياً لصفحتك في خرائط جوجل لرفع التقييم العام!</div>'
+            : '<div style="background:#16181E;border:1px solid rgba(52,168,83,0.4);border-radius:12px;padding:20px;margin-top:14px;color:var(--g-green-light);text-align:left;"><strong>🟢 DIRECT PUBLIC GOOGLE ACCESS</strong><br>Customer rating automatically redirected to Google Maps!</div>';
+    } else {
+        res.innerHTML = currentLang === 'ar'
+            ? '<div style="background:#16181E;border:1px solid rgba(251,188,5,0.4);border-radius:12px;padding:20px;margin-top:14px;color:var(--g-yellow);text-align:right;"><strong>🔒 تفعيل الدرع الذكي</strong><br>التقييم المنخفض يُحجب عن جوجل وتُرسل الشكوى سرّاً للوحة تحكم الإدارة!</div>'
+            : '<div style="background:#16181E;border:1px solid rgba(251,188,5,0.4);border-radius:12px;padding:20px;margin-top:14px;color:var(--g-yellow);text-align:left;"><strong>🔒 PRIVATE INTERCEPTOR ACTIVE</strong><br>Customer rating captured privately for owner dashboard.</div>';
+    }
+}
+
+(async () => {
+    const savedLang = localStorage.getItem('preferred_lang') || 'en';
+    setLanguage(savedLang);
+    await initConfig();
+    const p = new URLSearchParams(window.location.search);
+    const slug = p.get('c');
+    if (slug && sb) {
+        document.getElementById('global-nav').classList.add('hidden');
+        document.getElementById('view-home').classList.add('hidden');
+        document.getElementById('view-review').classList.remove('hidden');
+        const { data } = await sb.from('clients').select('*').eq('slug', slug).eq('active', true).maybeSingle();
+        const card = document.getElementById('rv-card-content');
+        if (data) {
+            card.innerHTML = `<h2 style="margin-bottom:8px">Rate ${data.name}</h2><p style="color:var(--on-surface-variant);font-size:0.9rem;margin-bottom:20px">Tap a star to leave your review</p><div class="stars" style="margin-bottom:20px"><button onclick="window.location.href='${data.google_review_url}'">&#9733;</button><button onclick="window.location.href='${data.google_review_url}'">&#9733;</button><button onclick="window.location.href='${data.google_review_url}'">&#9733;</button><button onclick="window.location.href='${data.google_review_url}'">&#9733;</button><button onclick="window.location.href='${data.google_review_url}'">&#9733;</button></div>`;
+        } else {
+            card.innerHTML = '<h2>Review Link Not Found</h2><p>This review link is invalid or expired.</p>';
+        }
+    }
+})();
+</script>
+</body>
+</html>

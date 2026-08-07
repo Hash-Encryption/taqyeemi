@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,78 +11,119 @@
         img-src     'self' data:;
     ">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Platform</title>
-    <meta name="description" content="Google review funnel platform.">
+    <title>Review Engine — Smart Google Review Funnel</title>
+    <meta name="description" content="Automatically route 5-star reviews to Google and privately intercept negative feedback before it goes public.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- SECURITY: pin to a specific version and add an SRI hash generated at https://www.srihash.org/ -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js"
-            crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
     <style>
         :root {
             --g-blue:#4285F4;--g-blue-dark:#1A73E8;--g-red:#EA4335;
             --g-yellow:#FBBC05;--g-green:#34A853;--g-green-light:#81C995;
-            --surface:#1E1E1E;--surface-dim:#121212;--surface-container:#2A2A2E;
-            --surface-bright:#28282C;--on-surface:#E8EAED;
-            --on-surface-variant:#9AA0A6;--outline:#3C4043;--outline-variant:#303134;
-            --shadow-sm:0 1px 3px rgba(0,0,0,.4);--shadow-md:0 4px 12px rgba(0,0,0,.35);
-            --shadow-lg:0 8px 30px rgba(0,0,0,.4);
-            --radius-sm:8px;--radius-md:16px;--radius-lg:24px;--radius-full:9999px;
+            --surface:#1E1E22;--surface-dim:#111114;--surface-container:#26262B;
+            --surface-bright:#2C2C32;--on-surface:#E8EAED;
+            --on-surface-variant:#9AA0A6;--outline:#3C4043;--outline-variant:#2C2F33;
+            --shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow-md:0 4px 16px rgba(0,0,0,.4);
+            --shadow-lg:0 8px 40px rgba(0,0,0,.5);
+            --radius-sm:10px;--radius-md:16px;--radius-lg:24px;--radius-full:9999px;
         }
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        html{font-size:16px;-webkit-font-smoothing:antialiased}
-        body{font-family:'Google Sans','Inter',sans-serif;background:var(--surface-dim);color:var(--on-surface);min-height:100vh}
+        html{font-size:16px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+        body{font-family:'Inter',sans-serif;background:var(--surface-dim);color:var(--on-surface);min-height:100vh}
 
-        /* BG BLOBS */
+        /* ── BG BLOBS ── */
         .bg-blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-        .blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.35}
-        .blob--blue{width:340px;height:340px;background:var(--g-blue);top:-10%;left:-5%;animation:bA 14s ease-in-out infinite alternate}
-        .blob--red{width:280px;height:280px;background:var(--g-red);bottom:-8%;right:-5%;animation:bB 16s ease-in-out infinite alternate}
-        .blob--yellow{width:250px;height:250px;background:var(--g-yellow);top:50%;left:60%;animation:bC 18s ease-in-out infinite alternate}
-        .blob--green{width:300px;height:300px;background:var(--g-green);bottom:30%;left:-10%;animation:bD 15s ease-in-out infinite alternate}
-        @keyframes bA{0%{transform:translate(0,0) scale(1)}100%{transform:translate(35vw,40vh) scale(1.1)}}
-        @keyframes bB{0%{transform:translate(0,0)}100%{transform:translate(-30vw,-45vh)}}
-        @keyframes bC{0%{transform:translate(0,0)}100%{transform:translate(-35vw,-20vh)}}
-        @keyframes bD{0%{transform:translate(0,0)}100%{transform:translate(40vw,30vh)}}
+        .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.28}
+        .blob--blue{width:380px;height:380px;background:var(--g-blue);top:-8%;left:-6%;animation:bA 15s ease-in-out infinite alternate}
+        .blob--red{width:300px;height:300px;background:var(--g-red);bottom:-10%;right:-6%;animation:bB 17s ease-in-out infinite alternate}
+        .blob--yellow{width:260px;height:260px;background:var(--g-yellow);top:45%;left:58%;animation:bC 19s ease-in-out infinite alternate}
+        .blob--green{width:320px;height:320px;background:var(--g-green);bottom:28%;left:-12%;animation:bD 16s ease-in-out infinite alternate}
+        @keyframes bA{0%{transform:translate(0,0) scale(1)}100%{transform:translate(32vw,38vh) scale(1.1)}}
+        @keyframes bB{0%{transform:translate(0,0)}100%{transform:translate(-28vw,-42vh)}}
+        @keyframes bC{0%{transform:translate(0,0)}100%{transform:translate(-32vw,-18vh)}}
+        @keyframes bD{0%{transform:translate(0,0)}100%{transform:translate(38vw,28vh)}}
 
-        /* SHARED AUTH CARD */
-        .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;position:relative}
-        .auth-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:400px;padding:40px 32px;position:relative;z-index:1;animation:cardIn .5s cubic-bezier(.22,1,.36,1) forwards;opacity:0;transform:translateY(20px)}
-        .auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;background:linear-gradient(90deg,var(--g-blue),var(--g-red) 40%,var(--g-yellow) 70%,var(--g-green))}
+        /* ── UTILS ── */
+        .hidden{display:none !important}
+        .fade-in{animation:fadeIn .35s ease forwards}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
         @keyframes cardIn{to{opacity:1;transform:translateY(0)}}
-        .auth-logo{font-size:2rem;margin-bottom:8px}
-        .auth-title{font-size:1.4rem;font-weight:700;margin-bottom:4px}
-        .auth-sub{font-size:.85rem;color:var(--on-surface-variant);margin-bottom:28px;line-height:1.5}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes successPop{0%{transform:scale(0)}100%{transform:scale(1)}}
+        @keyframes checkDraw{to{stroke-dashoffset:0}}
+        @keyframes dotPulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.35);opacity:1}}
 
-        /* FORMS */
+        /* ── TOP NAV ── */
+        .top-nav {
+            position:fixed;top:0;left:0;right:0;height:60px;
+            background:rgba(17,17,20,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+            border-bottom:1px solid var(--outline-variant);z-index:1000;
+            display:flex;align-items:center;justify-content:space-between;
+            padding:0 clamp(16px,4vw,36px);
+        }
+        .nav-brand {
+            display:flex;align-items:center;gap:10px;font-weight:700;font-size:1rem;
+            color:var(--on-surface);cursor:pointer;user-select:none;text-decoration:none;
+        }
+        .nav-brand-icon {
+            width:30px;height:30px;border-radius:8px;
+            background:linear-gradient(135deg,var(--g-blue),var(--g-green));
+            display:flex;align-items:center;justify-content:center;
+            color:white;font-size:0.95rem;font-weight:800;
+            box-shadow:0 2px 10px rgba(66,133,244,0.35);
+        }
+        .nav-signin-btn {
+            background:var(--g-blue);color:white;border:none;
+            padding:8px 20px;border-radius:var(--radius-full);
+            font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;
+            transition:background .2s,transform .15s,box-shadow .2s;
+            box-shadow:0 2px 10px rgba(66,133,244,0.3);
+        }
+        .nav-signin-btn:hover{background:var(--g-blue-dark);transform:translateY(-1px);box-shadow:0 4px 16px rgba(66,133,244,0.4)}
+        .nav-signout-btn {
+            background:var(--surface-container);border:1px solid var(--outline-variant);
+            color:var(--on-surface-variant);padding:7px 16px;border-radius:var(--radius-full);
+            font-family:inherit;font-size:0.82rem;font-weight:500;cursor:pointer;
+            transition:all .2s;
+        }
+        .nav-signout-btn:hover{background:rgba(234,67,53,.12);border-color:rgba(234,67,53,.3);color:#f28b82}
+
+        /* ── SHARED FORM STYLES ── */
         .form-group{margin-bottom:16px;text-align:left}
-        .form-label{display:block;font-size:.78rem;font-weight:500;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-        .form-input{width:100%;padding:12px 14px;background:var(--surface-dim);border:1.5px solid var(--outline);border-radius:var(--radius-sm);color:var(--on-surface);font-family:inherit;font-size:.95rem;outline:none;transition:border-color .2s,box-shadow .2s}
-        .form-input::placeholder{color:var(--on-surface-variant);opacity:.6}
-        .form-input:focus{border-color:var(--g-blue);box-shadow:0 0 0 3px rgba(66,133,244,.2)}
-        .form-hint{font-size:.76rem;color:var(--on-surface-variant);margin-top:4px}
-        .btn-primary{width:100%;padding:13px;margin-top:8px;background:var(--g-blue);color:white;border:none;border-radius:var(--radius-full);font-family:inherit;font-size:.95rem;font-weight:600;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;position:relative;overflow:hidden}
+        .form-label{display:block;font-size:.76rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+        .form-input{width:100%;padding:11px 14px;background:var(--surface-dim);border:1.5px solid var(--outline);border-radius:var(--radius-sm);color:var(--on-surface);font-family:inherit;font-size:.92rem;outline:none;transition:border-color .2s,box-shadow .2s}
+        .form-input::placeholder{color:var(--on-surface-variant);opacity:.55}
+        .form-input:focus{border-color:var(--g-blue);box-shadow:0 0 0 3px rgba(66,133,244,.18)}
+        .form-hint{font-size:.74rem;color:var(--on-surface-variant);margin-top:4px}
+        .btn-primary{width:100%;padding:12px;margin-top:6px;background:var(--g-blue);color:white;border:none;border-radius:var(--radius-full);font-family:inherit;font-size:.93rem;font-weight:600;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;position:relative;overflow:hidden}
         .btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent 60%);pointer-events:none}
-        .btn-primary:hover{background:var(--g-blue-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,115,232,.35)}
+        .btn-primary:hover{background:var(--g-blue-dark);transform:translateY(-1px);box-shadow:0 4px 16px rgba(26,115,232,.35)}
         .btn-primary:active{transform:scale(.98)}
-        .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
-        .auth-tabs{display:flex;gap:0;margin-bottom:24px;background:var(--surface-dim);border-radius:var(--radius-sm);padding:4px}
-        .auth-tab{flex:1;padding:8px;border:none;background:none;border-radius:6px;font-family:inherit;font-size:.88rem;font-weight:500;color:var(--on-surface-variant);cursor:pointer;transition:background .2s,color .2s}
-        .auth-tab.active{background:var(--surface);color:var(--on-surface);box-shadow:var(--shadow-sm)}
-        .err-box{background:rgba(234,67,53,.12);border:1px solid rgba(234,67,53,.3);color:#f28b82;padding:10px 14px;border-radius:var(--radius-sm);font-size:.85rem;margin-top:14px;display:none}
+        .btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
+        .err-box{background:rgba(234,67,53,.1);border:1px solid rgba(234,67,53,.3);color:#f28b82;padding:10px 14px;border-radius:var(--radius-sm);font-size:.84rem;margin-top:12px;display:none}
         .err-box.show{display:block}
+        .auth-tabs{display:flex;gap:0;margin-bottom:20px;background:var(--surface-dim);border-radius:var(--radius-sm);padding:3px}
+        .auth-tab{flex:1;padding:7px;border:none;background:none;border-radius:7px;font-family:inherit;font-size:.86rem;font-weight:500;color:var(--on-surface-variant);cursor:pointer;transition:background .2s,color .2s}
+        .auth-tab.active{background:var(--surface);color:var(--on-surface);box-shadow:var(--shadow-sm)}
 
-        /* SHARED UTILS */
-        .navbar{background:var(--surface);border-bottom:1px solid var(--outline-variant);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-        .navbar-left{display:flex;align-items:center;gap:10px}
-        .navbar-icon{font-size:1.3rem}
-        .navbar-name{font-size:1rem;font-weight:700}
-        .navbar-badge{background:var(--g-blue);color:white;font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:var(--radius-full)}
-        .navbar-tag{background:rgba(66,133,244,.15);color:var(--g-blue);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:var(--radius-full);letter-spacing:.05em}
-        .btn-logout{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface-variant);padding:7px 14px;border-radius:var(--radius-full);font-family:inherit;font-size:.82rem;font-weight:500;cursor:pointer;transition:background .2s,color .2s}
-        .btn-logout:hover{background:var(--outline-variant);color:var(--on-surface)}
-        .btn-sm{padding:6px 14px;border-radius:var(--radius-full);font-family:inherit;font-size:.8rem;font-weight:500;cursor:pointer;border:1px solid var(--outline);background:none;color:var(--on-surface-variant);transition:all .2s}
+        /* ── SHARED DASHBOARD NAVBAR (inside views) ── */
+        .db-navbar{background:var(--surface);border-bottom:1px solid var(--outline-variant);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:60px;z-index:100}
+        .db-navbar-left{display:flex;align-items:center;gap:10px}
+        .db-navbar-icon{font-size:1.2rem}
+        .db-navbar-name{font-size:.98rem;font-weight:700}
+        .db-navbar-badge{background:var(--g-blue);color:white;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:var(--radius-full)}
+        .db-navbar-tag{background:rgba(66,133,244,.15);color:var(--g-blue);font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:var(--radius-full);letter-spacing:.05em}
+
+        /* ── SPINNER / STATES ── */
+        .spinner{width:36px;height:36px;border:3px solid var(--outline);border-top-color:var(--g-blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+        .state-box{text-align:center;padding:56px 20px;color:var(--on-surface-variant)}
+        .state-icon{font-size:2.8rem;margin-bottom:12px}
+        .state-title{font-size:1rem;font-weight:600;margin-bottom:6px;color:var(--on-surface)}
+        .state-sub{font-size:.84rem}
+
+        /* ── BTN VARIANTS ── */
+        .btn-sm{padding:5px 13px;border-radius:var(--radius-full);font-family:inherit;font-size:.78rem;font-weight:500;cursor:pointer;border:1px solid var(--outline);background:none;color:var(--on-surface-variant);transition:all .2s}
         .btn-sm:hover{background:var(--surface-container);color:var(--on-surface)}
         .btn-sm.primary{border-color:var(--g-blue);color:var(--g-blue)}
         .btn-sm.primary:hover{background:rgba(66,133,244,.1)}
@@ -90,401 +131,219 @@
         .btn-sm.danger:hover{background:rgba(234,67,53,.1)}
         .btn-sm.success{border-color:var(--g-green);color:var(--g-green)}
         .btn-sm.success:hover{background:rgba(52,168,83,.1)}
-        .spinner{width:40px;height:40px;border:3px solid var(--outline);border-top-color:var(--g-blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .state-box{text-align:center;padding:60px 20px;color:var(--on-surface-variant)}
-        .state-icon{font-size:3rem;margin-bottom:12px}
-        .state-title{font-size:1rem;font-weight:600;margin-bottom:6px;color:var(--on-surface)}
-        .state-sub{font-size:.85rem}
-        .hidden{display:none !important}
-        .fade-in{animation:fadeIn .35s ease forwards}
-        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .btn-add{display:flex;align-items:center;gap:8px;padding:9px 18px;background:var(--g-blue);color:white;border:none;border-radius:var(--radius-full);font-family:inherit;font-size:.87rem;font-weight:600;cursor:pointer;transition:background .2s,transform .15s}
+        .btn-add:hover{background:var(--g-blue-dark);transform:translateY(-1px)}
+        .btn-close{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface-variant);width:30px;height:30px;border-radius:50%;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+        .btn-close:hover{background:var(--outline)}
 
-        /* REVIEW VIEW */
-        #view-review{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;position:relative}
-        .rv-card{background:var(--surface);padding:40px 32px 36px;border-radius:28px;box-shadow:var(--shadow-lg);width:92%;max-width:420px;position:relative;z-index:1;border:1px solid var(--outline-variant);animation:cardIn .6s cubic-bezier(.22,1,.36,1) forwards;opacity:0;transform:translateY(24px) scale(.97)}
-        .rv-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:28px 28px 0 0;background:linear-gradient(90deg,var(--g-blue),var(--g-red) 30%,var(--g-yellow) 60%,var(--g-green))}
-        .google-dots{display:flex;justify-content:center;gap:8px;margin-bottom:24px}
-        .google-dots span{width:10px;height:10px;border-radius:var(--radius-full);display:inline-block;animation:dotPulse 2s ease-in-out infinite}
-        .google-dots span:nth-child(1){background:var(--g-blue);animation-delay:0s}
-        .google-dots span:nth-child(2){background:var(--g-red);animation-delay:.15s}
-        .google-dots span:nth-child(3){background:var(--g-yellow);animation-delay:.3s}
-        .google-dots span:nth-child(4){background:var(--g-green);animation-delay:.45s}
-        @keyframes dotPulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.35);opacity:1}}
-        .rv-card h2{color:var(--on-surface);font-weight:700;font-size:1.5rem;letter-spacing:-.02em;margin-bottom:6px}
-        .rv-card .sub{color:var(--on-surface-variant);font-size:.95rem;line-height:1.5;margin-bottom:28px}
-        .stars-container{background:var(--surface-dim);border-radius:var(--radius-md);padding:20px 12px;margin:0 -4px 8px;border:1px solid var(--outline-variant);transition:border-color .3s,box-shadow .3s}
-        .stars-container:hover{border-color:rgba(66,133,244,.5);box-shadow:0 0 0 3px rgba(66,133,244,.15)}
-        .stars-label{font-size:.75rem;font-weight:500;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:block}
-        .stars{font-size:2.75rem;display:flex;justify-content:center;gap:10px;user-select:none}
-        .stars button{cursor:pointer;color:var(--outline);background:none;border:none;padding:0;font:inherit;font-size:inherit;transition:color .2s,transform .2s cubic-bezier(.34,1.56,.64,1);line-height:1;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:var(--radius-full)}
-        .stars button:hover{transform:scale(1.15)}
-        .stars button:active{transform:scale(.95)}
-        .stars button.active{color:#FBBC05 !important;text-shadow:0 0 12px rgba(251,188,5,0.8) !important;filter:drop-shadow(0 2px 6px rgba(251,188,5,0.45))}
-        .stars button.hovered{color:#FBBC05 !important;text-shadow:0 0 12px rgba(251,188,5,0.8) !important}
-        .star-text{height:24px;margin-top:14px;font-size:.85rem;font-weight:500;color:var(--g-blue-dark);transition:opacity .25s;opacity:0}
-        .star-text.visible{opacity:1}
-        .rv-textarea{width:100%;height:130px;padding:16px;border-radius:var(--radius-md);border:1.5px solid var(--outline);font-family:inherit;font-size:.95rem;line-height:1.5;color:var(--on-surface);background:var(--surface-dim);resize:none;transition:border-color .3s,box-shadow .3s;outline:none}
-        .rv-textarea::placeholder{color:var(--on-surface-variant);opacity:.7}
-        .rv-textarea:focus{border-color:var(--g-blue);box-shadow:0 0 0 3px rgba(66,133,244,.25)}
-        .rv-btn{background:var(--g-blue);color:white;border:none;padding:14px 24px;border-radius:var(--radius-full);font-family:inherit;font-size:.95rem;font-weight:600;cursor:pointer;margin-top:16px;width:100%;transition:background .2s,box-shadow .3s,transform .15s;position:relative;overflow:hidden}
-        .rv-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent 60%);pointer-events:none}
-        .rv-btn:hover{background:var(--g-blue-dark);box-shadow:0 4px 16px rgba(26,115,232,.35);transform:translateY(-1px)}
-        .rv-btn:active{transform:scale(.98)}
-        .rv-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
-        .success-icon{width:72px;height:72px;border-radius:var(--radius-full);background:linear-gradient(135deg,var(--g-green),var(--g-green-light));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:successPop .5s cubic-bezier(.34,1.56,.64,1)}
-        .success-icon svg{width:36px;height:36px;stroke:white;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
-        .success-icon svg path{stroke-dasharray:40;stroke-dashoffset:40;animation:checkDraw .5s .3s ease forwards}
-        @keyframes successPop{0%{transform:scale(0)}100%{transform:scale(1)}}
-        @keyframes checkDraw{to{stroke-dashoffset:0}}
-        .rv-footer{margin-top:24px;font-size:.72rem;color:var(--on-surface-variant);opacity:.5;letter-spacing:.02em}
-        .fb-icon{width:64px;height:64px;border-radius:var(--radius-full);background:linear-gradient(135deg,rgba(234,67,53,.15),rgba(251,188,5,.15));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.75rem}
+        /* ─────────────────────────────────────────
+           HOME / LANDING VIEW
+        ───────────────────────────────────────── */
+        #view-home{min-height:100vh;padding-top:60px;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;width:100%}
 
-        /* DASHBOARD VIEW */
-        #view-dashboard{flex-direction:column;min-height:100vh}
+        .hero-section {
+            max-width:860px;width:100%;padding:72px 24px 48px;
+            text-align:center;display:flex;flex-direction:column;align-items:center;
+        }
+        .hero-badge {
+            display:inline-flex;align-items:center;gap:8px;
+            background:rgba(66,133,244,.1);border:1px solid rgba(66,133,244,.28);
+            color:var(--g-blue);font-size:.8rem;font-weight:600;
+            padding:5px 16px;border-radius:var(--radius-full);margin-bottom:28px;letter-spacing:.03em;
+        }
+        .hero-badge .dot{width:7px;height:7px;background:var(--g-green);border-radius:50%;box-shadow:0 0 8px var(--g-green);display:inline-block}
+        .hero-title {
+            font-size:clamp(2.2rem,5.5vw,3.6rem);font-weight:800;line-height:1.1;
+            letter-spacing:-.028em;margin-bottom:18px;color:var(--on-surface);
+        }
+        .hero-title span{background:linear-gradient(135deg,var(--g-blue) 20%,var(--g-green) 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hero-sub{font-size:1.1rem;color:var(--on-surface-variant);max-width:640px;margin:0 auto 40px;line-height:1.65}
+
+        /* Sign In card embedded in landing */
+        .signin-card {
+            width:100%;max-width:420px;background:var(--surface);
+            border:1px solid var(--outline-variant);border-radius:var(--radius-lg);
+            box-shadow:var(--shadow-lg);padding:36px 32px;position:relative;
+            animation:cardIn .5s cubic-bezier(.22,1,.36,1) forwards;opacity:0;transform:translateY(20px);
+        }
+        .signin-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;background:linear-gradient(90deg,var(--g-blue),var(--g-red) 38%,var(--g-yellow) 68%,var(--g-green))}
+        .signin-card-title{font-size:1.1rem;font-weight:700;margin-bottom:4px;text-align:center}
+        .signin-card-sub{font-size:.82rem;color:var(--on-surface-variant);margin-bottom:22px;text-align:center;line-height:1.5}
+
+        /* Feature grid */
+        .features-section{width:100%;max-width:960px;padding:0 24px 56px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+        .feature-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:28px 24px;text-align:left;transition:border-color .25s,transform .25s}
+        .feature-card:hover{border-color:rgba(66,133,244,.4);transform:translateY(-3px)}
+        .feature-icon{font-size:2rem;margin-bottom:14px}
+        .feature-title{font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--on-surface)}
+        .feature-desc{font-size:.87rem;color:var(--on-surface-variant);line-height:1.6}
+
+        /* Footer */
+        .site-footer{width:100%;text-align:center;padding:28px 24px 40px;border-top:1px solid var(--outline-variant);margin-top:auto}
+        .footer-text{font-size:.75rem;color:var(--on-surface-variant);opacity:.5}
+        .admin-footer-link{background:none;border:none;color:var(--on-surface-variant);font-family:inherit;font-size:.73rem;cursor:pointer;padding:0;opacity:.35;transition:opacity .2s;text-decoration:underline;text-decoration-color:transparent;margin-top:10px;display:inline-block}
+        .admin-footer-link:hover{opacity:.65;text-decoration-color:var(--on-surface-variant)}
+
+        /* ─────────────────────────────────────────
+           OWNER DASHBOARD VIEW
+        ───────────────────────────────────────── */
+        #view-dashboard{flex-direction:column;min-height:100vh;padding-top:60px}
         #view-dashboard:not(.hidden){display:flex}
         .db-stats{padding:20px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
         .db-stat{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:16px 20px}
-        .db-stat-label{font-size:.75rem;font-weight:500;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
-        .db-stat-value{font-size:1.75rem;font-weight:700;line-height:1}
-        .db-stat-sub{font-size:.75rem;color:var(--on-surface-variant);margin-top:4px}
-        .db-filters{padding:0 24px 16px;display:flex;gap:8px;flex-wrap:wrap}
-        .db-filter{padding:7px 16px;border:1px solid var(--outline);border-radius:var(--radius-full);background:none;color:var(--on-surface-variant);font-family:inherit;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s}
+        .db-stat-label{font-size:.72rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+        .db-stat-value{font-size:1.7rem;font-weight:700;line-height:1}
+        .db-stat-sub{font-size:.72rem;color:var(--on-surface-variant);margin-top:4px}
+        .db-filters{padding:0 24px 14px;display:flex;gap:8px;flex-wrap:wrap}
+        .db-filter{padding:6px 15px;border:1px solid var(--outline);border-radius:var(--radius-full);background:none;color:var(--on-surface-variant);font-family:inherit;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s}
         .db-filter.active{background:var(--g-blue);border-color:var(--g-blue);color:white}
         .db-filter:hover:not(.active){border-color:var(--g-blue);color:var(--on-surface)}
-        .db-list{padding:0 24px 40px;display:flex;flex-direction:column;gap:12px}
+        .db-list{padding:0 24px 48px;display:flex;flex-direction:column;gap:12px}
         .db-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:18px 20px;transition:border-color .2s}
-        .db-card:hover{border-color:rgba(66,133,244,.35)}
+        .db-card:hover{border-color:rgba(66,133,244,.3)}
         .db-card.unread{border-left:3px solid var(--g-blue)}
         .db-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-        .db-card-stars{color:var(--g-yellow);font-size:1rem;letter-spacing:1px}
-        .db-card-date{font-size:.78rem;color:var(--on-surface-variant)}
-        .db-card-text{font-size:.92rem;color:var(--on-surface);line-height:1.6;margin-bottom:12px}
+        .db-card-stars{color:var(--g-yellow);font-size:.95rem;letter-spacing:1px}
+        .db-card-date{font-size:.76rem;color:var(--on-surface-variant)}
+        .db-card-text{font-size:.9rem;color:var(--on-surface);line-height:1.6;margin-bottom:12px}
         .db-card-footer{display:flex;justify-content:flex-end}
-        .btn-mark-read{background:none;border:1px solid var(--outline);color:var(--on-surface-variant);padding:5px 12px;border-radius:var(--radius-full);font-family:inherit;font-size:.78rem;cursor:pointer;transition:all .2s}
+        .btn-mark-read{background:none;border:1px solid var(--outline);color:var(--on-surface-variant);padding:5px 12px;border-radius:var(--radius-full);font-family:inherit;font-size:.76rem;cursor:pointer;transition:all .2s}
         .btn-mark-read:hover{border-color:var(--g-green);color:var(--g-green)}
-        .read-badge{font-size:.75rem;color:var(--on-surface-variant);opacity:.5}
+        .read-badge{font-size:.74rem;color:var(--on-surface-variant);opacity:.5}
 
-        /* ADMIN VIEW */
-        #view-admin{flex-direction:column;min-height:100vh}
+        /* ─────────────────────────────────────────
+           ADMIN PANEL VIEW
+        ───────────────────────────────────────── */
+        #view-admin{flex-direction:column;min-height:100vh;padding-top:60px}
         #view-admin:not(.hidden){display:flex}
         .admin-body{display:flex;flex:1}
-        .sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--outline-variant);padding:20px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
-        .sidebar-section{font-size:.7rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.08em;padding:4px 12px;margin-top:8px;margin-bottom:2px}
-        .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--on-surface-variant);font-size:.9rem;font-weight:500;transition:background .15s,color .15s;border:none;background:none;font-family:inherit;width:100%;text-align:left}
+        .sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--outline-variant);padding:18px 10px;display:flex;flex-direction:column;gap:4px;position:sticky;top:118px;height:calc(100vh - 118px);overflow-y:auto}
+        .sidebar-section{font-size:.68rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.08em;padding:4px 12px;margin-top:8px;margin-bottom:2px}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--on-surface-variant);font-size:.88rem;font-weight:500;transition:background .15s,color .15s;border:none;background:none;font-family:inherit;width:100%;text-align:left}
         .nav-item:hover{background:var(--surface-container);color:var(--on-surface)}
         .nav-item.active{background:rgba(66,133,244,.12);color:var(--g-blue)}
-        .nav-icon{font-size:1rem;width:20px;text-align:center}
-        .nav-badge{margin-left:auto;background:var(--g-blue);color:white;font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:var(--radius-full)}
+        .nav-icon{font-size:.95rem;width:20px;text-align:center}
+        .nav-badge{margin-left:auto;background:var(--g-blue);color:white;font-size:.66rem;font-weight:700;padding:1px 6px;border-radius:var(--radius-full)}
         .mgr-content{flex:1;padding:28px;overflow-y:auto}
-        .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-        .page-title{font-size:1.3rem;font-weight:700}
-        .page-sub{font-size:.85rem;color:var(--on-surface-variant);margin-top:2px}
-        .btn-add{display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--g-blue);color:white;border:none;border-radius:var(--radius-full);font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;transition:background .2s,transform .15s}
-        .btn-add:hover{background:var(--g-blue-dark);transform:translateY(-1px)}
-        .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+        .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+        .page-title{font-size:1.25rem;font-weight:700}
+        .page-sub{font-size:.83rem;color:var(--on-surface-variant);margin-top:2px}
+        .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:26px}
         .summary-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:20px}
-        .summary-label{font-size:.75rem;font-weight:500;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
-        .summary-value{font-size:2rem;font-weight:700}
+        .summary-label{font-size:.72rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+        .summary-value{font-size:1.9rem;font-weight:700}
         .rest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
         .rest-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:20px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s}
-        .rest-card:hover{border-color:rgba(66,133,244,.4)}
+        .rest-card:hover{border-color:rgba(66,133,244,.35)}
         .rest-card.inactive{opacity:.5}
         .rc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-        .rc-name{font-size:1rem;font-weight:700}
-        .rc-slug{font-size:.78rem;color:var(--on-surface-variant);margin-top:2px;font-family:monospace}
-        .rc-status{flex-shrink:0;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:var(--radius-full)}
+        .rc-name{font-size:.98rem;font-weight:700}
+        .rc-slug{font-size:.75rem;color:var(--on-surface-variant);margin-top:2px;font-family:monospace}
+        .rc-status{flex-shrink:0;font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:var(--radius-full)}
         .rc-status.on{background:rgba(52,168,83,.15);color:var(--g-green)}
         .rc-status.off{background:rgba(234,67,53,.12);color:var(--g-red)}
         .rc-stats{display:flex;gap:16px}
         .rc-stat{text-align:center}
-        .rc-stat-val{font-size:1.1rem;font-weight:700}
-        .rc-stat-label{font-size:.7rem;color:var(--on-surface-variant)}
-        .rc-link{font-size:.75rem;color:var(--on-surface-variant);background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:var(--radius-sm);padding:6px 10px;font-family:monospace;word-break:break-all}
+        .rc-stat-val{font-size:1.05rem;font-weight:700}
+        .rc-stat-label{font-size:.68rem;color:var(--on-surface-variant)}
+        .rc-link{font-size:.73rem;color:var(--on-surface-variant);background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:var(--radius-sm);padding:6px 10px;font-family:monospace;word-break:break-all}
         .rc-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+        /* ─────────────────────────────────────────
+           REVIEW VIEW (customer-facing)
+        ───────────────────────────────────────── */
+        #view-review{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;position:relative}
+        .rv-card{background:var(--surface);padding:40px 32px 36px;border-radius:28px;box-shadow:var(--shadow-lg);width:92%;max-width:420px;position:relative;z-index:1;border:1px solid var(--outline-variant);animation:cardIn .6s cubic-bezier(.22,1,.36,1) forwards;opacity:0;transform:translateY(24px) scale(.97)}
+        .rv-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:28px 28px 0 0;background:linear-gradient(90deg,var(--g-blue),var(--g-red) 30%,var(--g-yellow) 60%,var(--g-green))}
+        .google-dots{display:flex;justify-content:center;gap:8px;margin-bottom:24px}
+        .google-dots span{width:10px;height:10px;border-radius:50%;display:inline-block;animation:dotPulse 2s ease-in-out infinite}
+        .google-dots span:nth-child(1){background:var(--g-blue);animation-delay:0s}
+        .google-dots span:nth-child(2){background:var(--g-red);animation-delay:.15s}
+        .google-dots span:nth-child(3){background:var(--g-yellow);animation-delay:.3s}
+        .google-dots span:nth-child(4){background:var(--g-green);animation-delay:.45s}
+        .rv-card h2{color:var(--on-surface);font-weight:700;font-size:1.45rem;letter-spacing:-.02em;margin-bottom:6px}
+        .rv-card .sub{color:var(--on-surface-variant);font-size:.93rem;line-height:1.5;margin-bottom:28px}
+        .stars-container{background:var(--surface-dim);border-radius:var(--radius-md);padding:20px 12px;margin:0 -4px 8px;border:1px solid var(--outline-variant);transition:border-color .3s,box-shadow .3s}
+        .stars-container:hover{border-color:rgba(66,133,244,.5);box-shadow:0 0 0 3px rgba(66,133,244,.12)}
+        .stars-label{font-size:.73rem;font-weight:500;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:block}
+        .stars{font-size:2.75rem;display:flex;justify-content:center;gap:10px;user-select:none}
+        .stars button{cursor:pointer;color:var(--outline);background:none;border:none;padding:0;font:inherit;font-size:inherit;transition:color .2s,transform .2s cubic-bezier(.34,1.56,.64,1);line-height:1;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%}
+        .stars button:hover{transform:scale(1.15)}
+        .stars button:active{transform:scale(.95)}
+        .stars button.active{color:#FBBC05 !important;text-shadow:0 0 12px rgba(251,188,5,0.8) !important;filter:drop-shadow(0 2px 6px rgba(251,188,5,.45))}
+        .stars button.hovered{color:#FBBC05 !important;text-shadow:0 0 12px rgba(251,188,5,0.8) !important}
+        .star-text{height:24px;margin-top:14px;font-size:.84rem;font-weight:500;color:var(--g-blue);transition:opacity .25s;opacity:0}
+        .star-text.visible{opacity:1}
+        .rv-textarea{width:100%;height:130px;padding:16px;border-radius:var(--radius-md);border:1.5px solid var(--outline);font-family:inherit;font-size:.93rem;line-height:1.5;color:var(--on-surface);background:var(--surface-dim);resize:none;transition:border-color .3s,box-shadow .3s;outline:none}
+        .rv-textarea::placeholder{color:var(--on-surface-variant);opacity:.7}
+        .rv-textarea:focus{border-color:var(--g-blue);box-shadow:0 0 0 3px rgba(66,133,244,.22)}
+        .rv-btn{background:var(--g-blue);color:white;border:none;padding:13px 24px;border-radius:var(--radius-full);font-family:inherit;font-size:.93rem;font-weight:600;cursor:pointer;margin-top:16px;width:100%;transition:background .2s,box-shadow .3s,transform .15s;position:relative;overflow:hidden}
+        .rv-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent 60%);pointer-events:none}
+        .rv-btn:hover{background:var(--g-blue-dark);box-shadow:0 4px 16px rgba(26,115,232,.35);transform:translateY(-1px)}
+        .rv-btn:active{transform:scale(.98)}
+        .rv-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .success-icon{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--g-green),var(--g-green-light));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:successPop .5s cubic-bezier(.34,1.56,.64,1)}
+        .success-icon svg{width:34px;height:34px;stroke:white;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+        .success-icon svg path{stroke-dasharray:40;stroke-dashoffset:40;animation:checkDraw .5s .3s ease forwards}
+        .rv-footer{margin-top:24px;font-size:.7rem;color:var(--on-surface-variant);opacity:.45;letter-spacing:.02em}
+        .fb-icon{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,rgba(234,67,53,.15),rgba(251,188,5,.15));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.7rem}
+
+        /* ─────────────────────────────────────────
+           ADMIN LOGIN MODAL
+        ───────────────────────────────────────── */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+        .modal-overlay.open{opacity:1;pointer-events:all}
+        .modal{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:420px;padding:36px 32px;transform:scale(.94);transition:transform .25s;max-height:90vh;overflow-y:auto;position:relative}
+        .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;background:linear-gradient(90deg,var(--g-red),var(--g-yellow))}
+        .modal-overlay.open .modal{transform:scale(1)}
+        .modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px}
+        .modal-title{font-size:1.05rem;font-weight:700}
+        .modal-sub{font-size:.8rem;color:var(--on-surface-variant);margin-top:3px}
+        .link-box{background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:var(--radius-sm);padding:10px 14px;font-family:monospace;font-size:.8rem;word-break:break-all;margin:8px 0;color:var(--g-blue)}
+
+        /* ─────────────────────────────────────────
+           PANEL (admin feedback side-drawer)
+        ───────────────────────────────────────── */
         .panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;display:none}
         .panel-overlay.open{display:block}
         .feedback-panel{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:95vw;background:var(--surface-bright);border-left:1px solid var(--outline-variant);box-shadow:var(--shadow-lg);z-index:200;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .35s cubic-bezier(.22,1,.36,1)}
         .feedback-panel.open{transform:translateX(0)}
         .panel-header{padding:20px 24px;border-bottom:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:space-between}
-        .panel-title{font-size:1rem;font-weight:700}
-        .panel-sub{font-size:.8rem;color:var(--on-surface-variant)}
-        .btn-close{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface-variant);width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
-        .btn-close:hover{background:var(--outline)}
-        .panel-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
-        .panel-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:16px}
+        .panel-title{font-size:.98rem;font-weight:700}
+        .panel-sub{font-size:.78rem;color:var(--on-surface-variant)}
+        .panel-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+        .panel-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:14px}
         .panel-card.unread{border-left:3px solid var(--g-blue)}
         .pc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-        .pc-stars{color:var(--g-yellow);font-size:.9rem}
-        .pc-date{font-size:.75rem;color:var(--on-surface-variant)}
-        .pc-text{font-size:.88rem;color:var(--on-surface);line-height:1.6}
-        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
-        .modal-overlay.open{opacity:1;pointer-events:all}
-        .modal{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:480px;padding:32px;transform:scale(.95);transition:transform .25s;max-height:90vh;overflow-y:auto}
-        .modal-overlay.open .modal{transform:scale(1)}
-        .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-        .modal-title{font-size:1.1rem;font-weight:700}
-        .link-box{background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:var(--radius-sm);padding:12px 14px;font-family:monospace;font-size:.82rem;word-break:break-all;margin:8px 0;color:var(--g-blue)}
+        .pc-stars{color:var(--g-yellow);font-size:.88rem}
+        .pc-date{font-size:.73rem;color:var(--on-surface-variant)}
+        .pc-text{font-size:.86rem;color:var(--on-surface);line-height:1.6}
 
-        /* MOBILE BOTTOM NAV */
+        /* ─────────────────────────────────────────
+           MOBILE / RESPONSIVE
+        ───────────────────────────────────────── */
         .mob-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--outline-variant);z-index:150;padding-bottom:env(safe-area-inset-bottom,0px)}
         .mob-nav-row{display:flex}
-        .mob-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;border:none;background:none;color:var(--on-surface-variant);font-family:inherit;font-size:.65rem;font-weight:500;cursor:pointer;transition:color .2s;min-height:56px}
+        .mob-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;border:none;background:none;color:var(--on-surface-variant);font-family:inherit;font-size:.63rem;font-weight:500;cursor:pointer;transition:color .2s;min-height:54px}
         .mob-nav-btn.active{color:var(--g-blue)}
-        .mob-nav-ico{font-size:1.35rem;line-height:1}
+        .mob-nav-ico{font-size:1.3rem;line-height:1}
 
-        /* RESPONSIVE */
         @media(max-width:768px){
             .sidebar{display:none}
             .mob-bottom-nav{display:block}
             .summary-grid{grid-template-columns:1fr 1fr}
-            .mgr-content{padding:16px 16px 88px}
-            .navbar{padding:0 16px}
-            .db-stats{padding:16px;gap:8px}
-            .db-list{padding:0 16px 100px}
-            .db-filters{padding:0 16px 12px}
+            .mgr-content{padding:14px 14px 90px}
+            .db-stats{padding:14px;gap:8px}
+            .db-list{padding:0 14px 100px}
+            .db-filters{padding:0 14px 12px}
             .btn-add span{display:none}
+            .hero-section{padding:52px 16px 32px}
+            .features-section{padding:0 16px 40px}
+            .signin-card{padding:28px 20px}
         }
         @media(max-width:500px){
             .summary-grid,.rest-grid{grid-template-columns:1fr}
             .db-stats{grid-template-columns:1fr 1fr}
-        }
-
-        /* ══ GLOBAL HEADER NAVBAR ══ */
-        .top-nav-bar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 64px;
-            background: rgba(18, 18, 22, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--outline-variant);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 clamp(16px, 4vw, 32px);
-        }
-        .top-nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-size: 1.05rem;
-            color: var(--on-surface);
-            cursor: pointer;
-            user-select: none;
-        }
-        .top-nav-brand .brand-logo-icon {
-            width: 32px; height: 32px;
-            border-radius: var(--radius-sm);
-            background: linear-gradient(135deg, var(--g-blue), var(--g-green));
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 1rem; font-weight: 800;
-            box-shadow: 0 2px 8px rgba(66,133,244,0.3);
-        }
-        .top-nav-links {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .top-nav-link {
-            background: none;
-            border: none;
-            color: var(--on-surface-variant);
-            padding: 8px 16px;
-            border-radius: var(--radius-full);
-            font-family: inherit;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .top-nav-link:hover {
-            color: var(--on-surface);
-            background: var(--surface-container);
-        }
-        .top-nav-link.active {
-            color: var(--g-blue);
-            background: rgba(66, 133, 244, 0.12);
-            font-weight: 600;
-        }
-
-        /* ══ LANDING PAGE / HOME VIEW ══ */
-        #view-home {
-            min-height: 100vh;
-            padding-top: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            z-index: 1;
-            width: 100%;
-        }
-        .hero-container {
-            max-width: 920px;
-            width: 100%;
-            padding: 56px 24px 48px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(66, 133, 244, 0.12);
-            border: 1px solid rgba(66, 133, 244, 0.3);
-            color: var(--g-blue);
-            font-size: 0.82rem;
-            font-weight: 600;
-            padding: 6px 18px;
-            border-radius: var(--radius-full);
-            margin-bottom: 24px;
-            letter-spacing: 0.03em;
-        }
-        .hero-badge .dot-live {
-            width: 8px; height: 8px;
-            background: var(--g-green);
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 10px var(--g-green);
-        }
-        .hero-title {
-            font-size: clamp(2.3rem, 5.5vw, 3.8rem);
-            font-weight: 800;
-            line-height: 1.12;
-            letter-spacing: -0.025em;
-            margin-bottom: 20px;
-            color: var(--on-surface);
-        }
-        .hero-title span {
-            background: linear-gradient(135deg, var(--g-blue) 20%, var(--g-green) 80%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .hero-sub {
-            font-size: 1.15rem;
-            color: var(--on-surface-variant);
-            max-width: 680px;
-            margin: 0 auto 36px;
-            line-height: 1.6;
-        }
-        .hero-actions {
-            display: flex;
-            justify-content: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-        .btn-hero-primary {
-            background: linear-gradient(135deg, var(--g-blue), var(--g-blue-dark));
-            color: white;
-            padding: 14px 32px;
-            border-radius: var(--radius-full);
-            font-weight: 600;
-            font-size: 0.95rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 4px 20px rgba(66, 133, 244, 0.35);
-        }
-        .btn-hero-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 28px rgba(66, 133, 244, 0.5);
-        }
-        .btn-hero-secondary {
-            background: var(--surface);
-            border: 1.5px solid var(--outline);
-            color: var(--on-surface);
-            padding: 14px 28px;
-            border-radius: var(--radius-full);
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-hero-secondary:hover {
-            background: var(--surface-container);
-            border-color: var(--on-surface-variant);
-        }
-
-
-        /* FEATURES GRID */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 24px;
-            max-width: 960px;
-            width: 100%;
-            padding: 0 24px 64px;
-        }
-        .feature-card {
-            background: var(--surface);
-            border: 1px solid var(--outline-variant);
-            border-radius: var(--radius-md);
-            padding: 32px 26px;
-            text-align: left;
-            transition: border-color 0.25s, transform 0.25s;
-        }
-        .feature-card:hover {
-            border-color: rgba(66, 133, 244, 0.4);
-            transform: translateY(-3px);
-        }
-        .feature-icon {
-            font-size: 2.2rem;
-            margin-bottom: 16px;
-        }
-        .feature-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--on-surface);
-        }
-        .feature-desc {
-            font-size: 0.9rem;
-            color: var(--on-surface-variant);
-            line-height: 1.6;
-        }
-
-        /* PORTAL ACCESS SWITCHER SECTION */
-        .portal-access-section {
-            width: 100%;
-            max-width: 960px;
-            padding: 0 24px 80px;
-        }
-        .portal-access-title {
-            text-align: center;
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-bottom: 24px;
-        }
-        .portal-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .portal-card {
-            background: var(--surface);
-            border: 1px solid var(--outline-variant);
-            border-radius: var(--radius-md);
-            padding: 28px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 16px;
-            transition: border-color 0.2s;
-        }
-        .portal-card:hover {
-            border-color: var(--g-blue);
-        }
-
-        @media(max-width:768px){
-            .top-nav-bar{padding:0 16px}
-            .hero-container{padding:36px 16px 32px}
-            #view-home{padding-top:64px}
-            .portal-grid{grid-template-columns:1fr}
         }
     </style>
 </head>
@@ -497,75 +356,128 @@
     <div class="blob blob--green"></div>
 </div>
 
-<!-- ══ GLOBAL NAVIGATION BAR ══ -->
-<nav class="top-nav-bar" id="global-nav">
-    <div class="top-nav-brand" onclick="showView('home')">
-        <div class="brand-logo-icon">&#x2B50;</div>
-        <span style="letter-spacing:-.01em">Review Engine</span>
-    </div>
-    <div class="top-nav-links">
-        <button class="top-nav-link active" id="nav-tab-home" onclick="showView('home')">Overview</button>
-        <button class="top-nav-link" id="nav-tab-dashboard" onclick="showView('dashboard')">Owner Portal</button>
-        <button class="top-nav-link" id="nav-tab-admin" onclick="showView('admin')">Admin Panel</button>
-    </div>
+<!-- ══ GLOBAL TOP NAV ══ -->
+<nav class="top-nav" id="global-nav" aria-label="Main navigation">
+    <a class="nav-brand" href="/" onclick="return goHome()">
+        <div class="nav-brand-icon" aria-hidden="true">&#x2B50;</div>
+        Review Engine
+    </a>
+    <!-- Shown when NOT logged in as owner/admin -->
+    <button class="nav-signin-btn" id="nav-signin-btn" onclick="scrollToSignin()">Sign In</button>
+    <!-- Shown when logged in as owner -->
+    <button class="nav-signout-btn hidden" id="nav-signout-btn" onclick="ownerSignOut()">Sign Out</button>
 </nav>
 
-<!-- ══ HOME / LANDING PAGE VIEW ══ -->
+
+<!-- ══════════════════════════════════════════
+     HOME / LANDING VIEW
+══════════════════════════════════════════ -->
 <div id="view-home">
-    <section class="hero-container">
-        <div class="hero-badge"><span class="dot-live"></span> Smart Google Review Funnel Platform</div>
-        <h1 class="hero-title">More 5-Star Google Reviews.<br><span>Zero Public Complaints.</span></h1>
-        <p class="hero-sub">Automatically route 4 &amp; 5-star customer reviews directly to your public Google Maps profile, while privately intercepting 1 to 3-star feedback before it hits the web.</p>
-        <div class="hero-actions">
-            <button class="btn-hero-primary" onclick="showView('dashboard')">Launch Owner Portal &rarr;</button>
+    <!-- Hero -->
+    <section class="hero-section">
+        <div class="hero-badge"><span class="dot"></span> Smart Google Review Funnel</div>
+        <h1 class="hero-title">More 5-Star Reviews.<br><span>Zero Public Complaints.</span></h1>
+        <p class="hero-sub">Automatically route happy customers to Google Maps and privately intercept negative feedback before it ever goes public.</p>
+
+        <!-- Inline sign-in / register card -->
+        <div class="signin-card" id="signin-card">
+            <p class="signin-card-title">&#x1F37D;&#xFE0F; Owner Portal</p>
+            <p class="signin-card-sub">Sign in to view your private customer feedback dashboard.</p>
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="home-tab-login" onclick="homeSwitchTab('login')">Log In</button>
+                <button class="auth-tab" id="home-tab-register" onclick="homeSwitchTab('register')">Register</button>
+            </div>
+            <!-- Login form -->
+            <div id="home-form-login">
+                <div class="form-group">
+                    <label class="form-label" for="home-email">Email</label>
+                    <input class="form-input" type="email" id="home-email" placeholder="you@restaurant.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="home-password">Password</label>
+                    <input class="form-input" type="password" id="home-password" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <button class="btn-primary" id="home-btn-login" onclick="homeLogin()">Log In &rarr;</button>
+                <div class="err-box" id="home-login-err"></div>
+            </div>
+            <!-- Register form -->
+            <div id="home-form-register" class="hidden">
+                <div class="form-group">
+                    <label class="form-label" for="home-reg-email">Email</label>
+                    <input class="form-input" type="email" id="home-reg-email" placeholder="you@restaurant.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="home-reg-pass">Password</label>
+                    <input class="form-input" type="password" id="home-reg-pass" placeholder="Min. 8 characters" autocomplete="new-password">
+                </div>
+                <p class="form-hint" style="margin-bottom:12px">Your email must be pre-registered by an administrator.</p>
+                <button class="btn-primary" id="home-btn-register" onclick="homeRegister()">Create Account &rarr;</button>
+                <div class="err-box" id="home-register-err"></div>
+            </div>
         </div>
     </section>
 
-
-    <!-- Feature Grid -->
-    <section class="features-grid">
+    <!-- Feature highlights -->
+    <section class="features-section" aria-label="Features">
         <div class="feature-card">
             <div class="feature-icon">&#x1F3AF;</div>
             <h4 class="feature-title">Smart Review Shield</h4>
-            <p class="feature-desc">Happy customers (4 &amp; 5 stars) are instantly directed to Google Maps. Constructive feedback (1-3 stars) stays 100% private to management.</p>
+            <p class="feature-desc">Happy customers (4–5 stars) are sent directly to Google Maps. Constructive feedback (1–3 stars) stays 100% private to management.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon">&#x1F50F;</div>
-            <h4 class="feature-title">Strict Admin Pre-Registration</h4>
-            <p class="feature-desc">Restricted access control ensures only pre-approved restaurant client emails registered in the Admin Portal can create login accounts.</p>
+            <h4 class="feature-title">Strict Access Control</h4>
+            <p class="feature-desc">Only pre-approved owner emails registered by the admin can create login accounts — no unauthorized signups.</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon">&#x1F4C8;</div>
-            <h4 class="feature-title">Real-Time Owner Portal</h4>
-            <p class="feature-desc">Restaurant owners get a private portal to review incoming customer notes, mark items as read, and track average star trends.</p>
+            <h4 class="feature-title">Real-Time Dashboard</h4>
+            <p class="feature-desc">Owners get a private portal to review incoming customer notes, mark items as read, and track average star trends.</p>
         </div>
     </section>
 
-    <!-- Portal Switcher Section -->
-    <section class="portal-access-section">
-        <h3 class="portal-access-title">Access Platform Portals</h3>
-        <div class="portal-grid">
-            <div class="portal-card">
-                <div>
-                    <div style="font-size:2rem;margin-bottom:10px">&#x1F37D;&#xFE0F;</div>
-                    <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px">Restaurant Owner Portal</div>
-                    <p style="font-size:.85rem;color:var(--on-surface-variant);line-height:1.5">Pre-registered owners can sign in to view private customer feedback, unread notes, and star statistics.</p>
-                </div>
-                <button class="btn-hero-primary" style="width:100%" onclick="showView('dashboard')">Sign In to Owner Portal &rarr;</button>
-            </div>
-            <div class="portal-card">
-                <div>
-                    <div style="font-size:2rem;margin-bottom:10px">&#x1F6E0;&#xFE0F;</div>
-                    <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px">Platform Admin Panel</div>
-                    <p style="font-size:.85rem;color:var(--on-surface-variant);line-height:1.5">Platform managers can pre-register new client emails, generate unique review links, and manage active status.</p>
-                </div>
-                <button class="btn-hero-secondary" style="width:100%" onclick="showView('admin')">Sign In to Admin Panel &rarr;</button>
-            </div>
-        </div>
-    </section>
+    <!-- Footer with discreet admin link -->
+    <footer class="site-footer">
+        <p class="footer-text">&copy; Review Engine. All rights reserved.</p>
+        <br>
+        <button class="admin-footer-link" id="admin-footer-link" onclick="openAdminModal()" aria-label="Admin access">Admin Access</button>
+    </footer>
 </div>
 
-<!-- ══ REVIEW VIEW ══ -->
+
+<!-- ══════════════════════════════════════════
+     OWNER DASHBOARD VIEW
+══════════════════════════════════════════ -->
+<div id="view-dashboard" class="hidden">
+    <nav class="db-navbar" aria-label="Dashboard navigation">
+        <div class="db-navbar-left">
+            <span class="db-navbar-icon">&#x1F37D;&#xFE0F;</span>
+            <span class="db-navbar-name" id="db-rest-name">My Restaurant</span>
+            <span class="db-navbar-badge hidden" id="db-unread-badge">0</span>
+        </div>
+        <button class="nav-signout-btn" onclick="ownerSignOut()">Sign Out</button>
+    </nav>
+    <div class="db-stats">
+        <div class="db-stat"><div class="db-stat-label">Total</div><div class="db-stat-value" id="db-stat-total" style="color:var(--g-blue)">—</div><div class="db-stat-sub">reviews</div></div>
+        <div class="db-stat"><div class="db-stat-label">Average</div><div class="db-stat-value" id="db-stat-avg" style="color:var(--g-yellow)">—</div><div class="db-stat-sub">stars</div></div>
+        <div class="db-stat"><div class="db-stat-label">Unread</div><div class="db-stat-value" id="db-stat-unread" style="color:var(--g-green)">—</div><div class="db-stat-sub">new</div></div>
+    </div>
+    <div class="db-filters">
+        <button class="db-filter active" data-f="all" onclick="dbFilter('all')">All</button>
+        <button class="db-filter" data-f="unread" onclick="dbFilter('unread')">Unread</button>
+        <button class="db-filter" data-f="1" onclick="dbFilter('1')">&#9733;</button>
+        <button class="db-filter" data-f="2" onclick="dbFilter('2')">&#9733;&#9733;</button>
+        <button class="db-filter" data-f="3" onclick="dbFilter('3')">&#9733;&#9733;&#9733;</button>
+    </div>
+    <div class="db-list" id="db-list">
+        <div class="state-box"><div class="spinner"></div><div class="state-title">Loading feedback&hellip;</div></div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     REVIEW VIEW (customer-facing, via ?c=slug)
+══════════════════════════════════════════ -->
 <div id="view-review" class="hidden">
     <div class="rv-card" id="rv-loading">
         <div class="spinner"></div>
@@ -604,132 +516,71 @@
     </div>
 </div>
 
-<!-- ══ DASHBOARD VIEW ══ -->
-<div id="view-dashboard" class="hidden">
-    <div class="auth-wrap" id="db-auth">
-        <div class="auth-card">
-            <div class="auth-logo">&#x1F37D;&#xFE0F;</div>
-            <h1 class="auth-title">Owner Portal</h1>
-            <p class="auth-sub">View and manage customer feedback for your restaurant.</p>
-            <div class="auth-tabs">
-                <button class="auth-tab active" id="db-tab-login" onclick="dbSwitchTab('login')">Log In</button>
-                <button class="auth-tab" id="db-tab-register" onclick="dbSwitchTab('register')">Register</button>
-            </div>
-            <div id="db-form-login">
-                <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="db-email" placeholder="you@restaurant.com"></div>
-                <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="db-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"></div>
-                <button class="btn-primary" id="db-btn-login" onclick="dbLogin()">Log In</button>
-                <div class="err-box" id="db-login-err"></div>
-            </div>
-            <div id="db-form-register" class="hidden">
-                <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="db-reg-email" placeholder="you@restaurant.com"></div>
-                <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="db-reg-pass" placeholder="Min. 8 characters"></div>
-                <p class="form-hint" style="margin-bottom:12px">Your email must be pre-registered by an account administrator.</p>
-                <button class="btn-primary" id="db-btn-register" onclick="dbRegister()">Create Account</button>
-                <div class="err-box" id="db-register-err"></div>
-            </div>
-        </div>
-    </div>
-    <div id="db-screen" class="hidden" style="display:flex;flex-direction:column;flex:1">
-        <nav class="navbar">
-            <div class="navbar-left">
-                <span class="navbar-icon">&#x1F37D;&#xFE0F;</span>
-                <span class="navbar-name" id="db-rest-name">My Restaurant</span>
-                <span class="navbar-badge hidden" id="db-unread-badge">0</span>
-            </div>
-            <button class="btn-logout" onclick="dbLogout()">Log out</button>
-        </nav>
-        <div class="db-stats">
-            <div class="db-stat"><div class="db-stat-label">Total</div><div class="db-stat-value" id="db-stat-total" style="color:var(--g-blue)">&#x2014;</div><div class="db-stat-sub">reviews</div></div>
-            <div class="db-stat"><div class="db-stat-label">Average</div><div class="db-stat-value" id="db-stat-avg" style="color:var(--g-yellow)">&#x2014;</div><div class="db-stat-sub">stars</div></div>
-            <div class="db-stat"><div class="db-stat-label">Unread</div><div class="db-stat-value" id="db-stat-unread" style="color:var(--g-green)">&#x2014;</div><div class="db-stat-sub">new</div></div>
-        </div>
-        <div class="db-filters">
-            <button class="db-filter active" data-f="all" onclick="dbFilter('all')">All</button>
-            <button class="db-filter" data-f="unread" onclick="dbFilter('unread')">Unread</button>
-            <button class="db-filter" data-f="1" onclick="dbFilter('1')">&#9733;</button>
-            <button class="db-filter" data-f="2" onclick="dbFilter('2')">&#9733;&#9733;</button>
-            <button class="db-filter" data-f="3" onclick="dbFilter('3')">&#9733;&#9733;&#9733;</button>
-        </div>
-        <div class="db-list" id="db-list">
-            <div class="state-box"><div class="spinner"></div><div class="state-title">Loading feedback&hellip;</div></div>
-        </div>
-    </div>
-</div>
 
-<!-- ══ ADMIN VIEW ══ -->
+<!-- ══════════════════════════════════════════
+     ADMIN PANEL VIEW
+══════════════════════════════════════════ -->
 <div id="view-admin" class="hidden">
-    <div class="auth-wrap" id="mgr-auth">
-        <div class="auth-card">
-            <div class="auth-logo">&#x1F6E0;&#xFE0F;</div>
-            <h1 class="auth-title">Admin Panel</h1>
-            <p class="auth-sub">Sign in with your admin account to manage restaurants.</p>
-            <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="mgr-email" placeholder="admin@yourdomain.com"></div>
-            <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="mgr-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"></div>
-            <button class="btn-primary" id="mgr-btn-login" onclick="mgrLogin()">Sign In</button>
-            <div class="err-box" id="mgr-auth-err"></div>
+    <nav class="db-navbar" aria-label="Admin navigation">
+        <div class="db-navbar-left">
+            <span class="db-navbar-icon">&#x1F6E0;&#xFE0F;</span>
+            <span class="db-navbar-name">Review Platform</span>
+            <span class="db-navbar-tag">ADMIN</span>
         </div>
+        <button class="nav-signout-btn" onclick="mgrSignOut()">Sign Out</button>
+    </nav>
+    <div class="admin-body">
+        <aside class="sidebar" aria-label="Admin sidebar">
+            <span class="sidebar-section">Menu</span>
+            <button class="nav-item active" id="nav-restaurants" onclick="mgrView('restaurants')">
+                <span class="nav-icon">&#x1F37D;&#xFE0F;</span> Restaurants
+                <span class="nav-badge hidden" id="mgr-count"></span>
+            </button>
+            <button class="nav-item" id="nav-feedback" onclick="mgrView('feedback')">
+                <span class="nav-icon">&#x1F4AC;</span> All Feedback
+            </button>
+        </aside>
+        <main class="mgr-content" id="mgr-content" aria-label="Admin content">
+            <div class="state-box"><div class="spinner"></div><div class="state-title">Loading&hellip;</div></div>
+        </main>
     </div>
-    <div id="mgr-screen" class="hidden" style="display:flex;flex-direction:column;flex:1">
-        <nav class="navbar">
-            <div class="navbar-left">
-                <span class="navbar-icon">&#x1F6E0;&#xFE0F;</span>
-                <span class="navbar-name">Review Platform</span>
-                <span class="navbar-tag">ADMIN</span>
-            </div>
-            <button class="btn-logout" onclick="mgrLogout()">Log out</button>
-        </nav>
-        <div class="admin-body">
-            <aside class="sidebar">
-                <span class="sidebar-section">Menu</span>
-                <button class="nav-item active" id="nav-restaurants" onclick="mgrView('restaurants')">
-                    <span class="nav-icon">&#x1F37D;&#xFE0F;</span> Restaurants
-                    <span class="nav-badge hidden" id="mgr-count"></span>
-                </button>
-                <button class="nav-item" id="nav-feedback" onclick="mgrView('feedback')">
-                    <span class="nav-icon">&#x1F4AC;</span> All Feedback
-                </button>
-            </aside>
-            <main class="mgr-content" id="mgr-content">
-                <div class="state-box"><div class="spinner"></div><div class="state-title">Loading&hellip;</div></div>
-            </main>
+    <!-- Mobile bottom nav -->
+    <nav class="mob-bottom-nav" aria-label="Mobile admin nav">
+        <div class="mob-nav-row">
+            <button class="mob-nav-btn active" id="mob-restaurants" onclick="mgrView('restaurants')">
+                <span class="mob-nav-ico">&#x1F37D;&#xFE0F;</span>Restaurants
+            </button>
+            <button class="mob-nav-btn" id="mob-feedback" onclick="mgrView('feedback')">
+                <span class="mob-nav-ico">&#x1F4AC;</span>Feedback
+            </button>
+            <button class="mob-nav-btn" onclick="mgrSignOut()">
+                <span class="mob-nav-ico">&#x1F6AA;</span>Sign Out
+            </button>
         </div>
-        <!-- Mobile bottom nav -->
-        <nav class="mob-bottom-nav">
-            <div class="mob-nav-row">
-                <button class="mob-nav-btn active" id="mob-restaurants" onclick="mgrView('restaurants')">
-                    <span class="mob-nav-ico">&#x1F37D;&#xFE0F;</span>Restaurants
-                </button>
-                <button class="mob-nav-btn" id="mob-feedback" onclick="mgrView('feedback')">
-                    <span class="mob-nav-ico">&#x1F4AC;</span>Feedback
-                </button>
-                <button class="mob-nav-btn" onclick="mgrLogout()">
-                    <span class="mob-nav-ico">&#x1F6AA;</span>Log out
-                </button>
-            </div>
-        </nav>
-    </div>
+    </nav>
     <!-- Feedback panel -->
     <div class="panel-overlay" id="mgr-panel-overlay" onclick="mgrClosePanel()"></div>
-    <aside class="feedback-panel" id="mgr-panel">
+    <aside class="feedback-panel" id="mgr-panel" aria-label="Feedback details">
         <div class="panel-header">
             <div><div class="panel-title" id="mgr-panel-title">Feedback</div><div class="panel-sub" id="mgr-panel-sub">&mdash;</div></div>
-            <button class="btn-close" onclick="mgrClosePanel()">&#x2715;</button>
+            <button class="btn-close" onclick="mgrClosePanel()" aria-label="Close panel">&#x2715;</button>
         </div>
         <div class="panel-body" id="mgr-panel-body"></div>
     </aside>
     <!-- Add restaurant modal -->
-    <div class="modal-overlay" id="mgr-modal">
+    <div class="modal-overlay" id="mgr-modal" role="dialog" aria-modal="true" aria-labelledby="mgr-modal-title">
         <div class="modal">
             <div class="modal-header">
-                <span class="modal-title" id="mgr-modal-title">Add Restaurant</span>
-                <button class="btn-close" onclick="mgrCloseModal()">&#x2715;</button>
+                <div>
+                    <div class="modal-title" id="mgr-modal-title">Add Restaurant</div>
+                </div>
+                <button class="btn-close" onclick="mgrCloseModal()" aria-label="Close modal">&#x2715;</button>
             </div>
             <div id="mgr-modal-body">
-                <div class="form-group"><label class="form-label">Restaurant Name</label><input class="form-input" type="text" id="r-name" placeholder="e.g. Burger Palace"></div>
-                <div class="form-group"><label class="form-label">Owner Email (Pre-Registration)</label><input class="form-input" type="email" id="r-email" placeholder="owner@restaurant.com"><p class="form-hint">Owner must sign up using this exact email address.</p></div>
-                <div class="form-group"><label class="form-label">Restaurant Code (URL slug)</label><input class="form-input" type="text" id="r-slug" placeholder="e.g. burger-palace" oninput="sanitizeSlug(this)"><p class="form-hint">Lowercase, numbers, hyphens only. Used in the review link.</p></div>
-                <div class="form-group"><label class="form-label">Google Review URL</label><input class="form-input" type="url" id="r-url" placeholder="https://g.page/r/YOUR_ID/review"></div>
+                <div class="form-group"><label class="form-label" for="r-name">Restaurant Name</label><input class="form-input" type="text" id="r-name" placeholder="e.g. Burger Palace"></div>
+                <div class="form-group"><label class="form-label" for="r-email">Owner Email (Pre-Registration)</label><input class="form-input" type="email" id="r-email" placeholder="owner@restaurant.com"><p class="form-hint">Owner must sign up using this exact email address.</p></div>
+                <div class="form-group"><label class="form-label" for="r-slug">Restaurant Code (URL slug)</label><input class="form-input" type="text" id="r-slug" placeholder="e.g. burger-palace" oninput="sanitizeSlug(this)"><p class="form-hint">Lowercase, numbers, hyphens only. Used in the review link.</p></div>
+                <div class="form-group"><label class="form-label" for="r-url">Google Review URL</label><input class="form-input" type="url" id="r-url" placeholder="https://g.page/r/YOUR_ID/review"></div>
                 <button class="btn-primary" id="mgr-btn-save" onclick="mgrSave()">Create Restaurant</button>
                 <div class="err-box" id="mgr-modal-err"></div>
             </div>
@@ -737,37 +588,55 @@
     </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════
+     ADMIN LOGIN MODAL (triggered from footer)
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title" id="admin-modal-title">&#x1F6E0;&#xFE0F; Admin Access</div>
+                <div class="modal-sub">Platform administrators only</div>
+            </div>
+            <button class="btn-close" onclick="closeAdminModal()" aria-label="Close">&#x2715;</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="mgr-email">Email</label>
+            <input class="form-input" type="email" id="mgr-email" placeholder="admin@yourdomain.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="mgr-password">Password</label>
+            <input class="form-input" type="password" id="mgr-password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="btn-primary" id="mgr-btn-login" onclick="mgrLogin()">Sign In to Admin Panel &rarr;</button>
+        <div class="err-box" id="mgr-auth-err"></div>
+    </div>
+</div>
+
+
 <script>
+/* ── CONFIG & SUPABASE INIT ── */
 let SUPABASE_URL = 'https://tldzmrghbvqfaclantlr.supabase.co';
 let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
 let sb = null;
-
 const SITE_URL = window.location.origin + window.location.pathname;
 
 async function initConfig() {
     try {
         const res = await fetch('/api/config');
         if (res.ok) {
-            const data = await res.json();
-            if (data.SUPABASE_URL && data.SUPABASE_ANON_KEY) {
-                SUPABASE_URL = data.SUPABASE_URL;
-                SUPABASE_ANON_KEY = data.SUPABASE_ANON_KEY;
-            }
+            const d = await res.json();
+            if (d.SUPABASE_URL && d.SUPABASE_ANON_KEY) { SUPABASE_URL = d.SUPABASE_URL; SUPABASE_ANON_KEY = d.SUPABASE_ANON_KEY; }
         }
-    } catch(e) {
-        console.log('Using static fallback credentials');
-    }
-
+    } catch(e) { console.log('Using static fallback credentials'); }
     if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-        try {
-            const { createClient } = supabase;
-            sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } catch(e) {
-            console.error('Supabase failed', e);
-        }
+        try { const { createClient } = supabase; sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+        catch(e) { console.error('Supabase init failed', e); }
     }
 }
 
+/* ── VIEW ROUTING ── */
 function showView(id) {
     ['home','review','dashboard','admin'].forEach(v => {
         const el = document.getElementById('view-'+v);
@@ -775,40 +644,120 @@ function showView(id) {
     });
     const target = document.getElementById('view-'+id);
     if (target) target.classList.remove('hidden');
-
+    // Hide global nav on review view only
     const nav = document.getElementById('global-nav');
     if (nav) nav.classList.toggle('hidden', id === 'review');
-
-    ['home','dashboard','admin'].forEach(t => {
-        const btn = document.getElementById('nav-tab-'+t);
-        if (btn) btn.classList.toggle('active', t === id);
-    });
+    // Show/hide signin button based on view
+    const signinBtn = document.getElementById('nav-signin-btn');
+    const signoutBtn = document.getElementById('nav-signout-btn');
+    if (signinBtn && signoutBtn) {
+        const isOwnerView = id === 'dashboard';
+        signinBtn.classList.toggle('hidden', isOwnerView || id === 'admin' || id === 'review');
+        signoutBtn.classList.toggle('hidden', !isOwnerView);
+    }
 }
 
+function goHome() {
+    showView('home');
+    return false;
+}
 
+function scrollToSignin() {
+    const card = document.getElementById('signin-card');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* ── ADMIN MODAL ── */
+function openAdminModal() {
+    document.getElementById('admin-modal').classList.add('open');
+    setTimeout(() => document.getElementById('mgr-email').focus(), 300);
+}
+function closeAdminModal() {
+    document.getElementById('admin-modal').classList.remove('open');
+}
+// Close on backdrop click
+document.getElementById('admin-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeAdminModal();
+});
+
+/* ── OWNER SIGN OUT ── */
+async function ownerSignOut() {
+    if (sb) await sb.auth.signOut();
+    dbFeedback = []; dbClientId_ = null;
+    showView('home');
+}
+
+/* ── INIT ── */
 (async () => {
     await initConfig();
-    if (!sb) { console.warn('Supabase not connected. Running in static demo mode.'); }
     const p = new URLSearchParams(window.location.search);
     const slug = p.get('c'), view = p.get('view');
-    if (slug && sb) { showView('review'); rvInit(slug); }
-    else if (view === 'dashboard' && sb) {
-        showView('dashboard');
-        const { data: { session } } = await sb.auth.getSession();
-        if (session) dbEnter(session.user); else document.getElementById('db-auth').classList.remove('hidden');
-    } else if (view === 'admin' && sb) {
-        showView('admin');
+    if (slug && sb) { showView('review'); rvInit(slug); return; }
+    if (view === 'admin' && sb) {
         const { data: { session } } = await sb.auth.getSession();
         if (session) {
             const { data: role } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
-            if (role?.role === 'admin') mgrEnter(); else await sb.auth.signOut();
+            if (role?.role === 'admin') { showView('admin'); await mgrLoad(); mgrView('restaurants'); return; }
         }
-    } else {
-        showView('home');
     }
+    // Check for existing owner session
+    if (sb) {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) {
+            // Check if owner (not admin)
+            const { data: role } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+            if (role?.role === 'admin') { showView('home'); }
+            else { showView('dashboard'); await dbEnter(session.user); return; }
+        }
+    }
+    showView('home');
 })();
 
-/* ── REVIEW ── */
+/* ────────────────────────────────────────────
+   OWNER LOGIN (on landing page)
+──────────────────────────────────────────── */
+function homeSwitchTab(t) {
+    ['login','register'].forEach(x => {
+        document.getElementById('home-tab-'+x).classList.toggle('active', x === t);
+        document.getElementById('home-form-'+x).classList.toggle('hidden', x !== t);
+    });
+}
+
+async function homeLogin() {
+    const email = document.getElementById('home-email').value.trim();
+    const pass  = document.getElementById('home-password').value;
+    const btn = document.getElementById('home-btn-login'), err = document.getElementById('home-login-err');
+    if (!email || !pass) { showErr(err, 'Please fill in all fields.'); return; }
+    btn.disabled = true; btn.textContent = 'Logging in\u2026'; err.classList.remove('show');
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) { showErr(err, 'Incorrect email or password.'); btn.disabled = false; btn.textContent = 'Log In \u2192'; return; }
+    showView('dashboard');
+    await dbEnter(data.user);
+}
+
+async function homeRegister() {
+    const email = document.getElementById('home-reg-email').value.trim().toLowerCase();
+    const pass  = document.getElementById('home-reg-pass').value;
+    const btn = document.getElementById('home-btn-register'), err = document.getElementById('home-register-err');
+    if (!email || !pass) { showErr(err, 'Please fill in all fields.'); return; }
+    if (pass.length < 8) { showErr(err, 'Password must be at least 8 characters.'); return; }
+    btn.disabled = true; btn.textContent = 'Creating account\u2026'; err.classList.remove('show');
+    const { data, error } = await sb.auth.signUp({ email, password: pass });
+    if (error) {
+        showErr(err, error.message.includes('Registration restricted') ? 'Your email has not been pre-registered by an Administrator.' : error.message);
+        btn.disabled = false; btn.textContent = 'Create Account \u2192'; return;
+    }
+    if (data.session) { showView('dashboard'); await dbEnter(data.session.user); }
+    else {
+        err.style.cssText += ';background:rgba(52,168,83,.12);border-color:rgba(52,168,83,.3);color:#81c995';
+        showErr(err, '\u2705 Account created! Check your email to verify, then log in.');
+        btn.disabled = false; btn.textContent = 'Create Account \u2192';
+    }
+}
+
+/* ────────────────────────────────────────────
+   REVIEW VIEW (customer-facing)
+──────────────────────────────────────────── */
 let rvClientId = null, rvGoogleURL = null, rvRating = 0;
 const rvLabels = ['','Poor \u2014 we can do better','Fair \u2014 room for improvement','Good \u2014 but not great','Great \u2014 glad you enjoyed it!','Excellent \u2014 thank you! \uD83C\uDF89'];
 
@@ -848,7 +797,6 @@ function rvSelect(n) {
     rvRating = n;
     for (let i = 1; i <= 5; i++) { const s = document.getElementById('star-'+i); s.classList.remove('hovered'); s.classList.toggle('active', i <= n); }
     const t = document.getElementById('rv-star-text'); t.textContent = rvLabels[n]; t.classList.add('visible');
-    // SECURITY: validate URL scheme before redirect to prevent open-redirect abuse
     setTimeout(() => { n >= 4 ? (rvGoogleURL && rvGoogleURL.startsWith('https://') ? window.location.href = rvGoogleURL : rvShow('rv-feedback')) : rvShow('rv-feedback'); }, 500);
 }
 
@@ -862,51 +810,22 @@ async function rvSubmit() {
     document.getElementById('rv-feedback').innerHTML = '<div class="fade-in"><div class="success-icon"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div><h2 style="color:var(--g-green)">Thank you!</h2><p class="sub">Your feedback has been sent privately to our management team. We truly appreciate your honesty.</p></div>';
 }
 
-/* ── DASHBOARD ── */
+/* ────────────────────────────────────────────
+   OWNER DASHBOARD
+──────────────────────────────────────────── */
 let dbFeedback = [], dbFilter_ = 'all', dbClientId_ = null;
 
-function dbSwitchTab(t) {
-    ['login','register'].forEach(x => {
-        document.getElementById('db-tab-'+x).classList.toggle('active', x === t);
-        document.getElementById('db-form-'+x).classList.toggle('hidden', x !== t);
-    });
-}
-
-async function dbLogin() {
-    const email = document.getElementById('db-email').value.trim(), pass = document.getElementById('db-password').value;
-    const btn = document.getElementById('db-btn-login'), err = document.getElementById('db-login-err');
-    if (!email || !pass) { dbErr(err, 'Please fill in all fields.'); return; }
-    btn.disabled = true; btn.textContent = 'Logging in\u2026'; err.classList.remove('show');
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-    if (error) { dbErr(err, 'Incorrect email or password.'); btn.disabled = false; btn.textContent = 'Log In'; return; }
-    dbEnter(data.user);
-}
-
-async function dbRegister() {
-    const email = document.getElementById('db-reg-email').value.trim().toLowerCase(), pass = document.getElementById('db-reg-pass').value;
-    const btn = document.getElementById('db-btn-register'), err = document.getElementById('db-register-err');
-    if (!email || !pass) { dbErr(err, 'Please fill in all fields.'); return; }
-    if (pass.length < 8) { dbErr(err, 'Password must be at least 8 characters.'); return; }
-    btn.disabled = true; btn.textContent = 'Creating account\u2026'; err.classList.remove('show');
-    const { data, error } = await sb.auth.signUp({ email, password: pass });
-    if (error) {
-        dbErr(err, error.message.includes('Registration restricted') ? 'Registration Restricted: Your email has not been pre-registered by an Administrator.' : error.message);
-        btn.disabled = false; btn.textContent = 'Create Account';
+async function dbEnter(user) {
+    const s = document.getElementById('db-screen');
+    const { data: client } = await sb.from('clients').select('id,name').eq('owner_user_id', user.id).maybeSingle();
+    if (!client) {
+        document.getElementById('db-list').innerHTML = '<div class="state-box"><div class="state-icon">\u26A0\uFE0F</div><div class="state-title">Account not linked</div><div class="state-sub">Contact your account manager.</div></div>';
+        document.getElementById('db-rest-name').textContent = user.email;
         return;
     }
-    if (data.session) { dbEnter(data.session.user); }
-    else { err.style.cssText += ';background:rgba(52,168,83,.12);border-color:rgba(52,168,83,.3);color:#81c995'; dbErr(err, '\u2705 Account created! Check your email to verify, then log in.'); btn.disabled = false; btn.textContent = 'Create Account'; }
-}
-
-async function dbLogout() { await sb.auth.signOut(); dbFeedback = []; document.getElementById('db-screen').classList.add('hidden'); document.getElementById('db-auth').classList.remove('hidden'); }
-function dbErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
-
-async function dbEnter(user) {
-    document.getElementById('db-auth').classList.add('hidden');
-    const s = document.getElementById('db-screen'); s.classList.remove('hidden'); s.style.display = 'flex';
-    const { data: client } = await sb.from('clients').select('id,name').eq('owner_user_id', user.id).maybeSingle();
-    if (!client) { document.getElementById('db-list').innerHTML = '<div class="state-box"><div class="state-icon">\u26A0\uFE0F</div><div class="state-title">Account not linked</div><div class="state-sub">Contact your account manager.</div></div>'; document.getElementById('db-rest-name').textContent = user.email; return; }
-    dbClientId_ = client.id; document.getElementById('db-rest-name').textContent = client.name; document.title = client.name + ' \u2014 Dashboard';
+    dbClientId_ = client.id;
+    document.getElementById('db-rest-name').textContent = client.name;
+    document.title = client.name + ' \u2014 Dashboard';
     await dbLoad();
 }
 
@@ -933,7 +852,7 @@ function dbRender() {
     list.innerHTML = items.map(f => {
         const stars = '\u2605'.repeat(f.rating) + '\u2606'.repeat(5-f.rating);
         const date = new Date(f.submitted_at).toLocaleDateString('en-US', { year:'numeric',month:'short',day:'numeric' });
-        return '<div class="db-card ' + (f.is_read ? '' : 'unread') + ' fade-in"><div class="db-card-header"><span class="db-card-stars">' + stars + '</span><span class="db-card-date">' + date + '</span></div><p class="db-card-text">' + esc(f.feedback_text) + '</p><div class="db-card-footer">' + (f.is_read ? '<span class="read-badge">\u2713 Read</span>' : '<button class="btn-mark-read" onclick="dbMarkRead(\'' + f.id + '\')\">\u2713 Mark as read</button>') + '</div></div>';
+        return '<div class="db-card ' + (f.is_read ? '' : 'unread') + ' fade-in"><div class="db-card-header"><span class="db-card-stars">' + stars + '</span><span class="db-card-date">' + date + '</span></div><p class="db-card-text">' + esc(f.feedback_text) + '</p><div class="db-card-footer">' + (f.is_read ? '<span class="read-badge">\u2713 Read</span>' : '<button class="btn-mark-read" onclick="dbMarkRead(\'' + f.id + '\')">\u2713 Mark as read</button>') + '</div></div>';
     }).join('');
 }
 
@@ -943,28 +862,29 @@ async function dbMarkRead(id) {
     dbUpdateStats(); dbRender();
 }
 
-/* ── ADMIN / MANAGER ── */
+/* ────────────────────────────────────────────
+   ADMIN PANEL
+──────────────────────────────────────────── */
 let mgrClients = [], mgrFeedback = [], mgrCurrentView = 'restaurants';
 
 async function mgrLogin() {
     const email = document.getElementById('mgr-email').value.trim(), pass = document.getElementById('mgr-password').value;
     const btn = document.getElementById('mgr-btn-login'), err = document.getElementById('mgr-auth-err');
-    if (!email || !pass) { mgrErr(err, 'Please fill in all fields.'); return; }
+    if (!email || !pass) { showErr(err, 'Please fill in all fields.'); return; }
     btn.disabled = true; btn.textContent = 'Signing in\u2026'; err.classList.remove('show');
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-    if (error) { mgrErr(err, 'Incorrect email or password.'); btn.disabled = false; btn.textContent = 'Sign In'; return; }
+    if (error) { showErr(err, 'Incorrect email or password.'); btn.disabled = false; btn.textContent = 'Sign In to Admin Panel \u2192'; return; }
     const { data: role } = await sb.from('user_roles').select('role').eq('user_id', data.user.id).maybeSingle();
-    if (role?.role !== 'admin') { await sb.auth.signOut(); mgrErr(err, 'This account does not have admin access.'); btn.disabled = false; btn.textContent = 'Sign In'; return; }
-    mgrEnter();
+    if (role?.role !== 'admin') { await sb.auth.signOut(); showErr(err, 'This account does not have admin access.'); btn.disabled = false; btn.textContent = 'Sign In to Admin Panel \u2192'; return; }
+    closeAdminModal();
+    showView('admin');
+    await mgrLoad(); mgrView('restaurants');
 }
 
-async function mgrLogout() { await sb.auth.signOut(); document.getElementById('mgr-screen').classList.add('hidden'); document.getElementById('mgr-auth').classList.remove('hidden'); }
-function mgrErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
-
-async function mgrEnter() {
-    document.getElementById('mgr-auth').classList.add('hidden');
-    const s = document.getElementById('mgr-screen'); s.classList.remove('hidden'); s.style.display = 'flex';
-    await mgrLoad(); mgrView('restaurants');
+async function mgrSignOut() {
+    if (sb) await sb.auth.signOut();
+    mgrClients = []; mgrFeedback = [];
+    showView('home');
 }
 
 async function mgrLoad() {
@@ -1006,7 +926,7 @@ function mgrRenderFeedback() {
     const el = document.getElementById('mgr-content');
     if (!mgrFeedback.length) { el.innerHTML = '<div class="page-header"><div><div class="page-title">All Feedback</div></div></div><div class="state-box fade-in"><div class="state-icon">\uD83D\uDCAC</div><div class="state-title">No feedback yet</div></div>'; return; }
     el.innerHTML = '<div class="page-header"><div><div class="page-title">All Feedback</div><div class="page-sub">' + mgrFeedback.length + ' total \u00B7 ' + mgrFeedback.filter(f=>!f.is_read).length + ' unread</div></div></div><div style="display:flex;flex-direction:column;gap:12px">' +
-        mgrFeedback.map(f => { const client = mgrClients.find(c => c.id === f.client_id); const stars = '\u2605'.repeat(f.rating)+'\u2606'.repeat(5-f.rating); const date = new Date(f.submitted_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); return '<div class="panel-card ' + (f.is_read ? '' : 'unread') + ' fade-in"><div class="pc-header"><div><div style="font-size:.78rem;color:var(--on-surface-variant);margin-bottom:4px">\uD83C\uDF7D\uFE0F ' + (client ? esc(client.name) : 'Unknown') + '</div><span class="pc-stars">' + stars + '</span></div><span class="pc-date">' + date + '</span></div><p class="pc-text">' + esc(f.feedback_text) + '</p></div>'; }).join('') + '</div>';
+        mgrFeedback.map(f => { const client = mgrClients.find(c => c.id === f.client_id); const stars = '\u2605'.repeat(f.rating)+'\u2606'.repeat(5-f.rating); const date = new Date(f.submitted_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); return '<div class="panel-card ' + (f.is_read ? '' : 'unread') + ' fade-in"><div class="pc-header"><div><div style="font-size:.75rem;color:var(--on-surface-variant);margin-bottom:4px">\uD83C\uDF7D\uFE0F ' + (client ? esc(client.name) : 'Unknown') + '</div><span class="pc-stars">' + stars + '</span></div><span class="pc-date">' + date + '</span></div><p class="pc-text">' + esc(f.feedback_text) + '</p></div>'; }).join('') + '</div>';
 }
 
 function mgrOpenPanel(clientId) {
@@ -1045,22 +965,19 @@ async function mgrSave() {
     const slug = document.getElementById('r-slug').value.trim();
     const url = document.getElementById('r-url').value.trim();
     const btn = document.getElementById('mgr-btn-save'), err = document.getElementById('mgr-modal-err');
-
-    if (!name || !ownerEmail || !slug || !url) { mgrErr(err, 'Please fill in all fields including Owner Email.'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) { mgrErr(err, 'Please enter a valid owner email address.'); return; }
-    if (!/^[a-z0-9-]+$/.test(slug)) { mgrErr(err, 'Code: lowercase letters, numbers, hyphens only.'); return; }
-    if (!url.startsWith('https://')) { mgrErr(err, 'Please enter a valid URL starting with https://'); return; }
-
+    if (!name || !ownerEmail || !slug || !url) { showErr(err, 'Please fill in all fields including Owner Email.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) { showErr(err, 'Please enter a valid owner email address.'); return; }
+    if (!/^[a-z0-9-]+$/.test(slug)) { showErr(err, 'Code: lowercase letters, numbers, hyphens only.'); return; }
+    if (!url.startsWith('https://')) { showErr(err, 'Please enter a valid URL starting with https://'); return; }
     btn.disabled = true; btn.textContent = 'Creating\u2026'; err.classList.remove('show');
     const { error } = await sb.from('clients').insert({ name, owner_email: ownerEmail, slug, google_review_url: url });
     if (error) {
-        mgrErr(err, error.code === '23505' ? 'That restaurant code or owner email already exists.' : 'Failed to create. Please try again.');
-        btn.disabled = false; btn.textContent = 'Create Restaurant';
-        return;
+        showErr(err, error.code === '23505' ? 'That restaurant code or owner email already exists.' : 'Failed to create. Please try again.');
+        btn.disabled = false; btn.textContent = 'Create Restaurant'; return;
     }
     const reviewLink = SITE_URL + '?c=' + slug;
     document.getElementById('mgr-modal-title').textContent = '';
-    document.getElementById('mgr-modal-body').innerHTML = '<div style="text-align:center;padding:20px 0"><div style="font-size:3rem;margin-bottom:12px">\uD83C\uDF89</div><div style="font-size:1.1rem;font-weight:700;color:var(--g-green);margin-bottom:8px">Restaurant Pre-Registered!</div><div style="font-size:.88rem;color:var(--on-surface-variant);line-height:1.6">Share the review link with customers. The owner can now sign up using their pre-registered email.</div><div style="margin-top:20px;text-align:left"><div class="form-label" style="display:block;margin-bottom:6px">Customer Review Link</div><div class="link-box">' + esc(reviewLink) + '</div><div class="form-label" style="display:block;margin-top:16px;margin-bottom:6px">Pre-Registered Owner Email</div><div class="link-box">' + esc(ownerEmail) + '</div><div class="form-hint" style="margin-top:8px">Owner visits: ' + SITE_URL + '?view=dashboard &rarr; Register &rarr; enters email: ' + esc(ownerEmail) + ' &amp; their password.</div></div><button class="btn-primary" style="margin-top:20px" onclick="mgrCloseModal();mgrLoad().then(()=>mgrView(\'restaurants\'))">Done</button></div>';
+    document.getElementById('mgr-modal-body').innerHTML = '<div style="text-align:center;padding:20px 0"><div style="font-size:3rem;margin-bottom:12px">\uD83C\uDF89</div><div style="font-size:1.05rem;font-weight:700;color:var(--g-green);margin-bottom:8px">Restaurant Pre-Registered!</div><div style="font-size:.86rem;color:var(--on-surface-variant);line-height:1.6">Share the review link with customers. The owner can now sign up using their pre-registered email.</div><div style="margin-top:20px;text-align:left"><div class="form-label" style="display:block;margin-bottom:6px">Customer Review Link</div><div class="link-box">' + esc(reviewLink) + '</div><div class="form-label" style="display:block;margin-top:16px;margin-bottom:6px">Pre-Registered Owner Email</div><div class="link-box">' + esc(ownerEmail) + '</div></div><button class="btn-primary" style="margin-top:20px" onclick="mgrCloseModal();mgrLoad().then(()=>mgrView(\'restaurants\'))">Done</button></div>';
     await mgrLoad();
 }
 
@@ -1071,6 +988,8 @@ async function mgrCopy(link, btn) {
     catch { btn.textContent = 'Failed'; }
 }
 
+/* ── HELPERS ── */
+function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 </script>
 </body>

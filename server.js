@@ -142,7 +142,7 @@ function createStaticServer(appFolder, port, appName) {
                     const parsed = JSON.parse(body);
                     const { business_name, decision_maker_name, email, phone_number, google_maps_link, counter_count, is_resubmission } = parsed;
                     const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_CSiVQsu8_B9Y64tk7wZKtcSTvgBk67nXJ';
-                    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'hgendi3@gmail.com';
+                    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'muhabagency@gmail.com';
 
                     const subject = `${is_resubmission ? '🔄 [Resubmission]' : '📬 [New Lead]'} Taqyeemi Request: ${business_name}`;
                     const html = `

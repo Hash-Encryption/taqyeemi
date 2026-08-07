@@ -2,7 +2,7 @@ export async function onRequestPost(context) {
     const { request, env } = context;
 
     const RESEND_API_KEY = env.RESEND_API_KEY || 're_CSiVQsu8_B9Y64tk7wZKtcSTvgBk67nXJ';
-    const ADMIN_EMAIL = env.ADMIN_EMAIL || 'hgendi3@gmail.com';
+    const ADMIN_EMAIL = env.ADMIN_EMAIL || 'muhabagency@gmail.com';
 
     try {
         const body = await request.json();

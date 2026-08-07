@@ -1,0 +1,22 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  const video = document.getElementById("matchaVideo");
+
+  // Ensure metadata is loaded so duration is available
+  video.onloadedmetadata = function() {
+    gsap.to(video, {
+      currentTime: video.duration,
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".scroll-track",
+        start: "top top",      // Start when top of container hits top of viewport
+        end: "bottom bottom",  // End when bottom of container hits bottom of viewport
+        scrub: 1              // 1-second smooth catch-up delay for buttery movement
+      }
+    });
+  };
+</script>

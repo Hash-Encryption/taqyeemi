@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="h-full bg-[#FAF7F2]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>QuickRSVPme — Modular Block Component Architecture & Analytics</title>
+
+  <!-- Google Fonts: Playfair Display, Cairo, Plus Jakarta Sans, Tajawal -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            alabaster: '#FAF7F2',
+            sandstone: '#EADBC8',
+            gold: '#D4AF37',
+            emerald: '#0A2E23',
+            espresso: '#2D2421',
+            ivory: '#FFFDF9',
+          },
+          fontFamily: {
+            serif: ['Playfair Display', 'Cairo', 'serif'],
+            sans: ['Plus Jakarta Sans', 'Tajawal', 'sans-serif'],
+            arabic: ['Cairo', 'Tajawal', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- QRCode.js Library CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Custom Styles for Golden Thread & 3D Grommets -->
+  <style>
+    /* Continuous Center Golden Thread Axis */
+    .golden-thread-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1.5px;
+      background: linear-gradient(180deg, #D4AF37 0%, rgba(212, 175, 55, 0.4) 50%, #D4AF37 100%);
+      transform: translateX(-50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* 3D Metallic Eyelet Grommet */
+    .grommet {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 9999px;
+      background-color: #FAF7F2;
+      border: 2px solid #D4AF37;
+      box-shadow: inset 0 1px 3px rgba(45, 36, 33, 0.2), 0 2px 4px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    .grommet::after {
+      content: '';
+      width: 4px;
+      height: 4px;
+      border-radius: 9999px;
+      background-color: #D4AF37;
+      box-shadow: 0 0 2px rgba(212, 175, 55, 0.8);
+    }
+    .grommet-top {
+      top: 0;
+      transform: translate(-50%, -50%);
+    }
+    .grommet-bottom {
+      bottom: 0;
+      transform: translate(-50%, 50%);
+    }
+
+    /* Card Styling */
+    .sandstone-card {
+      background: rgba(234, 219, 200, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 24px;
+      box-shadow: 0 15px 30px -8px rgba(45, 36, 33, 0.08), 0 0 1px 1px rgba(212, 175, 55, 0.15);
+      position: relative;
+    }
+
+    /* Single Line Uppercase Gold Tagline */
+    .gold-tagline {
+      color: #D4AF37;
+      letter-spacing: 0.25em;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    /* Draggable Palette Items */
+    .block-palette-item {
+      cursor: grab;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .block-palette-item:active {
+      cursor: grabbing;
+      transform: scale(0.98);
+    }
+
+    /* Mobile Canvas Preview Frame */
+    .mobile-preview-frame {
+      width: 380px;
+      max-width: 100%;
+      height: 740px;
+      background: #FAF7F2;
+      border: 8px solid #2D2421;
+      border-radius: 40px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      position: relative;
+      overflow-y: auto;
+    }
+
+    /* Active Selected Block Highlight */
+    .builder-block-active {
+      border: 2px solid #0A2E23 !important;
+      box-shadow: 0 0 0 3px rgba(10, 46, 35, 0.25) !important;
+    }
+
+    .drag-handle {
+      cursor: grab;
+    }
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    /* Hide Scrollbars */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-[#FAF7F2] text-[#2D2421] min-h-full font-sans antialiased selection:bg-[#D4AF37]/20 relative">
+
+  <!-- Top Global Navigation Header -->
+  <header class="sticky top-0 z-50 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#D4AF37]/30 px-6 py-3 shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-3 space-x-reverse cursor-pointer" onclick="switchView('dashboard')">
+        <div class="w-9 h-9 rounded-full border-2 border-[#D4AF37] flex items-center justify-center bg-[#FAF7F2] shadow-sm">
+          <span class="text-[#D4AF37] text-base font-bold font-serif">Q</span>
+        </div>
+        <div>
+          <span class="font-serif font-bold text-lg text-[#2D2421]">QuickRSVP<span class="text-[#D4AF37]">.me</span></span>
+          <span class="block text-[10px] text-[#D4AF37] font-bold uppercase tracking-wider">Modular Block Architecture</span>
+        </div>
+      </div>
+
+      <!-- Main Navigation Links -->
+      <nav class="flex bg-[#EADBC8]/80 p-1 rounded-full border border-[#D4AF37]/40 text-xs font-bold">
+        <button id="nav-dashboard" onclick="switchView('dashboard')" class="px-4 py-1.5 rounded-full transition-all bg-[#2D2421] text-[#FFFDF9] shadow-sm">
+          <span data-i18n="nav_dashboard">📊 لوحة التحليلات (Dashboard)</span>
+        </button>
+        <button id="nav-builder" onclick="switchView('builder')" class="px-4 py-1.5 rounded-full transition-all text-[#2D2421] hover:text-[#D4AF37]">
+          <span data-i18n="nav_builder">🎨 مصمم الدعوة (Canvas Builder)</span>
+        </button>
+        <button id="nav-guest" onclick="switchView('guest')" class="px-4 py-1.5 rounded-full transition-all text-[#2D2421] hover:text-[#D4AF37]">
+          <span data-i18n="nav_guest">👁️ معاينة دعوة الضيف</span>
+        </button>
+        <button id="nav-scanner" onclick="switchView('scanner')" class="px-4 py-1.5 rounded-full transition-all text-[#2D2421] hover:text-[#D4AF37]">
+          <span data-i18n="nav_scanner">🚪 ماسح البوابة</span>
+        </button>
+      </nav>
+
+      <!-- Language Toggle Switcher (AR 🇸🇦 / EN 🇬🇧) -->
+      <button onclick="toggleLanguage()" class="flex items-center space-x-2 space-x-reverse px-3.5 py-1.5 rounded-full border border-[#D4AF37]/60 bg-[#FFFDF9] text-xs font-bold text-[#2D2421] hover:border-[#D4AF37] shadow-sm transition">
+        <span id="lang-flag">🇬🇧</span>
+        <span id="lang-label">English</span>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- =================================================================== -->
+  <!-- VIEW 1: HOST ANALYTICS DASHBOARD (MAIN DEFAULT LANDING VIEW)         -->
+  <!-- =================================================================== -->
+  <div id="view-dashboard" class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+    <!-- Dashboard Welcome Header & Primary CTA to Open Builder -->
+    <div class="sandstone-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 border-2 border-[#D4AF37]/40 shadow-lg">
+      <div class="space-y-2">
+        <span class="gold-tagline" data-i18n="dash_welcome_tag">مركز تحليلات المناسبة • جدة</span>
+        <h1 class="font-serif text-3xl font-bold text-[#2D2421]" id="dash-event-title">
+          حفل زفاف مايا & ليام
+        </h1>
+        <p class="text-xs text-[#2D2421]/80 font-medium" id="dash-event-subtitle">
+          الأربعاء، 14 أكتوبر 2026 • قاعة القصر الكبير، جدة
+        </p>
+      </div>
+
+      <!-- Quick Action CTAs -->
+      <div class="flex flex-wrap items-center gap-3">
+        <button onclick="switchView('builder')" class="px-5 py-3 bg-[#0A2E23] text-[#FFFDF9] font-bold text-xs rounded-2xl shadow-lg hover:bg-[#0A2E23]/90 flex items-center space-x-2 space-x-reverse transition active:scale-95">
+          <span>🎨</span>
+          <span data-i18n="open_builder_cta">فتح مصمم الدعوة (Modular Canvas Builder)</span>
+        </button>
+
+        <button onclick="exportCatererCsv()" class="px-4 py-3 bg-[#FFFDF9] border border-[#D4AF37] text-[#2D2421] font-bold text-xs rounded-2xl shadow-sm hover:bg-[#EADBC8] transition">
+          <span data-i18n="export_caterer_btn">📥 تصدير قائمة المطعم (CSV)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 MAIN ANALYTICS STAT CARDS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+      
+      <div class="sandstone-card p-5 text-center space-y-1.5">
+        <div class="text-xs font-bold text-[#2D2421]/70" data-i18n="stat_total">إجمالي المدعوين</div>
+        <div class="text-3xl font-bold text-[#2D2421]">120</div>
+        <div class="text-[11px] text-[#D4AF37] font-semibold" data-i18n="stat_total_sub">دعوات صادرة عبر واتساب</div>
+      </div>
+
+      <div class="sandstone-card p-5 text-center space-y-1.5">
+        <div class="text-xs font-bold text-[#0A2E23]" data-i18n="stat_attending">المؤكدون (Attending)</div>
+        <div class="text-3xl font-bold text-[#0A2E23]">94</div>
+        <div class="text-[11px] text-[#0A2E23]/80 font-semibold" data-i18n="stat_attending_sub">نسبة التأكيد: 78%</div>
+      </div>
+
+      <div class="sandstone-card p-5 text-center space-y-1.5">
+        <div class="text-xs font-bold text-red-700" data-i18n="stat_declined">المعتذرون (Declined)</div>
+        <div class="text-3xl font-bold text-red-700">12</div>
+        <div class="text-[11px] text-red-600/80 font-semibold" data-i18n="stat_declined_sub">مع رسائل تهنئة</div>
+      </div>
+
+      <div class="sandstone-card p-5 text-center space-y-1.5">
+        <div class="text-xs font-bold text-[#D4AF37]" data-i18n="stat_checkedin">المتواجدون الآن (Checked-In)</div>
+        <div class="text-3xl font-bold text-[#D4AF37]" id="dash-checkedin-count">48</div>
+        <div class="text-[11px] text-[#2D2421]/70 font-semibold" data-i18n="stat_checkedin_sub">تم المسح في البوابة</div>
+      </div>
+
+    </div>
+
+    <!-- GUEST CRM DIRECTORY TABLE -->
+    <div class="sandstone-card p-6 space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D4AF37]/30 pb-4">
+        <div>
+          <h3 class="font-serif font-bold text-xl text-[#2D2421]" data-i18n="crm_table_title">
+            👥 سجل إدارة الضيوف والتأكيدات (CRM Directory)
+          </h3>
+          <p class="text-xs text-[#2D2421]/70" data-i18n="crm_table_subtitle">متابعة إرسال واتساب والوجبات ورسائل الاعتذار</p>
+        </div>
+
+        <input type="text" id="crm-search-input" onkeyup="filterCrmGuests()" class="px-4 py-2 text-xs rounded-xl bg-[#FFFDF9] border border-[#D4AF37]/40 text-[#2D2421] focus:outline-none focus:border-[#0A2E23] w-64 shadow-sm" placeholder="ابحث عن اسم ضيف..." data-i18n-ph="crm_search_ph">
+      </div>
+
+      <!-- Guest Rows -->
+      <div class="space-y-4" id="crm-guest-container">
+        
+        <!-- Guest 1: Hashim Alnimari -->
+        <div class="p-4 bg-[#FFFDF9] rounded-2xl border border-[#D4AF37]/30 shadow-sm space-y-3" data-guest-row="hashim">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center space-x-2 space-x-reverse">
+              <span class="font-bold text-sm text-[#2D2421]">هاشم النماري</span>
+              <span class="text-[10px] text-[#0A2E23] bg-[#0A2E23]/10 font-bold px-2.5 py-0.5 rounded-full border border-[#0A2E23]/20" data-i18n="badge_attending_2">
+                مؤكد الحضور (2)
+              </span>
+            </div>
+            <span class="text-xs font-mono text-[#D4AF37] font-semibold">token: k82f9x</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#2D2421]/80 bg-[#FAF7F2] p-3 rounded-xl border border-[#D4AF37]/20">
+            <div><b>المرافق (+1):</b> <span id="crm-guest-plusone">سارة النماري</span></div>
+            <div><b>الوجبة:</b> <span id="crm-guest-meals">لحم بقر كمأة + سلمون</span></div>
+            <div class="col-span-1 sm:col-span-2 text-[11px] text-gray-500"><b>حساسية الطعام:</b> لا يوجد</div>
+          </div>
+
+          <div class="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[#D4AF37]/20">
+            <a id="wa-link-btn-1" href="https://wa.me/?text=%D8%B9%D8%B2%D9%8A%D8%B2%D9%8A%20%D9%87%D8%A7%D8%B4%D9%85%D8%8C%20%D9%8A%D8%B3%D8%B9%D8%AF%D9%86%D8%A7%20%D8%AF%D8%B9%D9%88%D8%AA%D9%83%D9%85%20%D9%8D%D8%AD%D9%81%D9%84%20%D8%B2%D9%81%D8%A7%D9%81%20%D9%85%D8%A7%D9%8A%D8%A7%20%D9%88%D9%84%D9%8A%D8%A7%D9%85!%20%D8%A7%D8%B6%D8%BA%D8%B7%20%D9%84%D9%84%D8%AA%D8%A3%D9%83%D9%8A%D8%AF:%20https://quickrsvp.me/i/k82f9x" target="_blank" class="inline-flex items-center text-xs font-bold text-[#25D366] hover:underline bg-[#25D366]/10 px-3.5 py-2 rounded-xl">
+              <span data-i18n="wa_send_btn">💬 إرسال دعوتك عبر واتساب</span>
+            </a>
+
+            <button onclick="toggleGuestCheckin('hashim')" id="crm-checkin-btn-hashim" class="px-4 py-2 rounded-xl bg-[#0A2E23] text-[#FFFDF9] text-xs font-semibold hover:bg-[#0A2E23]/90 shadow-sm">
+              <span data-i18n="crm_checkin_toggle">✓ مسح حضور البوابة</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- VIEW 2: CANVAS BUILDER (MODULAR BLOCK COMPONENT ENGINE)            -->
+  <!-- =================================================================== -->
+  <div id="view-builder" class="hidden min-h-[calc(100vh-70px)] bg-[#FAF7F2] px-4 py-6">
+    
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+
+      <!-- LEFT SIDEBAR (3 COLS): BLOCK COMPONENT PALETTE LIBRARY -->
+      <div class="lg:col-span-3 space-y-4">
+        <div class="sandstone-card p-5 space-y-4 max-h-[750px] overflow-y-auto">
+          <div class="grommet grommet-top"></div>
+
+          <div>
+            <span class="gold-tagline" data-i18n="palette_tag">مكتبة العناصر والكتل</span>
+            <h2 class="font-serif text-lg font-bold text-[#2D2421]" data-i18n="palette_title">اسحب أو انقر لإضافة الكتل 📦</h2>
+            <p class="text-[11px] text-[#2D2421]/70" data-i18n="palette_desc">كل كتلة عبارة عن قوالب برمجية مستقلة</p>
+          </div>
+
+          <!-- DYNAMIC PALETTE ITEM LIST RENDERED FROM BLOCK REGISTRY -->
+          <div class="space-y-3" id="palette-items-container">
+            <!-- Rendered by JS BlockRegistry -->
+          </div>
+
+          <div class="grommet grommet-bottom"></div>
+        </div>
+      </div>
+
+      <!-- CENTER CANVAS (5 COLS): REORDERABLE LIVE CANVAS PREVIEW -->
+      <div class="lg:col-span-5 flex flex-col items-center justify-center">
+        
+        <div class="text-center mb-3">
+          <span class="gold-tagline" data-i18n="live_canvas_tag">المعاينة الحية المباشرة (LIVE CANVAS)</span>
+        </div>
+
+        <!-- MOBILE PREVIEW FRAME -->
+        <div id="mobile-canvas-dropzone" ondragover="handleCanvasDragOver(event)" ondrop="handleCanvasDrop(event)" class="mobile-preview-frame p-4 space-y-6 no-scrollbar relative">
+          
+          <!-- Continuous Central Golden Thread -->
+          <div class="golden-thread-line"></div>
+
+          <!-- DYNAMIC BLOCKS RENDER CONTAINER -->
+          <div id="canvas-blocks-mount-point" class="space-y-6 relative z-10">
+            <!-- Active Block Component Templates Rendered Here -->
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- RIGHT SIDEBAR (4 COLS): DYNAMIC BLOCK INSPECTOR EDITOR FORM -->
+      <div class="lg:col-span-4 space-y-4">
+        <div class="sandstone-card p-5 space-y-4">
+          <div class="grommet grommet-top"></div>
+
+          <div>
+            <span class="gold-tagline" data-i18n="inspector_tag">محرر النصوص والمحتوى</span>
+            <h2 class="font-serif text-xl font-bold text-[#2D2421]" id="inspector-active-heading">محرر الكتلة المحددة ✏️</h2>
+            <p class="text-xs text-[#2D2421]/70" data-i18n="inspector_subtitle">انقر على أي كتلة لتشغيل محرر القوالب الخاص بها</p>
+          </div>
+
+          <!-- DYNAMIC INSPECTOR FORM MOUNT POINT -->
+          <div id="inspector-form-mount-point" class="space-y-4 border-t border-[#D4AF37]/30 pt-3">
+            <!-- Active Block Inspector Component Rendered Here -->
+          </div>
+
+          <div class="grommet grommet-bottom"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- VIEW 3: GUEST INVITATION VIEW (/i/k82f9x)                           -->
+  <!-- =================================================================== -->
+  <div id="view-guest" class="max-w-md mx-auto px-4 py-8 space-y-10 transition-opacity duration-300 hidden">
+
+    <!-- Guest Welcome Badge -->
+    <div class="text-center space-y-1">
+      <div class="gold-tagline" data-i18n="personal_invite_tag">دعوة خاصة وشخصية</div>
+      <div class="text-[#2D2421] font-semibold text-lg">
+        <span data-i18n="guest_welcome_prefix">أهلاً بك،</span> <span class="text-[#0A2E23] font-bold underline decoration-[#D4AF37]" id="guest-name-display">هاشم النماري</span> 🌹
+      </div>
+    </div>
+
+    <!-- DYNAMIC GUEST BLOCKS MOUNT POINT -->
+    <div id="guest-blocks-mount-point" class="space-y-10">
+      <!-- Active Blocks Rendered dynamically for Guest -->
+    </div>
+
+    <!-- WEB VIP QR CODE PASS CARD -->
+    <div class="sandstone-card p-6 text-center space-y-4 bg-gradient-to-b from-[#EADBC8] to-[#FAF7F2]">
+      <div class="grommet grommet-top"></div>
+      <span class="gold-tagline" data-i18n="qr_tag">بطاقة الدخول الرقمية</span>
+      <h2 class="font-serif text-2xl font-bold text-[#0A2E23]" data-i18n="qr_title">بطاقة VIP الشخصية 🎫</h2>
+      <p class="text-xs text-[#2D2421]/80" id="qr-pass-names">هاشم النماري + سارة النماري</p>
+      <div class="p-4 bg-white rounded-2xl border-2 border-[#D4AF37] inline-block shadow-lg">
+        <div id="qrcode-canvas" class="mx-auto"></div>
+      </div>
+      <div class="grommet grommet-bottom"></div>
+    </div>
+
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- VIEW 4: CONCIERGE DOOR SCANNER (/scanner)                          -->
+  <!-- =================================================================== -->
+  <div id="view-scanner" class="max-w-md mx-auto px-4 py-8 space-y-6 hidden text-center">
+
+    <div class="space-y-1">
+      <span class="gold-tagline" data-i18n="scanner_tag">بوابة الدخول الفاخرة</span>
+      <h1 class="font-serif text-2xl font-bold text-[#2D2421]" data-i18n="scanner_title">ماسح VIP عند البوابة</h1>
+    </div>
+
+    <div class="sandstone-card p-6 space-y-4">
+      <div class="grommet grommet-top"></div>
+
+      <div class="w-full h-52 rounded-2xl bg-black/90 border-2 border-[#D4AF37] relative flex flex-col items-center justify-center text-white overflow-hidden shadow-inner">
+        <div class="w-40 h-40 border-2 border-dashed border-[#D4AF37] rounded-xl animate-pulse flex items-center justify-center">
+          <span class="text-xs text-[#D4AF37]" data-i18n="scanner_align_prompt">وجّه الكاميرا للرمز الرقمي</span>
+        </div>
+        <div class="absolute bottom-2 text-[10px] text-gray-400" data-i18n="camera_active">الكاميرا نشطة (WebRTC Active)</div>
+      </div>
+
+      <button onclick="simulateScanSuccess()" class="w-full py-3.5 rounded-xl bg-[#0A2E23] text-[#FFFDF9] font-bold text-xs shadow-md hover:bg-[#0A2E23]/90 transition">
+        <span data-i18n="scanner_sim_btn">⚡ محاكاة مسح رمز (هاشم النماري + سارة النماري)</span>
+      </button>
+
+      <div class="grommet grommet-bottom"></div>
+    </div>
+
+    <!-- Verified Result -->
+    <div id="scanner-result" class="sandstone-card p-6 space-y-3 bg-[#0A2E23] text-[#FFFDF9] hidden border-2 border-[#D4AF37]">
+      <div class="w-12 h-12 rounded-full bg-[#D4AF37] text-[#0A2E23] flex items-center justify-center text-2xl font-bold mx-auto">
+        ✓
+      </div>
+      <h3 class="font-serif text-xl font-bold" id="scanner-result-name">هاشم النماري + سارة النماري</h3>
+      <div class="inline-block px-3 py-1 bg-[#D4AF37]/30 border border-[#D4AF37] text-xs rounded-full font-semibold" data-i18n="entry_verified">
+        دخول مأذون • تم التحقق (Verified Entry)
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODULAR BLOCK COMPONENT ENGINE & REGISTRY SCRIPT -->
+  <script>
+    let currentLang = 'ar';
+    let selectedBlockId = 'blk-hero';
+    let draggedPaletteType = null;
+    let draggedCanvasId = null;
+
+    /* ================================================================== */
+    /* MASTER BLOCK REGISTRY: DEFINES TEMPLATE + RENDERER + INSPECTOR FORM */
+    /* ================================================================== */
+    const BlockRegistry = {
+      hero: {
+        type: 'hero',
+        name: { ar: 'الكتلة الرئيسية (Hero RSVP)', en: 'Hero RSVP Entrance' },
+        isFixed: true,
+        defaultData: {
+          titleAr: 'مايا & ليام',
+          titleEn: 'Maya & Liam',
+          dateAr: 'الأربعاء، 14 أكتوبر 2026',
+          dateEn: 'Wednesday, Oct 14, 2026',
+          venueAr: 'قاعة القصر الكبير، جدة - حي الشاطئ',
+          venueEn: 'The Grand Palace Hall, Jeddah'
+        },
+        renderGuest: (data, lang) => `
+          <div class="sandstone-card p-6 text-center space-y-6">
+            <div class="grommet grommet-top"></div>
+            <div class="space-y-2">
+              <span class="gold-tagline">${lang === 'ar' ? 'حفل زفاف فاخر • جدة' : 'LUXURY WEDDING • JEDDAH'}</span>
+              <h1 class="font-serif text-3xl font-bold text-[#2D2421] leading-tight">${lang === 'ar' ? data.titleAr : data.titleEn}</h1>
+              <p class="text-xs text-[#2D2421]/80 font-medium">${lang === 'ar' ? 'يتشرفان بدعوتكم لمشاركتهما فرحة العمر' : 'Joyfully request the pleasure of your company'}</p>
+            </div>
+            <div class="py-3 border-y border-[#D4AF37]/30 space-y-2">
+              <div class="flex items-center justify-center space-x-2 space-x-reverse text-sm font-semibold text-[#0A2E23]">
+                <span>📅</span> <span>${lang === 'ar' ? data.dateAr : data.dateEn}</span>
+              </div>
+              <div class="flex items-center justify-center space-x-2 space-x-reverse text-xs text-[#2D2421]">
+                <span>📍</span> <span>${lang === 'ar' ? data.venueAr : data.venueEn}</span>
+              </div>
+            </div>
+            <div class="grommet grommet-bottom"></div>
+          </div>
+        `,
+        renderInspector: (data, lang, onChange) => `
+          <div class="space-y-3">
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-[#2D2421]">${lang === 'ar' ? 'عنوان الحفل (أسماء العروسين):' : 'Event Title:'}</label>
+              <input type="text" value="${lang === 'ar' ? data.titleAr : data.titleEn}" oninput="updateBlockField('title', this.value)" class="w-full px-3 py-2 text-xs rounded-xl border border-[#D4AF37]/40 bg-[#FFFDF9] text-[#2D2421]">
+            </div>
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-[#2D2421]">${lang === 'ar' ? 'تاريخ الحفل:' : 'Event Date:'}</label>
+              <input type="text" value="${lang === 'ar' ? data.dateAr : data.dateEn}" oninput="updateBlockField('date', this.value)" class="w-full px-3 py-2 text-xs rounded-xl border border-[#D4AF37]/40 bg-[#FFFDF9] text-[#2D2421]">
+            </div>
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-[#2D2421]">${lang === 'ar' ? 'اسم القاعة والمدينة:' : 'Venue & City:'}</label>
+              <input type="text" value="${lang === 'ar' ? data.venueAr : data.venueEn}" oninput="updateBlockField('venue', this.value)" class="w-full px-3 py-2 text-xs rounded-xl border border-[#D4AF37]/40 bg-[#FFFDF9] text-[#2D2421]">
+            </div>
+          </div>
+        `
+      },
+      catering: {
+        type: 'catering',
+        name: { ar: '🥩 قائمة الطعام الفاخرة', en: '🥩 Fine Catering' },
+        defaultData: {
+          titleAr: 'اختيار الوجبة الفردية',
+          titleEn: 'Meal Selection',
+          dish1Ar: '🥩 شرائح الكمأة ولحم البقر الفاخر',
+          dish1En: '🥩 Truffle-Crusted Angus Beef Filet',
+          dish2Ar: '🐟 سلمون الأطلسي المشوي',
+          dish2En: '🐟 Pan-Seared Atlantic Salmon'
+        },
+        renderGuest: (data, lang) => `
+          <div class="sandstone-card p-6 space-y-4">
+            <div class="grommet grommet-top"></div>
+            <div class="text-center space-y-1">
+              <span class="gold-tagline">${lang === 'ar' ? 'قائمة الطعام الفاخرة' : 'FINE CATERING'}</span>
+              <h2 class="font-serif text-2xl font-bold text-[#2D2421]">${lang === 'ar' ? data.titleAr : data.titleEn}</h2>
+            </div>
+            <div class="space-y-2 text-xs font-semibold text-[#0A2E23]">
+              <div class="p-3 bg-[#FFFDF9] rounded-xl border border-[#D4AF37]/30">${lang === 'ar' ? data.dish1Ar : data.dish1En}</div>
+              <div class="p-3 bg-[#FFFDF9] rounded-xl border border-[#D4AF37]/30">${lang === 'ar' ? data.dish2Ar : data.dish2En}</div>
+            </div>
+            <div class="grommet grommet-bottom"></div>
+          </div>
+        `,
+        renderInspector: (data, lang, onChange) => `
+          <div class="space-y-3">
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-[#0A2E23]">${lang === 'ar' ? 'عنوان قائمة الطعام:' : 'Catering Section Title:'}</label>
+              <input type="text" value="${lang === 'ar' ? data.titleAr : data.titleEn}" oninput="updateBlockField('title', this.value)" class="w-full px-3 py-2 text-xs rounded-xl border border-[#D4AF37]/40 bg-[#FFFDF9]">
+            </div>
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-[#2D2421]">${lang === 'ar' ? 'الطبق الأول:' : 'Entree 1:'}</label>
+              <input type="text" value="${lang === 'ar' ? data.dish1Ar : data.dish1En}" oninput="updateBlockField('dish1', this.value)" class="w-full px-3 py-2 text-xs rounded-xl border border-[#D4AF37]/40 bg-[#FFFDF9]">
+            </div>
+          </div>
+        `
+      },
+      dresscode: {
+        type: 'dresscode',
+        name: { ar: '👗 قواعد الزي والألوان', en: '👗 Dress Code & Palette' },
+        defaultData: {
+          titleAr: 'قواعد الزي والألوان',
+          titleEn: 'Dress Code & Palette',
+          descAr: 'يسعدنا مشاركتكم بأزيائكم الرسمية الفاخرة.'
+        },
+        renderGuest: (data, lang) => `
+          <div class="sandstone-card p-6 text-center space-y-4">
+            <div class="grommet grommet-top"></div>
+            <span class="gold-tagline">${lang === 'ar' ? 'المظهر والزي' : 'DRESS CODE'}</span>
+            <h2 class="font-serif text-2xl font-bold text-[#2D2421]">${lang === 'ar' ? data.titleAr : data.titleEn}</h2>
+            <div class="flex justify-center space-x-2 space-x-reverse">
+              <div class="w-8 h-8 rounded-full bg-black border-2 border-[#D4AF37]"></div>
+              <div class="w-8 h-8 rounded-full bg-[#0A2E23] border-2 border-[#D4AF37]"></div>
+              <div class="w-8 h-8 rounded-full bg-[#D4AF37] border-2 border-[#FFFDF9]"></div>
+            </div>
+            <div class="grommet grommet-bottom"></div>
+          </div>
+        `,
+        renderInspector: (data, lang) => `
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-[#2D2421]">${lang === 'ar' ? 'عنوان قواعد الزي:' : 'Dress Code Title:'}</label>
+            <input type="text" value="${lang === 'ar' ? data.titleAr : data.titleEn}" oninput="updateBlockField('title', this.value)" class="w-full px-3 py-2 text-xs rounded-xl border border-[#D4AF37]/40 bg-[#FFFDF9]">
+          </div>
+        `
+      },
+      itinerary: {
+        type: 'itinerary',
+        name: { ar: '📅 جدول الحفل والوقت', en: '📅 Schedule & Itinerary' },
+        defaultData: { titleAr: 'جدول الحفل والوقت', titleEn: 'Event Schedule' },
+        renderGuest: (data, lang) => `
+          <div class="sandstone-card p-6 text-center space-y-3">
+            <div class="grommet grommet-top"></div>
+            <span class="gold-tagline">TIMELINE</span>
+            <h2 class="font-serif text-xl font-bold">${lang === 'ar' ? data.titleAr : data.titleEn}</h2>
+            <div class="text-xs text-[#0A2E23]">4:00 PM • 5:30 PM • 7:00 PM</div>
+            <div class="grommet grommet-bottom"></div>
+          </div>
+        `,
+        renderInspector: (data, lang) => `
+          <div class="space-y-2">
+            <label class="block text-xs font-bold">${lang === 'ar' ? 'عنوان جدول الحفل:' : 'Itinerary Title:'}</label>
+            <input type="text" value="${lang === 'ar' ? data.titleAr : data.titleEn}" oninput="updateBlockField('title', this.value)" class="w-full px-3 py-2 text-xs rounded-xl border border-[#D4AF37]/40 bg-[#FFFDF9]">
+          </div>
+        `
+      },
+      song: {
+        type: 'song',
+        name: { ar: '🎵 اقتراحات الأغاني (DJ)', en: '🎵 Song Request (DJ)' },
+        defaultData: { titleAr: 'اقترح أغنيتك المفضلة 🎵', titleEn: 'Request a Song 🎵' },
+        renderGuest: (data, lang) => `
+          <div class="sandstone-card p-6 text-center space-y-3">
+            <div class="grommet grommet-top"></div>
+            <span class="gold-tagline">DJ VIBES</span>
+            <h2 class="font-serif text-xl font-bold">${lang === 'ar' ? data.titleAr : data.titleEn}</h2>
+            <div class="grommet grommet-bottom"></div>
+          </div>
+        `,
+        renderInspector: (data, lang) => `
+          <div class="space-y-2">
+            <label class="block text-xs font-bold">${lang === 'ar' ? 'عنوان اقتراح الأغاني:' : 'Song Request Title:'}</label>
+            <input type="text" value="${lang === 'ar' ? data.titleAr : data.titleEn}" oninput="updateBlockField('title', this.value)" class="w-full px-3 py-2 text-xs rounded-xl border border-[#D4AF37]/40 bg-[#FFFDF9]">
+          </div>
+        `
+      },
+      photodump: {
+        type: 'photodump',
+        name: { ar: '📸 معرض الصور المشترك', en: '📸 Shared Photo Dump' },
+        defaultData: { titleAr: 'معرض الصور المشترك 📸', titleEn: 'Shared Photo Gallery 📸' },
+        renderGuest: (data, lang) => `
+          <div class="sandstone-card p-6 text-center space-y-3">
+            <div class="grommet grommet-top"></div>
+            <span class="gold-tagline">PHOTO DUMP</span>
+            <h2 class="font-serif text-xl font-bold">${lang === 'ar' ? data.titleAr : data.titleEn}</h2>
+            <div class="grommet grommet-bottom"></div>
+          </div>
+        `,
+        renderInspector: (data, lang) => `
+          <div class="space-y-2">
+            <label class="block text-xs font-bold">${lang === 'ar' ? 'عنوان معرض الصور:' : 'Gallery Title:'}</label>
+            <input type="text" value="${lang === 'ar' ? data.titleAr : data.titleEn}" oninput="updateBlockField('title', this.value)" class="w-full px-3 py-2 text-xs rounded-xl border border-[#D4AF37]/40 bg-[#FFFDF9]">
+          </div>
+        `
+      }
+    };
+
+    /* ACTIVE INSTANTIATED BLOCKS ARRAY */
+    let activeBlocks = [
+      { id: 'blk-hero', type: 'hero', data: JSON.parse(JSON.stringify(BlockRegistry.hero.defaultData)) },
+      { id: 'blk-catering-1', type: 'catering', data: JSON.parse(JSON.stringify(BlockRegistry.catering.defaultData)) },
+      { id: 'blk-dresscode-1', type: 'dresscode', data: JSON.parse(JSON.stringify(BlockRegistry.dresscode.defaultData)) }
+    ];
+
+    /* RENDER PALETTE LIBRARY FROM BLOCK REGISTRY */
+    function renderPalette() {
+      const container = document.getElementById('palette-items-container');
+      container.innerHTML = Object.keys(BlockRegistry).map(type => {
+        const item = BlockRegistry[type];
+        if (item.isFixed) return ''; // Skip fixed hero in palette
+        return `
+          <div draggable="true" ondragstart="handlePaletteDragStart(event, '${type}')" onclick="addBlockInstance('${type}')" class="block-palette-item p-3.5 bg-[#FFFDF9] rounded-2xl border-2 border-[#D4AF37]/40 hover:border-[#0A2E23] shadow-sm flex items-center justify-between">
+            <div class="space-y-0.5">
+              <div class="text-xs font-bold text-[#2D2421]">${item.name[currentLang]}</div>
+              <div class="text-[10px] text-gray-500">قالب محتوى مستقل</div>
+            </div>
+            <span class="text-xs font-bold text-[#0A2E23] bg-[#0A2E23]/10 px-2 py-1 rounded-lg">+ إضافة</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* RENDER ACTIVE BLOCKS ON CANVAS */
+    function renderCanvas() {
+      const container = document.getElementById('canvas-blocks-mount-point');
+      container.innerHTML = activeBlocks.map((blk, idx) => {
+        const template = BlockRegistry[blk.type];
+        const isSelected = blk.id === selectedBlockId;
+        const isFixed = template.isFixed;
+
+        return `
+          <div id="${blk.id}" ${!isFixed ? 'draggable="true"' : ''} 
+               ondragstart="handleCanvasReorderStart(event, '${blk.id}')" 
+               ondragover="handleCanvasDragOver(event)" 
+               ondrop="handleCanvasReorderDrop(event, '${blk.id}')" 
+               onclick="selectBlock('${blk.id}')" 
+               class="relative cursor-pointer transition ${isSelected ? 'builder-block-active' : ''}">
+            
+            ${!isFixed ? `
+              <div class="flex items-center justify-between text-xs p-2 bg-[#EADBC8]/90 rounded-t-2xl border-t border-x border-[#D4AF37]/40 mb-[-1px]">
+                <span class="drag-handle text-[#0A2E23] font-bold">⋮⋮ سحب لتغيير الترتيب</span>
+                <button onclick="removeBlockInstance(event, '${blk.id}')" class="text-red-600 font-bold hover:underline text-[11px]">🗑️ حذف الكتلة</button>
+              </div>
+            ` : ''}
+
+            ${template.renderGuest(blk.data, currentLang)}
+          </div>
+        `;
+      }).join('');
+
+      renderGuestPage();
+      renderInspector();
+    }
+
+    /* RENDER DYNAMIC GUEST INVITATION PAGE */
+    function renderGuestPage() {
+      const container = document.getElementById('guest-blocks-mount-point');
+      if (container) {
+        container.innerHTML = activeBlocks.map(blk => BlockRegistry[blk.type].renderGuest(blk.data, currentLang)).join('');
+      }
+    }
+
+    /* RENDER SPECIFIC BLOCK INSPECTOR FORM IN RIGHT SIDEBAR */
+    function renderInspector() {
+      const container = document.getElementById('inspector-form-mount-point');
+      const heading = document.getElementById('inspector-active-heading');
+      const activeBlk = activeBlocks.find(b => b.id === selectedBlockId) || activeBlocks[0];
+
+      if (activeBlk) {
+        const template = BlockRegistry[activeBlk.type];
+        heading.innerText = `${template.name[currentLang]} ✏️`;
+        container.innerHTML = template.renderInspector(activeBlk.data, currentLang, updateBlockField);
+      }
+    }
+
+    /* INSTANTIATE A NEW BLOCK FROM PALETTE */
+    function addBlockInstance(type) {
+      const newId = `blk-${type}-${Date.now()}`;
+      const defaultData = JSON.parse(JSON.stringify(BlockRegistry[type].defaultData));
+      activeBlocks.push({ id: newId, type: type, data: defaultData });
+      selectedBlockId = newId;
+      renderCanvas();
+    }
+
+    /* REMOVE A BLOCK INSTANCE */
+    function removeBlockInstance(e, id) {
+      e.stopPropagation();
+      activeBlocks = activeBlocks.filter(b => b.id !== id);
+      selectedBlockId = activeBlocks[0].id;
+      renderCanvas();
+    }
+
+    /* SELECT A BLOCK ON CANVAS */
+    function selectBlock(id) {
+      selectedBlockId = id;
+      renderCanvas();
+    }
+
+    /* UPDATE FIELD VALUE IN SELECTED BLOCK DATA */
+    function updateBlockField(fieldKey, value) {
+      const activeBlk = activeBlocks.find(b => b.id === selectedBlockId);
+      if (activeBlk) {
+        if (currentLang === 'ar') {
+          activeBlk.data[`${fieldKey}Ar`] = value;
+        } else {
+          activeBlk.data[`${fieldKey}En`] = value;
+        }
+        renderCanvas();
+      }
+    }
+
+    /* REORDERING DRAG & DROP HANDLERS */
+    function handlePaletteDragStart(e, type) {
+      draggedPaletteType = type;
+      e.dataTransfer.setData('text/plain', type);
+    }
+
+    function handleCanvasDragOver(e) {
+      e.preventDefault();
+    }
+
+    function handleCanvasDrop(e) {
+      e.preventDefault();
+      if (draggedPaletteType) {
+        addBlockInstance(draggedPaletteType);
+        draggedPaletteType = null;
+      }
+    }
+
+    function handleCanvasReorderStart(e, id) {
+      draggedCanvasId = id;
+      e.dataTransfer.setData('text/plain', id);
+    }
+
+    function handleCanvasReorderDrop(e, targetId) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!draggedCanvasId || draggedCanvasId === targetId) return;
+
+      const fromIdx = activeBlocks.findIndex(b => b.id === draggedCanvasId);
+      const toIdx = activeBlocks.findIndex(b => b.id === targetId);
+
+      if (fromIdx !== -1 && toIdx !== -1) {
+        const [moved] = activeBlocks.splice(fromIdx, 1);
+        activeBlocks.splice(toIdx, 0, moved);
+        renderCanvas();
+      }
+      draggedCanvasId = null;
+    }
+
+    /* LANGUAGE & VIEW SWITCHING */
+    function toggleLanguage() {
+      currentLang = currentLang === 'ar' ? 'en' : 'ar';
+      document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = currentLang;
+
+      document.getElementById('lang-flag').innerText = currentLang === 'ar' ? '🇬🇧' : '🇸🇦';
+      document.getElementById('lang-label').innerText = currentLang === 'ar' ? 'English' : 'العربية';
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[currentLang][key]) {
+          el.innerText = translations[currentLang][key];
+        }
+      });
+
+      renderPalette();
+      renderCanvas();
+    }
+
+    function switchView(viewName) {
+      ['dashboard', 'builder', 'guest', 'scanner'].forEach(v => {
+        document.getElementById(`view-${v}`).classList.add('hidden');
+        document.getElementById(`nav-${v}`).className = "px-4 py-1.5 rounded-full transition-all text-[#2D2421] hover:text-[#D4AF37]";
+      });
+
+      document.getElementById(`view-${viewName}`).classList.remove('hidden');
+      document.getElementById(`nav-${viewName}`).className = "px-4 py-1.5 rounded-full transition-all bg-[#2D2421] text-[#FFFDF9] shadow-sm";
+    }
+
+    const translations = {
+      ar: {
+        nav_dashboard: "📊 لوحة التحليلات (Dashboard)",
+        nav_builder: "🎨 مصمم الدعوة (Canvas Builder)",
+        nav_guest: "👁️ معاينة دعوة الضيف",
+        nav_scanner: "🚪 ماسح البوابة",
+        dash_welcome_tag: "مركز تحليلات المناسبة • جدة",
+        open_builder_cta: "🎨 فتح مصمم الدعوة (Modular Canvas Builder)",
+        export_caterer_btn: "📥 تصدير قائمة المطعم (CSV)",
+        stat_total: "إجمالي المدعوين",
+        stat_total_sub: "دعوات صادرة عبر واتساب",
+        stat_attending: "المؤكدون (Attending)",
+        stat_attending_sub: "نسبة التأكيد: 78%",
+        stat_declined: "المعتذرون (Declined)",
+        stat_declined_sub: "مع رسائل تهنئة",
+        stat_checkedin: "المتواجدون الآن (Checked-In)",
+        stat_checkedin_sub: "تم المسح في البوابة",
+        crm_table_title: "👥 سجل إدارة الضيوف والتأكيدات (CRM Directory)",
+        crm_table_subtitle: "متابعة إرسال واتساب والوجبات ورسائل الاعتذار",
+        crm_search_ph: "ابحث عن اسم ضيف...",
+        badge_attending_2: "مؤكد الحضور (2)",
+        wa_send_btn: "💬 إرسال دعوتك عبر واتساب",
+        crm_checkin_toggle: "✓ مسح حضور البوابة",
+        palette_tag: "مكتبة العناصر والكتل",
+        palette_title: "اسحب أو انقر لإضافة الكتل 📦",
+        palette_desc: "كل كتلة عبارة عن قوالب برمجية مستقلة",
+        live_canvas_tag: "المعاينة الحية المباشرة (LIVE CANVAS)",
+        inspector_tag: "محرر النصوص والمحتوى",
+        inspector_subtitle: "انقر على أي كتلة لتشغيل محرر القوالب الخاص بها",
+        personal_invite_tag: "دعوة خاصة وشخصية",
+        guest_welcome_prefix: "أهلاً بك،",
+        qr_tag: "بطاقة الدخول الرقمية",
+        qr_title: "بطاقة VIP الشخصية 🎫",
+        scanner_tag: "بوابة الدخول الفاخرة",
+        scanner_title: "ماسح VIP عند البوابة",
+        scanner_align_prompt: "وجّه الكاميرا للرمز الرقمي",
+        camera_active: "الكاميرا نشطة (WebRTC Active)",
+        scanner_sim_btn: "⚡ محاكاة مسح رمز (هاشم النماري + سارة النماري)",
+        entry_verified: "دخول مأذون • تم التحقق (Verified Entry)"
+      },
+      en: {
+        nav_dashboard: "📊 Analytics Dashboard",
+        nav_builder: "🎨 Canvas Builder",
+        nav_guest: "👁️ Preview Guest Link",
+        nav_scanner: "🚪 Gate Scanner",
+        dash_welcome_tag: "EVENT ANALYTICS HUB • JEDDAH",
+        open_builder_cta: "🎨 Open Modular Canvas Builder",
+        export_caterer_btn: "📥 Export Caterer List (CSV)",
+        stat_total: "Total Invited Guests",
+        stat_total_sub: "Dispatched via WhatsApp",
+        stat_attending: "Confirmed Attending",
+        stat_attending_sub: "78% Confirmation Rate",
+        stat_declined: "Declined",
+        stat_declined_sub: "With warm notes",
+        stat_checkedin: "Checked-In Now",
+        stat_checkedin_sub: "Scanned at gate entrance",
+        crm_table_title: "👥 Interactive Guest CRM Directory",
+        crm_table_subtitle: "Track WhatsApp invites, meals, and decline warm notes",
+        crm_search_ph: "Search guest name...",
+        badge_attending_2: "Attending (2)",
+        wa_send_btn: "💬 Send WhatsApp Invite",
+        crm_checkin_toggle: "✓ Gate Check-In",
+        palette_tag: "BLOCK LIBRARY",
+        palette_title: "Drag & Drop Block Components 📦",
+        palette_desc: "Each block is an independent template module",
+        live_canvas_tag: "LIVE CANVAS PREVIEW",
+        inspector_tag: "TEMPLATE INSPECTOR EDITOR",
+        inspector_subtitle: "Click any block to launch its template editor form",
+        personal_invite_tag: "Exclusive Personal Invitation",
+        guest_welcome_prefix: "Welcome,",
+        qr_tag: "DIGITAL DOOR PASS",
+        qr_title: "VIP Web QR Pass 🎫",
+        scanner_tag: "CONCIERGE PORTAL",
+        scanner_title: "Gate VIP Scanner",
+        scanner_align_prompt: "Align camera over guest QR pass",
+        camera_active: "Camera Active (WebRTC Active)",
+        scanner_sim_btn: "⚡ Simulate Pass Scan (Hashim + Sarah)",
+        entry_verified: "Verified Entry • Access Granted"
+      }
+    };
+
+    function filterCrmGuests() {
+      const q = document.getElementById('crm-search-input').value.toLowerCase();
+      document.querySelectorAll('[data-guest-row]').forEach(row => {
+        if (row.innerText.toLowerCase().includes(q)) {
+          row.classList.remove('hidden');
+        } else {
+          row.classList.add('hidden');
+        }
+      });
+    }
+
+    function toggleGuestCheckin(guestKey) {
+      const btn = document.getElementById(`crm-checkin-btn-${guestKey}`);
+      if (btn) {
+        btn.className = "px-3 py-1.5 rounded-lg bg-green-700 text-white text-xs font-bold shadow";
+        btn.innerText = currentLang === 'ar' ? "✓ تم التحقق بالكامل" : "✓ Fully Checked In";
+      }
+    }
+
+    function exportCatererCsv() {
+      const csvContent = "data:text/csv;charset=utf-8," 
+        + "Guest Name,Plus-One Name,Status,Meal Guest 1,Meal Guest 2,Dietary Restrictions\n"
+        + "Hashim Alnimari,Sarah Alnimari,Attending,Beef Filet,Atlantic Salmon,None\n";
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "quickrsvp_caterer_summary_jeddah.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function simulateScanSuccess() {
+      const res = document.getElementById('scanner-result');
+      if (res) res.classList.remove('hidden');
+      const checkedCount = document.getElementById('dash-checkedin-count');
+      if (checkedCount) checkedCount.innerText = "49";
+      if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+    }
+
+    // Initialize block engine on DOM Ready
+    window.addEventListener('DOMContentLoaded', () => {
+      renderPalette();
+      renderCanvas();
+    });
+  </script>
+</body>
+</html>

@@ -188,6 +188,55 @@ function createStaticServer(appFolder, port, appName) {
             return;
         }
 
+        if (urlPath === '/api/feedback' && req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => { body += chunk.toString(); });
+            req.on('end', async () => {
+                const corsHeaders = {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type'
+                };
+                try {
+                    const parsed = JSON.parse(body);
+                    const { client_id, rating, feedback_text } = parsed;
+                    const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tldzmrghbvqfaclantlr.supabase.co';
+                    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+                    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
+                    const apiKey = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+
+                    const fbRes = await fetch(`${SUPABASE_URL}/rest/v1/feedback`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': apiKey,
+                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify({
+                            client_id,
+                            rating: parseInt(rating),
+                            feedback_text: String(feedback_text).trim()
+                        })
+                    });
+
+                    const data = await fbRes.json();
+                    if (!fbRes.ok) {
+                        res.writeHead(fbRes.status, corsHeaders);
+                        res.end(JSON.stringify({ error: data.message || 'Database insert failed' }));
+                        return;
+                    }
+
+                    res.writeHead(200, corsHeaders);
+                    res.end(JSON.stringify({ success: true, feedback: data }));
+                } catch(err) {
+                    res.writeHead(500, corsHeaders);
+                    res.end(JSON.stringify({ error: err.message }));
+                }
+            });
+            return;
+        }
+
         const relative = urlPath === '/' ? 'index.html' : urlPath;
         const filePath = path.join(root, relative);
 

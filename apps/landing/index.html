@@ -166,9 +166,50 @@
         .site-footer { width: 100%; text-align: center; padding: 32px 24px; border-top: 1px solid var(--outline-variant); margin-top: auto; font-size: 0.8rem; color: var(--on-surface-variant); opacity: 0.7; }
         .hidden { display: none !important; }
 
-        /* REVIEW VIEW (WHEN ?c=slug IS PASSED) */
+        /* ─────────────────────────────────────────
+           REVIEW FUNNEL (customer-facing)
+        ───────────────────────────────────────── */
         #view-review { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; position: relative; z-index: 10; }
-        .rv-card { background: var(--surface); padding: 40px 32px 36px; border-radius: 28px; box-shadow: var(--shadow-lg); width: 92%; max-width: 420px; border: 1px solid var(--outline-variant); text-align: center; }
+        .rv-card { background: var(--surface); padding: 40px 32px 36px; border-radius: 28px; box-shadow: var(--shadow-lg); width: 92%; max-width: 420px; position: relative; z-index: 1; border: 1px solid var(--outline-variant); animation: cardIn .6s cubic-bezier(.22,1,.36,1) forwards; opacity: 0; transform: translateY(24px) scale(.97); text-align: center; }
+        .rv-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; border-radius: 28px 28px 0 0; background: linear-gradient(90deg, var(--g-blue), var(--g-red) 30%, var(--g-yellow) 60%, var(--g-green)); }
+        .google-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+        .google-dots span { width: 10px; height: 10px; border-radius: 50%; display: inline-block; animation: dotPulse 2s ease-in-out infinite; }
+        .google-dots span:nth-child(1) { background: var(--g-blue); animation-delay: 0s; }
+        .google-dots span:nth-child(2) { background: var(--g-red); animation-delay: .15s; }
+        .google-dots span:nth-child(3) { background: var(--g-yellow); animation-delay: .3s; }
+        .google-dots span:nth-child(4) { background: var(--g-green); animation-delay: .45s; }
+        .rv-card h2 { color: var(--on-surface); font-weight: 700; font-size: 1.45rem; letter-spacing: -.02em; margin-bottom: 6px; }
+        .rv-card .sub { color: var(--on-surface-variant); font-size: .93rem; line-height: 1.5; margin-bottom: 28px; }
+        .rv-card .stars-container { background: var(--surface-dim); border-radius: var(--radius-md); padding: 20px 12px; margin: 0 -4px 8px; border: 1px solid var(--outline-variant); transition: border-color .3s, box-shadow .3s; }
+        .rv-card .stars-container:hover { border-color: rgba(66,133,244,.5); box-shadow: 0 0 0 3px rgba(66,133,244,.12); }
+        .rv-card .stars-label { font-size: .73rem; font-weight: 500; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; display: block; }
+        .rv-card .stars { font-size: 2.75rem; display: flex; justify-content: center; gap: 10px; user-select: none; }
+        .rv-card .stars button { cursor: pointer; color: var(--outline); background: none; border: none; padding: 0; font: inherit; font-size: inherit; transition: color .2s, transform .2s cubic-bezier(.34,1.56,.64,1); line-height: 1; display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 50%; }
+        .rv-card .stars button:hover { transform: scale(1.15); }
+        .rv-card .stars button:active { transform: scale(.95); }
+        .rv-card .stars button.active { color: #FBBC05 !important; text-shadow: 0 0 12px rgba(251,188,5,0.8) !important; filter: drop-shadow(0 2px 6px rgba(251,188,5,.45)); }
+        .rv-card .stars button.hovered { color: #FBBC05 !important; text-shadow: 0 0 12px rgba(251,188,5,0.8) !important; }
+        .star-text { height: 24px; margin-top: 14px; font-size: .84rem; font-weight: 500; color: var(--g-blue); transition: opacity .25s; opacity: 0; }
+        .star-text.visible { opacity: 1; }
+        .rv-textarea { width: 100%; height: 130px; padding: 16px; border-radius: var(--radius-md); border: 1.5px solid var(--outline); font-family: inherit; font-size: .93rem; line-height: 1.5; color: var(--on-surface); background: var(--surface-dim); resize: none; transition: border-color .3s, box-shadow .3s; outline: none; }
+        .rv-textarea::placeholder { color: var(--on-surface-variant); opacity: .7; }
+        .rv-textarea:focus { border-color: var(--g-blue); box-shadow: 0 0 0 3px rgba(66,133,244,.22); }
+        .rv-btn { background: var(--g-blue); color: white; border: none; padding: 13px 24px; border-radius: var(--radius-full); font-family: inherit; font-size: .93rem; font-weight: 600; cursor: pointer; margin-top: 16px; width: 100%; transition: background .2s, box-shadow .3s, transform .15s; position: relative; overflow: hidden; }
+        .rv-btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.15), transparent 60%); pointer-events: none; }
+        .rv-btn:hover { background: var(--g-blue-dark); box-shadow: 0 4px 16px rgba(26,115,232,.35); transform: translateY(-1px); }
+        .rv-btn:active { transform: scale(.98); }
+        .rv-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+        .success-icon { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, var(--g-green), var(--g-green-light)); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; animation: successPop .5s cubic-bezier(.34,1.56,.64,1); }
+        .success-icon svg { width: 34px; height: 34px; stroke: white; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .success-icon svg path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: checkDraw .5s .3s ease forwards; }
+        .rv-footer { margin-top: 24px; font-size: .7rem; color: var(--on-surface-variant); opacity: .45; letter-spacing: .02em; }
+        .fb-icon { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, rgba(234,67,53,.15), rgba(251,188,5,.15)); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 1.7rem; }
+        .spinner { width: 36px; height: 36px; border: 3px solid var(--outline); border-top-color: var(--g-blue); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 14px; }
+        @keyframes cardIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes successPop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes checkDraw { to { stroke-dashoffset: 0; } }
+        @keyframes dotPulse { 0%,100% { transform: scale(1); opacity: .7; } 50% { transform: scale(1.35); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -303,9 +344,40 @@
 
 <!-- REVIEW VIEW (Triggered when URL has ?c=slug) -->
 <div id="view-review" class="hidden">
-    <div class="rv-card" id="rv-card-content">
-        <div style="font-size:2rem;margin-bottom:12px">&#x2B50;</div>
-        <h2>Loading Review...</h2>
+    <div class="rv-card" id="rv-loading">
+        <div class="spinner"></div>
+        <p style="color:var(--on-surface-variant);font-size:.9rem">Loading...</p>
+    </div>
+    <div class="rv-card hidden" id="rv-error">
+        <div style="font-size:3rem;margin-bottom:16px">&#x1F615;</div>
+        <h2>Link Not Found</h2>
+        <p class="sub">This review link is invalid or has been deactivated. Please contact the business for a new link.</p>
+        <div class="rv-footer">Powered by Google Reviews</div>
+    </div>
+    <div class="rv-card hidden" id="rv-rating">
+        <div class="google-dots"><span></span><span></span><span></span><span></span></div>
+        <h2 id="rv-heading">How was your visit?</h2>
+        <p class="sub" id="rv-subheading">Tap a star to rate your experience</p>
+        <div class="stars-container">
+            <span class="stars-label">Your rating</span>
+            <div class="stars" id="rv-stars">
+                <button type="button" id="star-1" aria-label="1 star">&#9733;</button>
+                <button type="button" id="star-2" aria-label="2 stars">&#9733;</button>
+                <button type="button" id="star-3" aria-label="3 stars">&#9733;</button>
+                <button type="button" id="star-4" aria-label="4 stars">&#9733;</button>
+                <button type="button" id="star-5" aria-label="5 stars">&#9733;</button>
+            </div>
+            <div class="star-text" id="rv-star-text"></div>
+        </div>
+        <div class="rv-footer">Powered by Google Reviews</div>
+    </div>
+    <div class="rv-card hidden" id="rv-feedback">
+        <div class="fb-icon">&#x1F4AC;</div>
+        <h2 id="rv-fb-title">We'd love to improve</h2>
+        <p class="sub" id="rv-fb-sub">Your feedback goes directly to our team &mdash; it won't be posted publicly.</p>
+        <textarea class="rv-textarea" id="rv-text" placeholder="Tell us how we can do better next time..."></textarea>
+        <button type="button" class="rv-btn" id="rv-submit-btn" onclick="rvSubmit()">Send Feedback</button>
+        <div class="rv-footer">Your response is private and confidential</div>
     </div>
 </div>
 
@@ -606,6 +678,160 @@ function runDemo(n) {
     }
 }
 
+/* ────────────────────────────────────────────
+   REVIEW VIEW LOGIC (customer-facing)
+──────────────────────────────────────────── */
+let rvClientId = null, rvGoogleURL = null, rvRating = 0;
+const rvLabels = ['', 'Poor — we can do better', 'Fair — room for improvement', 'Good — but not great', 'Great — glad you enjoyed it!', 'Excellent — thank you! 🎉'];
+
+function rvShow(id) {
+    ['rv-loading', 'rv-error', 'rv-rating', 'rv-feedback'].forEach(s => {
+        const el = document.getElementById(s);
+        if (el) el.classList.add('hidden');
+    });
+    const target = document.getElementById(id);
+    if (target) {
+        target.classList.remove('hidden');
+    }
+}
+
+async function rvInit(slug) {
+    rvShow('rv-loading');
+    if (!sb) await initConfig();
+    if (!sb) {
+        rvShow('rv-error');
+        return;
+    }
+    try {
+        const { data, error } = await sb.from('clients').select('id,name,google_review_url').eq('slug', slug).eq('active', true).maybeSingle();
+        if (error || !data) {
+            rvShow('rv-error');
+            return;
+        }
+        rvClientId = data.id;
+        rvGoogleURL = data.google_review_url;
+        document.title = 'Rate ' + data.name;
+        
+        const heading = document.getElementById('rv-heading');
+        if (heading) heading.textContent = 'How was your visit to ' + data.name + '?';
+        
+        rvShow('rv-rating');
+        rvBindEvents();
+    } catch (e) {
+        rvShow('rv-error');
+    }
+}
+
+function rvBindEvents() {
+    for (let i = 1; i <= 5; i++) {
+        const btn = document.getElementById('star-' + i);
+        if (btn) {
+            btn.onclick = () => rvSelect(i);
+            btn.onmouseenter = () => rvHover(i);
+            btn.onmouseleave = () => rvResetHover();
+        }
+    }
+}
+
+function rvHover(n) {
+    if (rvRating > 0) return;
+    for (let i = 1; i <= 5; i++) {
+        const s = document.getElementById('star-' + i);
+        if (s) s.classList.toggle('hovered', i <= n);
+    }
+    const t = document.getElementById('rv-star-text');
+    if (t) {
+        t.textContent = rvLabels[n];
+        t.classList.add('visible');
+    }
+}
+
+function rvResetHover() {
+    if (rvRating > 0) return;
+    for (let i = 1; i <= 5; i++) {
+        const s = document.getElementById('star-' + i);
+        if (s) s.classList.remove('hovered');
+    }
+    const t = document.getElementById('rv-star-text');
+    if (t) t.classList.remove('visible');
+}
+
+function rvSelect(n) {
+    rvRating = n;
+    for (let i = 1; i <= 5; i++) {
+        const s = document.getElementById('star-' + i);
+        if (s) {
+            s.classList.remove('hovered');
+            s.classList.toggle('active', i <= n);
+        }
+    }
+    const t = document.getElementById('rv-star-text');
+    if (t) {
+        t.textContent = rvLabels[n];
+        t.classList.add('visible');
+    }
+
+    if (n >= 4) {
+        // High rating (4 or 5 stars): Redirect to Google Review destination
+        setTimeout(() => {
+            if (rvGoogleURL && (rvGoogleURL.startsWith('http://') || rvGoogleURL.startsWith('https://'))) {
+                window.location.href = rvGoogleURL;
+            } else {
+                rvShow('rv-feedback');
+            }
+        }, 400);
+    } else {
+        // Low rating (1, 2, or 3 stars): Open private feedback form, DO NOT redirect to Google
+        setTimeout(() => {
+            rvShow('rv-feedback');
+        }, 400);
+    }
+}
+
+async function rvSubmit() {
+    const ta = document.getElementById('rv-text');
+    const btn = document.getElementById('rv-submit-btn');
+    const txt = ta.value.trim();
+    if (!txt) {
+        ta.style.borderColor = 'var(--g-red)';
+        setTimeout(() => { ta.style.borderColor = ''; }, 2000);
+        return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    
+    try {
+        let sent = false;
+        try {
+            const apiRes = await fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    client_id: rvClientId,
+                    rating: rvRating,
+                    feedback_text: txt
+                })
+            });
+            if (apiRes.ok) sent = true;
+        } catch(e) {}
+
+        if (!sent && sb) {
+            const { error } = await sb.from('feedback').insert({
+                client_id: rvClientId,
+                rating: rvRating,
+                feedback_text: txt
+            });
+            if (error) throw error;
+        }
+
+        document.getElementById('rv-feedback').innerHTML = '<div class="fade-in"><div class="success-icon"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div><h2 style="color:var(--g-green)">Thank you!</h2><p class="sub">Your feedback has been sent privately to our management team. We truly appreciate your honesty.</p></div>';
+    } catch(err) {
+        btn.disabled = false;
+        btn.textContent = 'Send Feedback';
+        alert('Failed to send feedback: ' + (err.message || 'Please try again.'));
+    }
+}
+
 (async () => {
     const savedLang = localStorage.getItem('preferred_lang') || 'en';
     setLanguage(savedLang);
@@ -616,19 +842,8 @@ function runDemo(n) {
         document.getElementById('global-nav').classList.add('hidden');
         document.getElementById('view-home').classList.add('hidden');
         document.getElementById('view-review').classList.remove('hidden');
-        if (sb) {
-            try {
-                const { data } = await sb.from('clients').select('*').eq('slug', slug).eq('active', true).maybeSingle();
-                const card = document.getElementById('rv-card-content');
-                if (data) {
-                    card.innerHTML = `<h2 style="margin-bottom:8px">Rate ${esc(data.name)}</h2><p style="color:var(--on-surface-variant);font-size:0.9rem;margin-bottom:20px">Tap a star to leave your review</p><div class="stars" style="margin-bottom:20px"><button onclick="window.location.href='${esc(data.google_review_url)}'">&#9733;</button><button onclick="window.location.href='${esc(data.google_review_url)}'">&#9733;</button><button onclick="window.location.href='${esc(data.google_review_url)}'">&#9733;</button><button onclick="window.location.href='${esc(data.google_review_url)}'">&#9733;</button><button onclick="window.location.href='${esc(data.google_review_url)}'">&#9733;</button></div>`;
-                } else {
-                    card.innerHTML = '<h2>Review Link Not Found</h2><p>This review link is invalid or expired.</p>';
-                }
-            } catch(e) {
-                document.getElementById('rv-card-content').innerHTML = '<h2>Review Link Not Found</h2><p>This review link is invalid or expired.</p>';
-            }
-        }
+        await rvInit(slug);
+        return;
     }
 })();
 </script>

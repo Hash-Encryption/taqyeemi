@@ -54,7 +54,7 @@ export async function onRequestPost(context) {
                 },
                 body: JSON.stringify({
                     email: email.toLowerCase(),
-                    redirectTo: env.DASHBOARD_URL || env.OWNER_APP_URL || 'https://app-taqyeemi-btl-pages.pages.dev'
+                    redirectTo: env.OWNER_APP_URL || env.DASHBOARD_URL || 'https://app-taqyeemi.pages.dev'
                 })
             });
             const inviteData = await inviteRes.json();

@@ -177,6 +177,7 @@
             <span class="navbar-badge hidden" id="db-unread-badge">0</span>
         </div>
         <div class="navbar-right">
+            <a href="#" id="db-funnel-link" target="_blank" class="btn-logout" style="text-decoration:none;display:none;color:var(--g-blue);border-color:rgba(66,133,244,0.4);background:rgba(66,133,244,0.08);">🚀 <span id="txt-btn-funnel">Customer Funnel</span> ↗</a>
             <button class="btn-lang-toggle" onclick="toggleLanguage()" id="db-nav-lang-btn">🌐 العربية</button>
             <button class="btn-logout" onclick="dbLogout()" id="txt-btn-logout">Log Out</button>
         </div>
@@ -213,9 +214,22 @@
 <script>
 let SUPABASE_URL = 'https://tldzmrghbvqfaclantlr.supabase.co';
 let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
+let PUBLIC_FUNNEL_URL = 'https://taqyeemi.pages.dev';
 let sb = null;
-let dbFeedback = [], dbFilter_ = 'all', dbClientId_ = null;
+let dbFeedback = [], dbFilter_ = 'all', dbClientId_ = null, dbClientSlug_ = null;
 let currentLang = 'en';
+
+// Canonical Public Funnel URL Helper
+function getBusinessFunnelUrl(slug) {
+    if (!slug) return '';
+    try {
+        const url = new URL(PUBLIC_FUNNEL_URL);
+        url.searchParams.set('c', slug);
+        return url.toString();
+    } catch (e) {
+        return `${PUBLIC_FUNNEL_URL.replace(/\/+$/, '')}/?c=${encodeURIComponent(slug)}`;
+    }
+}
 
 const i18n = {
     en: {
@@ -232,6 +246,7 @@ const i18n = {
         lblActPass: 'Set Password',
         btnActivate: 'Activate Account →',
         btnLogout: 'Log Out',
+        btnFunnel: 'Customer Funnel',
         statLblTotal: 'Total Reviews',
         statSubTotal: 'Customer notes',
         statLblAvg: 'Average Rating',
@@ -258,6 +273,7 @@ const i18n = {
         lblActPass: 'تعيين كلمة المرور',
         btnActivate: 'تفعيل الحساب والدخول ←',
         btnLogout: 'تسجيل الخروج',
+        btnFunnel: 'صفحة التقييم',
         statLblTotal: 'إجمالي التقييمات',
         statSubTotal: 'تقييم وملاحظة',
         statLblAvg: 'متوسط النجوم',
@@ -292,6 +308,8 @@ function setLanguage(lang) {
     document.getElementById('txt-lbl-act-pass').textContent = t.lblActPass;
     document.getElementById('db-btn-activate').textContent = t.btnActivate;
     document.getElementById('txt-btn-logout').textContent = t.btnLogout;
+    const txtFunnel = document.getElementById('txt-btn-funnel');
+    if (txtFunnel) txtFunnel.textContent = t.btnFunnel;
     document.getElementById('txt-stat-lbl-total').textContent = t.statLblTotal;
     document.getElementById('txt-stat-sub-total').textContent = t.statSubTotal;
     document.getElementById('txt-stat-lbl-avg').textContent = t.statLblAvg;
@@ -317,6 +335,9 @@ async function initConfig() {
             if (data.SUPABASE_URL && data.SUPABASE_ANON_KEY) {
                 SUPABASE_URL = data.SUPABASE_URL;
                 SUPABASE_ANON_KEY = data.SUPABASE_ANON_KEY;
+            }
+            if (data.PUBLIC_FUNNEL_URL) {
+                PUBLIC_FUNNEL_URL = data.PUBLIC_FUNNEL_URL;
             }
         }
     } catch(e) {}
@@ -394,12 +415,12 @@ async function dbEnter(user) {
     const s = document.getElementById('db-screen');
     s.classList.remove('hidden');
     
-    let { data: client } = await sb.from('clients').select('id,name').eq('owner_user_id', user.id).maybeSingle();
+    let { data: client } = await sb.from('clients').select('id,name,slug').eq('owner_user_id', user.id).maybeSingle();
     
     if (!client && sb) {
         try {
             await sb.rpc('claim_restaurant');
-            const { data: claimed } = await sb.from('clients').select('id,name').eq('owner_user_id', user.id).maybeSingle();
+            const { data: claimed } = await sb.from('clients').select('id,name,slug').eq('owner_user_id', user.id).maybeSingle();
             client = claimed;
         } catch(e) {}
     }
@@ -409,7 +430,7 @@ async function dbEnter(user) {
             .update({ owner_user_id: user.id })
             .ilike('owner_email', user.email.trim());
 
-        const { data: recheck } = await sb.from('clients').select('id,name').eq('owner_user_id', user.id).maybeSingle();
+        const { data: recheck } = await sb.from('clients').select('id,name,slug').eq('owner_user_id', user.id).maybeSingle();
         client = recheck;
     }
 
@@ -419,8 +440,19 @@ async function dbEnter(user) {
         return;
     }
     dbClientId_ = client.id;
+    dbClientSlug_ = client.slug;
     document.getElementById('db-rest-name').textContent = client.name;
     document.title = client.name + ' — Owner Portal';
+
+    if (client.slug) {
+        const funnelLink = getBusinessFunnelUrl(client.slug);
+        const flEl = document.getElementById('db-funnel-link');
+        if (flEl) {
+            flEl.href = funnelLink;
+            flEl.style.display = 'inline-flex';
+        }
+    }
+
     await dbLoad();
 }
 

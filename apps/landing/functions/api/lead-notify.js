@@ -45,7 +45,7 @@ export async function onRequestPost(context) {
                 </table>
 
                 <div style="margin-top:28px; padding-top:20px; border-top:1px solid #2c2f33; text-align:center;">
-                    <a href="https://admin-taqyeemi-btl-pages.pages.dev" style="background:#4285F4; color:#ffffff; padding:12px 24px; border-radius:30px; text-decoration:none; font-weight:600; font-size:0.9rem; display:inline-block;">Open Admin Panel & Provision Access &rarr;</a>
+                    <a href="${env.ADMIN_APP_URL || 'https://admin-taqyeemi.pages.dev'}" style="background:#4285F4; color:#ffffff; padding:12px 24px; border-radius:30px; text-decoration:none; font-weight:600; font-size:0.9rem; display:inline-block;">Open Admin Panel & Provision Access &rarr;</a>
                 </div>
             </div>
         `;

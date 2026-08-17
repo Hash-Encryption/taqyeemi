@@ -312,8 +312,24 @@
 <script>
 let SUPABASE_URL = 'https://tldzmrghbvqfaclantlr.supabase.co';
 let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
+let OWNER_APP_URL = 'https://app-taqyeemi-btl-pages.pages.dev';
+let PUBLIC_FUNNEL_URL = 'https://taqyeemi.pages.dev';
 let sb = null;
 let currentLang = 'en';
+
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Canonical Public Funnel URL Helper
+function getBusinessFunnelUrl(slug) {
+    if (!slug) return '';
+    try {
+        const url = new URL(PUBLIC_FUNNEL_URL);
+        url.searchParams.set('c', slug);
+        return url.toString();
+    } catch (e) {
+        return `${PUBLIC_FUNNEL_URL.replace(/\/+$/, '')}/?c=${encodeURIComponent(slug)}`;
+    }
+}
 
 const i18n = {
     en: {
@@ -444,12 +460,18 @@ async function initConfig() {
                 SUPABASE_URL = data.SUPABASE_URL;
                 SUPABASE_ANON_KEY = data.SUPABASE_ANON_KEY;
             }
-            if (data.DASHBOARD_URL) {
-                const loginLink = document.getElementById('client-login-link');
-                if (loginLink) loginLink.href = data.DASHBOARD_URL;
+            if (data.OWNER_APP_URL || data.DASHBOARD_URL) {
+                OWNER_APP_URL = data.OWNER_APP_URL || data.DASHBOARD_URL;
+            }
+            if (data.PUBLIC_FUNNEL_URL) {
+                PUBLIC_FUNNEL_URL = data.PUBLIC_FUNNEL_URL;
             }
         }
     } catch(e) {}
+
+    const loginLink = document.getElementById('client-login-link');
+    if (loginLink) loginLink.href = OWNER_APP_URL;
+
     if (window.supabase) {
         sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
@@ -590,16 +612,22 @@ function runDemo(n) {
     await initConfig();
     const p = new URLSearchParams(window.location.search);
     const slug = p.get('c');
-    if (slug && sb) {
+    if (slug) {
         document.getElementById('global-nav').classList.add('hidden');
         document.getElementById('view-home').classList.add('hidden');
         document.getElementById('view-review').classList.remove('hidden');
-        const { data } = await sb.from('clients').select('*').eq('slug', slug).eq('active', true).maybeSingle();
-        const card = document.getElementById('rv-card-content');
-        if (data) {
-            card.innerHTML = `<h2 style="margin-bottom:8px">Rate ${data.name}</h2><p style="color:var(--on-surface-variant);font-size:0.9rem;margin-bottom:20px">Tap a star to leave your review</p><div class="stars" style="margin-bottom:20px"><button onclick="window.location.href='${data.google_review_url}'">&#9733;</button><button onclick="window.location.href='${data.google_review_url}'">&#9733;</button><button onclick="window.location.href='${data.google_review_url}'">&#9733;</button><button onclick="window.location.href='${data.google_review_url}'">&#9733;</button><button onclick="window.location.href='${data.google_review_url}'">&#9733;</button></div>`;
-        } else {
-            card.innerHTML = '<h2>Review Link Not Found</h2><p>This review link is invalid or expired.</p>';
+        if (sb) {
+            try {
+                const { data } = await sb.from('clients').select('*').eq('slug', slug).eq('active', true).maybeSingle();
+                const card = document.getElementById('rv-card-content');
+                if (data) {
+                    card.innerHTML = `<h2 style="margin-bottom:8px">Rate ${esc(data.name)}</h2><p style="color:var(--on-surface-variant);font-size:0.9rem;margin-bottom:20px">Tap a star to leave your review</p><div class="stars" style="margin-bottom:20px"><button onclick="window.location.href='${esc(data.google_review_url)}'">&#9733;</button><button onclick="window.location.href='${esc(data.google_review_url)}'">&#9733;</button><button onclick="window.location.href='${esc(data.google_review_url)}'">&#9733;</button><button onclick="window.location.href='${esc(data.google_review_url)}'">&#9733;</button><button onclick="window.location.href='${esc(data.google_review_url)}'">&#9733;</button></div>`;
+                } else {
+                    card.innerHTML = '<h2>Review Link Not Found</h2><p>This review link is invalid or expired.</p>';
+                }
+            } catch(e) {
+                document.getElementById('rv-card-content').innerHTML = '<h2>Review Link Not Found</h2><p>This review link is invalid or expired.</p>';
+            }
         }
     }
 })();

@@ -193,7 +193,7 @@
     </div>
 </div>
 
-<!-- ADD / INVITE RESTAURANT MODAL -->
+<!-- ADD / INVITE RESTAURANT MODAL & QR MODAL -->
 <div class="modal-overlay" id="mgr-modal">
     <div class="modal">
         <div class="modal-header">
@@ -201,12 +201,15 @@
             <button class="btn-close" onclick="mgrCloseModal()">&#x2715;</button>
         </div>
         <div id="mgr-modal-body">
-            <div class="form-group"><label class="form-label">Business Name</label><input class="form-input" type="text" id="r-name" placeholder="e.g. Grand Bistro"></div>
-            <div class="form-group"><label class="form-label">Owner Email (Pre-Registration)</label><input class="form-input" type="email" id="r-email" placeholder="owner@business.com"></div>
-            <div class="form-group"><label class="form-label">URL Slug</label><input class="form-input" type="text" id="r-slug" placeholder="e.g. grand-bistro"></div>
-            <div class="form-group"><label class="form-label">Google Review URL</label><input class="form-input" type="url" id="r-url" placeholder="https://g.page/r/.../review"></div>
-            <button class="btn-primary" id="mgr-btn-save" onclick="mgrSave()">Provision Access & Send Invite &rarr;</button>
-            <div class="err-box" id="mgr-modal-err"></div>
+            <div id="mgr-modal-form">
+                <div class="form-group"><label class="form-label">Business Name</label><input class="form-input" type="text" id="r-name" placeholder="e.g. Grand Bistro"></div>
+                <div class="form-group"><label class="form-label">Owner Email (Pre-Registration)</label><input class="form-input" type="email" id="r-email" placeholder="owner@business.com"></div>
+                <div class="form-group"><label class="form-label">URL Slug</label><input class="form-input" type="text" id="r-slug" placeholder="e.g. grand-bistro"></div>
+                <div class="form-group"><label class="form-label">Google Review URL</label><input class="form-input" type="url" id="r-url" placeholder="https://g.page/r/.../review"></div>
+                <button class="btn-primary" id="mgr-btn-save" onclick="mgrSave()">Provision Access & Send Invite &rarr;</button>
+                <div class="err-box" id="mgr-modal-err"></div>
+            </div>
+            <div id="mgr-modal-dynamic" class="hidden"></div>
         </div>
     </div>
 </div>
@@ -214,9 +217,23 @@
 <script>
 let SUPABASE_URL = 'https://tldzmrghbvqfaclantlr.supabase.co';
 let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
+let PUBLIC_FUNNEL_URL = 'https://taqyeemi.pages.dev';
+let OWNER_APP_URL = 'https://app-taqyeemi-btl-pages.pages.dev';
 let sb = null;
 
 let mgrClients = [], mgrFeedback = [], mgrLeads = [], mgrCurrentView = 'leads';
+
+// Canonical Public Funnel URL Helper — Never derive customer links from window.location.origin
+function getBusinessFunnelUrl(slug) {
+    if (!slug) return '';
+    try {
+        const url = new URL(PUBLIC_FUNNEL_URL);
+        url.searchParams.set('c', slug);
+        return url.toString();
+    } catch (e) {
+        return `${PUBLIC_FUNNEL_URL.replace(/\/+$/, '')}/?c=${encodeURIComponent(slug)}`;
+    }
+}
 
 async function initConfig() {
     try {
@@ -226,6 +243,12 @@ async function initConfig() {
             if (data.SUPABASE_URL && data.SUPABASE_ANON_KEY) {
                 SUPABASE_URL = data.SUPABASE_URL;
                 SUPABASE_ANON_KEY = data.SUPABASE_ANON_KEY;
+            }
+            if (data.PUBLIC_FUNNEL_URL) {
+                PUBLIC_FUNNEL_URL = data.PUBLIC_FUNNEL_URL;
+            }
+            if (data.OWNER_APP_URL || data.DASHBOARD_URL) {
+                OWNER_APP_URL = data.OWNER_APP_URL || data.DASHBOARD_URL;
             }
         }
     } catch(e) {}
@@ -404,7 +427,8 @@ async function inviteLead(leadId, email, businessName, mapsUrl, counters) {
     }
 
     if (provisioned) {
-        alert(`✅ Client successfully provisioned!\nPre-registered email: ${email}\nReview Slug: ${clientSlug}\n\nThe owner can now sign in at the Owner Dashboard.`);
+        const funnelUrl = getBusinessFunnelUrl(clientSlug);
+        alert(`✅ Client successfully provisioned!\n\nBusiness: ${businessName}\nPre-registered email: ${email}\nReview Slug: ${clientSlug}\nCustomer Review Funnel: ${funnelUrl}\n\nThe owner can now sign in at the Owner Dashboard.`);
         await mgrLoad();
         mgrRenderLeads();
     }
@@ -423,7 +447,7 @@ function mgrRenderRestaurants() {
 function mgrCard(c) {
     const fb = mgrFeedback.filter(f => f.client_id === c.id);
     const cnt = fb.length, avg = cnt > 0 ? (fb.reduce((s,f) => s+f.rating,0)/cnt).toFixed(1) : '—', unread = fb.filter(f => !f.is_read).length;
-    const reviewLink = window.location.origin + '?c=' + c.slug;
+    const reviewLink = getBusinessFunnelUrl(c.slug);
     const ownerEmail = c.owner_email ? esc(c.owner_email) : 'Unassigned';
     const mapsUrl = c.google_review_url ? esc(c.google_review_url) : '';
 
@@ -443,20 +467,62 @@ function mgrCard(c) {
             </div>
             
             <div class="rc-link" style="margin-bottom:6px;">
-                <span style="color:var(--on-surface-variant);font-size:0.7rem;display:block;">Customer Link:</span>
-                ${esc(reviewLink)}
+                <span style="color:var(--on-surface-variant);font-size:0.7rem;display:block;margin-bottom:2px;">Customer Review Funnel:</span>
+                <a href="${esc(reviewLink)}" target="_blank" style="color:var(--g-blue);word-break:break-all;text-decoration:none;">${esc(reviewLink)} ↗</a>
             </div>
 
             <div style="font-size:0.78rem;color:var(--g-blue);margin-bottom:10px;word-break:break-all;">
-                📍 <strong>Google Maps URL:</strong> <a href="${mapsUrl}" target="_blank" style="color:var(--g-blue);">${mapsUrl ? 'Open Google Link ↗' : 'None Set'}</a>
+                📍 <strong>Google Maps Target:</strong> <a href="${mapsUrl}" target="_blank" style="color:var(--g-blue);">${mapsUrl ? 'Open Google Link ↗' : 'None Set'}</a>
             </div>
 
             <div class="rc-actions">
-                <button class="btn-sm primary" onclick="mgrEditUrl('${c.id}', '${esc(c.google_review_url || '')}')">✏️ Edit Google URL</button>
+                <button class="btn-sm primary" onclick="mgrCopy('${esc(reviewLink)}', this)">📋 Copy Link</button>
+                <a href="${esc(reviewLink)}" target="_blank" class="btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;">🚀 Open Funnel</a>
+                <button class="btn-sm" onclick="mgrShowQr('${esc(c.name)}', '${esc(c.slug)}')">📱 QR Code</button>
+                <button class="btn-sm" onclick="mgrEditUrl('${c.id}', '${esc(c.google_review_url || '')}')">✏️ Edit Maps</button>
                 <button class="btn-sm ${c.active ? 'danger' : 'success'}" onclick="mgrToggleActive('${c.id}', ${c.active})">${c.active ? 'Pause' : 'Activate'}</button>
             </div>
         </div>
     `;
+}
+
+async function mgrCopy(text, btn) {
+    try {
+        await navigator.clipboard.writeText(text);
+        const original = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('success');
+        setTimeout(() => {
+            btn.textContent = original;
+            btn.classList.remove('success');
+        }, 2000);
+    } catch (e) {
+        prompt('Copy to clipboard:', text);
+    }
+}
+
+function mgrShowQr(name, slug) {
+    const funnelUrl = getBusinessFunnelUrl(slug);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(funnelUrl)}&margin=10`;
+    
+    document.getElementById('mgr-modal-title').textContent = `${name} — QR Code`;
+    document.getElementById('mgr-modal-form').classList.add('hidden');
+    const dyn = document.getElementById('mgr-modal-dynamic');
+    dyn.classList.remove('hidden');
+    dyn.innerHTML = `
+        <div style="text-align:center;padding:10px 0;">
+            <div style="background:white;padding:16px;border-radius:12px;display:inline-block;margin-bottom:16px;box-shadow:var(--shadow-md);">
+                <img src="${qrUrl}" alt="QR Code for ${esc(name)}" style="width:240px;height:240px;display:block;" />
+            </div>
+            <div style="font-size:0.85rem;color:var(--on-surface-variant);margin-bottom:6px;">Customer Review Funnel Destination:</div>
+            <div class="link-box" style="margin-bottom:16px;"><a href="${esc(funnelUrl)}" target="_blank" style="color:var(--g-blue);text-decoration:none;">${esc(funnelUrl)} ↗</a></div>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="btn-primary" style="width:auto;padding:10px 20px;margin-top:0;" onclick="mgrCopy('${esc(funnelUrl)}', this)">📋 Copy Link</button>
+                <a href="${qrUrl}" download="qrcode-${esc(slug)}.png" target="_blank" class="btn-primary" style="width:auto;padding:10px 20px;margin-top:0;background:var(--surface-container);border:1px solid var(--outline);color:var(--on-surface);text-decoration:none;display:inline-flex;align-items:center;">⬇️ Download QR</a>
+            </div>
+        </div>
+    `;
+    document.getElementById('mgr-modal').classList.add('open');
 }
 
 async function mgrEditUrl(clientId, currentUrl) {
@@ -503,7 +569,15 @@ function mgrRenderFeedback() {
 }
 
 function mgrOpenModal() {
-    ['r-name','r-email','r-slug','r-url'].forEach(id => document.getElementById(id).value = '');
+    ['r-name','r-email','r-slug','r-url'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('mgr-modal-title').textContent = 'Provision Client Access';
+    document.getElementById('mgr-modal-form').classList.remove('hidden');
+    const dyn = document.getElementById('mgr-modal-dynamic');
+    dyn.classList.add('hidden');
+    dyn.innerHTML = '';
     document.getElementById('mgr-modal-err').classList.remove('show');
     document.getElementById('mgr-modal').classList.add('open');
 }
@@ -559,10 +633,31 @@ async function mgrSave() {
     }
 
     if (provisioned) {
-        mgrCloseModal();
+        const reviewLink = getBusinessFunnelUrl(slug);
+        document.getElementById('mgr-modal-title').textContent = 'Client Provisioned';
+        document.getElementById('mgr-modal-form').classList.add('hidden');
+        const dyn = document.getElementById('mgr-modal-dynamic');
+        dyn.classList.remove('hidden');
+        dyn.innerHTML = `
+            <div style="text-align:center;padding:10px 0;">
+                <div style="font-size:2.8rem;margin-bottom:8px">🎉</div>
+                <div style="font-size:1.1rem;font-weight:700;color:var(--g-green);margin-bottom:8px">Business Successfully Provisioned!</div>
+                <p style="font-size:.86rem;color:var(--on-surface-variant);line-height:1.6;margin-bottom:16px;">
+                    The customer review funnel is ready. The owner can sign in to the Owner Dashboard using their approved email.
+                </p>
+                <div style="text-align:left;">
+                    <div class="form-label" style="display:block;margin-bottom:4px">Customer Review Funnel Link</div>
+                    <div class="link-box"><a href="${esc(reviewLink)}" target="_blank" style="color:var(--g-blue);text-decoration:none;">${esc(reviewLink)} ↗</a></div>
+                    <div class="form-label" style="display:block;margin-top:12px;margin-bottom:4px">Approved Owner Email</div>
+                    <div class="link-box">${esc(ownerEmail)}</div>
+                </div>
+                <div style="margin-top:20px;display:flex;gap:8px;justify-content:center;">
+                    <button class="btn-primary" style="width:auto;padding:10px 20px;margin-top:0;" onclick="mgrCopy('${esc(reviewLink)}', this)">📋 Copy Funnel Link</button>
+                    <button class="btn-primary" style="width:auto;padding:10px 20px;margin-top:0;background:var(--surface-container);border:1px solid var(--outline);color:var(--on-surface);" onclick="mgrCloseModal();mgrLoad().then(()=>mgrView('restaurants'))">Done</button>
+                </div>
+            </div>
+        `;
         await mgrLoad();
-        mgrView('restaurants');
-        alert(`✓ Client provisioned! Owner email: ${ownerEmail}`);
     } else {
         mgrErr(err, 'Could not provision client.');
     }

@@ -412,7 +412,7 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
 
         // The base URL of your hosted site (used to generate review links)
-        const SITE_URL = window.location.origin;
+        const SITE_URL = 'https://taqyeemi.pages.dev';
 
         // ============================================================
         const { createClient } = supabase;
@@ -560,7 +560,7 @@
             const count  = clientFeedback.length;
             const avg    = count > 0 ? (clientFeedback.reduce((s,f) => s + f.rating, 0) / count).toFixed(1) : '—';
             const unread = clientFeedback.filter(f => !f.is_read).length;
-            const link   = `${SITE_URL}/review.html?c=${c.slug}`;
+            const link   = `${SITE_URL}/?c=${c.slug}`;
 
             return `
                 <div class="restaurant-card ${c.active ? '' : 'inactive'} fade-in">
@@ -736,7 +736,7 @@
             }
 
             // Show success with the owner instructions
-            const reviewLink = `${SITE_URL}/review.html?c=${slug}`;
+            const reviewLink = `${SITE_URL}/?c=${slug}`;
             document.getElementById('modal-title').textContent  = '';
             document.getElementById('modal-body').innerHTML = `
                 <div class="modal-success">

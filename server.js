@@ -65,7 +65,10 @@ function createStaticServer(appFolder, port, appName) {
             res.end(JSON.stringify({
                 SUPABASE_URL: process.env.SUPABASE_URL || '',
                 SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
-                DASHBOARD_URL: `http://localhost:${PORT_DASHBOARD}`
+                DASHBOARD_URL: process.env.DASHBOARD_URL || process.env.OWNER_APP_URL || `http://localhost:${PORT_DASHBOARD}`,
+                OWNER_APP_URL: process.env.OWNER_APP_URL || process.env.DASHBOARD_URL || `http://localhost:${PORT_DASHBOARD}`,
+                PUBLIC_FUNNEL_URL: process.env.PUBLIC_FUNNEL_URL || 'https://taqyeemi.pages.dev',
+                ADMIN_APP_URL: process.env.ADMIN_APP_URL || `http://localhost:${PORT_ADMIN}`
             }));
             return;
         }
@@ -119,8 +122,11 @@ function createStaticServer(appFolder, port, appName) {
                         }
                     }
 
+                    const publicFunnelBase = process.env.PUBLIC_FUNNEL_URL || 'https://taqyeemi.pages.dev';
+                    const funnelUrl = `${publicFunnelBase.replace(/\/+$/, '')}/?c=${encodeURIComponent(clientSlug)}`;
+
                     res.writeHead(200, corsHeaders);
-                    res.end(JSON.stringify({ success: true, slug: clientSlug, owner_email: email }));
+                    res.end(JSON.stringify({ success: true, slug: clientSlug, owner_email: email, funnel_url: funnelUrl }));
                 } catch(err) {
                     res.writeHead(500, corsHeaders);
                     res.end(JSON.stringify({ error: err.message }));

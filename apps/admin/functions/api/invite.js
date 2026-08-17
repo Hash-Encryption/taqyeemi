@@ -54,7 +54,7 @@ export async function onRequestPost(context) {
                 },
                 body: JSON.stringify({
                     email: email.toLowerCase(),
-                    redirectTo: env.DASHBOARD_URL || 'https://app-taqyeemi-btl-pages.pages.dev'
+                    redirectTo: env.DASHBOARD_URL || env.OWNER_APP_URL || 'https://app-taqyeemi-btl-pages.pages.dev'
                 })
             });
             const inviteData = await inviteRes.json();
@@ -78,10 +78,14 @@ export async function onRequestPost(context) {
             });
         }
 
+        const publicFunnelBase = env.PUBLIC_FUNNEL_URL || 'https://taqyeemi.pages.dev';
+        const funnelUrl = `${publicFunnelBase.replace(/\/+$/, '')}/?c=${encodeURIComponent(clientSlug)}`;
+
         return new Response(JSON.stringify({
             success: true,
             slug: clientSlug,
             owner_email: email.toLowerCase(),
+            funnel_url: funnelUrl,
             invite: inviteResult
         }), {
             status: 200,

@@ -5,7 +5,13 @@ export async function onRequest(context) {
     const OWNER_APP_URL = context.env.OWNER_APP_URL || DASHBOARD_URL;
     const PUBLIC_FUNNEL_URL = context.env.PUBLIC_FUNNEL_URL || 'https://taqyeemi.pages.dev';
 
-    return new Response(JSON.stringify({ SUPABASE_URL, SUPABASE_ANON_KEY, DASHBOARD_URL, OWNER_APP_URL, PUBLIC_FUNNEL_URL }), {
+    return new Response(JSON.stringify({
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+        DASHBOARD_URL,
+        OWNER_APP_URL,
+        PUBLIC_FUNNEL_URL
+    }), {
         headers: {
             'Content-Type': 'application/json',
             'Cache-Control': 'no-store',
@@ -13,4 +19,3 @@ export async function onRequest(context) {
         }
     });
 }
-

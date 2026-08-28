@@ -1,7 +1,7 @@
 export async function onRequestPost(context) {
     const { request, env } = context;
 
-    const RESEND_API_KEY = env.RESEND_API_KEY || 're_CSiVQsu8_B9Y64tk7wZKtcSTvgBk67nXJ';
+    const RESEND_API_KEY = env.RESEND_API_KEY;
     const ADMIN_EMAIL = env.ADMIN_EMAIL || 'muhabagency@gmail.com';
 
     try {
@@ -49,6 +49,13 @@ export async function onRequestPost(context) {
                 </div>
             </div>
         `;
+
+        if (!RESEND_API_KEY) {
+            return new Response(JSON.stringify({ error: 'Server configuration error: RESEND_API_KEY environment variable is not configured' }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
 
         const resendRes = await fetch('https://api.resend.com/emails', {
             method: 'POST',

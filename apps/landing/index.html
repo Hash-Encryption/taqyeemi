@@ -703,17 +703,28 @@ async function rvInit(slug) {
         return;
     }
     try {
-        const { data, error } = await sb.from('clients').select('id,name,google_review_url').eq('slug', slug).eq('active', true).maybeSingle();
-        if (error || !data) {
+        let clientData = null;
+        // 1. Preferred safe RPC: exposes only public fields
+        const { data: rpcData, error: rpcErr } = await sb.rpc('get_public_client', { p_slug: slug });
+        if (!rpcErr && rpcData) {
+            clientData = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+        }
+        // 2. Fallback for backwards compatibility if RPC not yet deployed
+        if (!clientData) {
+            const { data, error } = await sb.from('clients').select('id,name,google_review_url,active').eq('slug', slug).eq('active', true).maybeSingle();
+            if (!error && data) clientData = data;
+        }
+
+        if (!clientData || clientData.active === false) {
             rvShow('rv-error');
             return;
         }
-        rvClientId = data.id;
-        rvGoogleURL = data.google_review_url;
-        document.title = 'Rate ' + data.name;
+        rvClientId = clientData.id;
+        rvGoogleURL = clientData.google_review_url;
+        document.title = 'Rate ' + clientData.name;
         
         const heading = document.getElementById('rv-heading');
-        if (heading) heading.textContent = 'How was your visit to ' + data.name + '?';
+        if (heading) heading.textContent = 'How was your visit to ' + clientData.name + '?';
         
         rvShow('rv-rating');
         rvBindEvents();

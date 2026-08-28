@@ -186,6 +186,14 @@
             <button class="nav-item" id="nav-feedback" onclick="mgrView('feedback')">
                 <span class="nav-icon">&#x1F4AC;</span> All Feedback
             </button>
+            <span class="sidebar-section" style="margin-top:20px;">Platform Settings</span>
+            <div style="padding:12px;background:var(--surface-container);border-radius:var(--radius-sm);border:1px solid var(--outline-variant);">
+                <div style="font-size:0.72rem;color:var(--on-surface-variant);font-weight:700;letter-spacing:0.05em;margin-bottom:6px;">GLOBAL CLIENT DASHBOARDS</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                    <span id="mgr-global-status-badge" class="status-badge" style="background:rgba(52,168,83,0.15);color:var(--g-green);font-size:0.72rem;">ACTIVE</span>
+                    <button class="btn-sm" id="mgr-btn-global-toggle" onclick="mgrToggleGlobalPortals()" style="padding:4px 8px;font-size:0.72rem;">Suspend All</button>
+                </div>
+            </div>
         </aside>
         <main class="mgr-content" id="mgr-content">
             <div class="state-box"><div class="spinner"></div><div class="state-title">Loading admin dashboard&hellip;</div></div>
@@ -222,6 +230,7 @@ let OWNER_APP_URL = 'https://app-taqyeemi.pages.dev';
 let sb = null;
 
 let mgrClients = [], mgrFeedback = [], mgrLeads = [], mgrCurrentView = 'leads';
+let mgrPlatformSettings = { owner_portals_enabled: true };
 
 // Canonical Public Funnel URL Helper — Never derive customer links from window.location.origin
 function getBusinessFunnelUrl(slug) {
@@ -286,14 +295,27 @@ async function mgrEnter() {
 }
 
 async function mgrLoad() {
-    const [{ data: clients }, { data: feedback }, { data: leads }] = await Promise.all([
+    const [{ data: clients }, { data: feedback }, { data: leads }, { data: settings }] = await Promise.all([
         sb.from('clients').select('*').order('created_at', { ascending: false }),
         sb.from('feedback').select('*').order('submitted_at', { ascending: false }),
-        sb.from('lead_submissions').select('*').order('updated_at', { ascending: false })
+        sb.from('lead_submissions').select('*').order('updated_at', { ascending: false }),
+        sb.from('platform_settings').select('*').eq('id', 1).maybeSingle()
     ]);
     mgrClients = clients || [];
     mgrFeedback = feedback || [];
     mgrLeads = leads || [];
+    if (settings) mgrPlatformSettings = settings;
+
+    // Update global status badge in sidebar
+    const globalBadge = document.getElementById('mgr-global-status-badge');
+    const globalBtn = document.getElementById('mgr-btn-global-toggle');
+    if (globalBadge && globalBtn) {
+        const isEnabled = mgrPlatformSettings.owner_portals_enabled !== false;
+        globalBadge.textContent = isEnabled ? 'ACTIVE' : 'SUSPENDED';
+        globalBadge.style.background = isEnabled ? 'rgba(52,168,83,0.15)' : 'rgba(234,67,53,0.15)';
+        globalBadge.style.color = isEnabled ? 'var(--g-green)' : 'var(--g-red)';
+        globalBtn.textContent = isEnabled ? 'Suspend All' : 'Restore All';
+    }
     
     document.getElementById('mgr-count').textContent = mgrClients.length;
     document.getElementById('mgr-count').classList.toggle('hidden', mgrClients.length === 0);
@@ -301,6 +323,29 @@ async function mgrLoad() {
     const pendingCount = mgrLeads.filter(l => l.status === 'pending').length;
     document.getElementById('mgr-leads-count').textContent = pendingCount;
     document.getElementById('mgr-leads-count').classList.toggle('hidden', pendingCount === 0);
+}
+
+async function mgrToggleGlobalPortals() {
+    const isCurrentlyEnabled = mgrPlatformSettings.owner_portals_enabled !== false;
+    const confirmMsg = isCurrentlyEnabled
+        ? 'WARNING: Suspending all client dashboards will immediately prevent business owners from viewing their dashboards.\n\nCustomer QR/NFC funnels and feedback collection will continue operating normally.\n\nAre you sure you want to suspend ALL client dashboards?'
+        : 'Restore all client dashboards? Business owners will immediately regain access to view their dashboards.';
+    
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const { error } = await sb.from('platform_settings').upsert({
+            id: 1,
+            owner_portals_enabled: !isCurrentlyEnabled,
+            updated_at: new Date().toISOString()
+        });
+        if (error) throw error;
+        await mgrLoad();
+        if (mgrCurrentView === 'restaurants') mgrRenderRestaurants();
+        alert(isCurrentlyEnabled ? '⏸️ All client dashboards have been suspended.' : '▶️ All client dashboards have been restored.');
+    } catch(err) {
+        alert('Failed to update platform settings: ' + err.message);
+    }
 }
 
 function mgrView(v) {
@@ -380,9 +425,15 @@ async function inviteLead(leadId, email, businessName, mapsUrl, counters) {
     let provisioned = false;
 
     try {
+        const { data: sessionData } = await sb.auth.getSession();
+        const token = sessionData?.session?.access_token || '';
+
         const res = await fetch('/api/invite', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({
                 lead_id: leadId,
                 email: email,
@@ -409,7 +460,8 @@ async function inviteLead(leadId, email, businessName, mapsUrl, counters) {
                 slug: clientSlug,
                 owner_email: email.toLowerCase(),
                 google_review_url: mapsUrl || 'https://g.page/r/review',
-                active: true
+                active: true,
+                portal_status: 'active'
             });
             if (clientErr && !clientErr.message.includes('duplicate') && clientErr.code !== '23505') {
                 alert(`Notice: ${clientErr.message}`);
@@ -450,37 +502,62 @@ function mgrCard(c) {
     const reviewLink = getBusinessFunnelUrl(c.slug);
     const ownerEmail = c.owner_email ? esc(c.owner_email) : 'Unassigned';
     const mapsUrl = c.google_review_url ? esc(c.google_review_url) : '';
+    const isLinked = !!c.owner_user_id;
+    const isSuspended = c.portal_status === 'suspended';
 
     return `
-        <div class="rest-card ${c.active ? '' : 'inactive'}" style="${c.active ? '' : 'opacity:0.65'}">
+        <div class="rest-card ${c.active ? '' : 'inactive'}" style="${c.active ? '' : 'opacity:0.8'}">
             <div class="rc-header">
                 <div>
                     <div class="rc-name">${esc(c.name)}</div>
-                    <div class="rc-slug">${esc(c.slug)} &bull; ${ownerEmail}</div>
+                    <div class="rc-slug">${esc(c.slug)}</div>
                 </div>
-                <span class="rc-status ${c.active ? 'on' : 'off'}">${c.active ? 'Active' : 'Paused'}</span>
+                <div style="display:flex;gap:4px;flex-direction:column;align-items:flex-end;">
+                    <span class="rc-status ${c.active ? 'on' : 'off'}">${c.active ? 'Funnel Active' : 'Funnel Disabled'}</span>
+                    <span class="rc-status ${isSuspended ? 'off' : 'on'}">${isSuspended ? 'Dashboard Suspended' : 'Dashboard Active'}</span>
+                </div>
             </div>
+
+            <div style="font-size:0.82rem;color:var(--on-surface-variant);background:var(--surface-dim);padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--outline-variant);">
+                <div>👤 <strong>Owner:</strong> <span style="color:var(--on-surface)">${ownerEmail}</span></div>
+                <div style="margin-top:3px;font-size:0.75rem;">🔗 <strong>Account:</strong> <span style="color:${isLinked ? 'var(--g-green)' : 'var(--g-yellow)'};font-weight:600;">${isLinked ? 'Linked (Activated)' : 'Pending First-Time Activation'}</span></div>
+            </div>
+
             <div class="rc-stats">
-                <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-blue)">${cnt}</div><div class="rc-stat-label">Reviews</div></div>
-                <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-yellow)">${avg !== '—' ? '★' + avg : '—'}</div><div class="rc-stat-label">Avg</div></div>
+                <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-blue)">${cnt}</div><div class="rc-stat-label">Total Reviews</div></div>
+                <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-yellow)">${avg !== '—' ? '★' + avg : '—'}</div><div class="rc-stat-label">Avg Rating</div></div>
                 <div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-green)">${unread}</div><div class="rc-stat-label">Unread</div></div>
             </div>
             
-            <div class="rc-link" style="margin-bottom:6px;">
+            <div class="rc-link" style="margin-bottom:4px;">
                 <span style="color:var(--on-surface-variant);font-size:0.7rem;display:block;margin-bottom:2px;">Customer Review Funnel:</span>
                 <a href="${esc(reviewLink)}" target="_blank" style="color:var(--g-blue);word-break:break-all;text-decoration:none;">${esc(reviewLink)} ↗</a>
             </div>
 
-            <div style="font-size:0.78rem;color:var(--g-blue);margin-bottom:10px;word-break:break-all;">
-                📍 <strong>Google Maps Target:</strong> <a href="${mapsUrl}" target="_blank" style="color:var(--g-blue);">${mapsUrl ? 'Open Google Link ↗' : 'None Set'}</a>
+            <div style="font-size:0.78rem;color:var(--g-blue);margin-bottom:8px;word-break:break-all;">
+                📍 <strong>Google Review Destination:</strong> <a href="${mapsUrl}" target="_blank" style="color:var(--g-blue);">${mapsUrl ? 'Open Google Link ↗' : 'None Set'}</a>
             </div>
 
             <div class="rc-actions">
-                <button class="btn-sm primary" onclick="mgrCopy('${esc(reviewLink)}', this)">📋 Copy Link</button>
+                <button class="btn-sm primary" onclick="mgrCopy('${esc(reviewLink)}', this)">📋 Copy Funnel Link</button>
                 <a href="${esc(reviewLink)}" target="_blank" class="btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;">🚀 Open Funnel</a>
                 <button class="btn-sm" onclick="mgrShowQr('${esc(c.name)}', '${esc(c.slug)}')">📱 QR Code</button>
-                <button class="btn-sm" onclick="mgrEditUrl('${c.id}', '${esc(c.google_review_url || '')}')">✏️ Edit Maps</button>
-                <button class="btn-sm ${c.active ? 'danger' : 'success'}" onclick="mgrToggleActive('${c.id}', ${c.active})">${c.active ? 'Pause' : 'Activate'}</button>
+                <button class="btn-sm" onclick="mgrEditUrl('${c.id}', '${esc(c.google_review_url || '')}')">✏️ Edit Google Maps</button>
+                
+                <!-- Control A: Suspend / Restore Dashboard Access -->
+                <button class="btn-sm ${isSuspended ? 'success' : 'danger'}" onclick="mgrToggleDashboard('${c.id}', '${esc(c.name)}', '${c.portal_status || 'active'}')">
+                    ${isSuspended ? '▶️ Restore Dashboard' : '⏸️ Suspend Dashboard'}
+                </button>
+
+                <!-- Control B: Disable / Enable Customer Funnel -->
+                <button class="btn-sm ${c.active ? 'danger' : 'success'}" onclick="mgrToggleFunnel('${c.id}', '${esc(c.name)}', ${!!c.active})">
+                    ${c.active ? '🚫 Disable Customer Funnel' : '✅ Enable Customer Funnel'}
+                </button>
+
+                <!-- Send Password Reset -->
+                <button class="btn-sm" onclick="mgrSendPasswordReset('${esc(c.owner_email || '')}')" style="border-color:rgba(251,188,5,0.4);color:var(--g-yellow);">
+                    🔑 Send Password Reset
+                </button>
             </div>
         </div>
     `;
@@ -545,14 +622,60 @@ async function mgrEditUrl(clientId, currentUrl) {
     }
 }
 
-async function mgrToggleActive(clientId, isActive) {
+async function mgrToggleDashboard(clientId, name, currentPortalStatus) {
+    const isSuspended = currentPortalStatus === 'suspended';
+    const confirmMsg = isSuspended
+        ? `Restore dashboard access for "${name}"?\n\nThe owner will immediately regain access to view all feedback.`
+        : `Customers can continue using the QR/NFC and feedback will continue accumulating, but the owner will not be able to view it until access is restored.\n\nSuspend dashboard access for "${name}"?`;
+    
+    if (!confirm(confirmMsg)) return;
+
     try {
-        const { error } = await sb.from('clients').update({ active: !isActive }).eq('id', clientId);
+        const nextStatus = isSuspended ? 'active' : 'suspended';
+        const { error } = await sb.from('clients').update({ portal_status: nextStatus }).eq('id', clientId);
         if (error) throw error;
         await mgrLoad();
         mgrRenderRestaurants();
     } catch(err) {
-        alert('Failed to update status: ' + err.message);
+        alert('Failed to update dashboard access: ' + err.message);
+    }
+}
+
+async function mgrToggleFunnel(clientId, name, currentActive) {
+    const confirmMsg = currentActive
+        ? `Disable customer funnel for "${name}"?\n\nCustomers will NOT be able to open the review page or submit feedback.`
+        : `Enable customer funnel for "${name}"?\n\nCustomers will be able to open the review page and submit feedback.`;
+    
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const { error } = await sb.from('clients').update({ active: !currentActive }).eq('id', clientId);
+        if (error) throw error;
+        await mgrLoad();
+        mgrRenderRestaurants();
+    } catch(err) {
+        alert('Failed to update customer funnel: ' + err.message);
+    }
+}
+
+async function mgrSendPasswordReset(ownerEmail) {
+    if (!ownerEmail || ownerEmail === 'Unassigned') {
+        alert('Cannot send password reset: No owner email assigned.');
+        return;
+    }
+    if (!confirm(`Send password reset email to ${ownerEmail}?`)) return;
+
+    try {
+        const { error } = await sb.auth.resetPasswordForEmail(ownerEmail, {
+            redirectTo: OWNER_APP_URL || 'https://app-taqyeemi.pages.dev'
+        });
+        if (error) {
+            alert('Password reset error: ' + error.message + '\n\nNote: If custom Supabase Auth SMTP is not configured, email delivery may fail.');
+            return;
+        }
+        alert(`✓ Password reset request dispatched to ${ownerEmail}.\n\nNote: Supabase will deliver the recovery link if Auth SMTP is configured.`);
+    } catch(err) {
+        alert('Password reset error: ' + err.message);
     }
 }
 
@@ -596,9 +719,15 @@ async function mgrSave() {
     let provisioned = false;
 
     try {
+        const { data: sessionData } = await sb.auth.getSession();
+        const token = sessionData?.session?.access_token || '';
+
         const res = await fetch('/api/invite', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ email: ownerEmail, business_name: name, google_maps_link: url, slug: slug })
         });
         if (res.ok) {

@@ -5,6 +5,75 @@ export async function onRequestPost(context) {
     const SUPABASE_SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
 
+    const corsHeaders = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    };
+
+    if (request.method === 'OPTIONS') {
+        return new Response(null, { headers: corsHeaders });
+    }
+
+    // 0. Privileged Admin Endpoint Authorization Guard
+    const authHeader = request.headers.get('Authorization') || '';
+    if (!authHeader.startsWith('Bearer ')) {
+        return new Response(JSON.stringify({ error: 'Unauthorized: Missing or invalid Authorization header' }), {
+            status: 401,
+            headers: corsHeaders
+        });
+    }
+
+    const token = authHeader.replace('Bearer ', '').trim();
+
+    // Verify token with Supabase Auth
+    const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    if (!userRes.ok) {
+        return new Response(JSON.stringify({ error: 'Unauthorized: Invalid or expired access token' }), {
+            status: 401,
+            headers: corsHeaders
+        });
+    }
+
+    const authUser = await userRes.json();
+    if (!authUser || !authUser.id) {
+        return new Response(JSON.stringify({ error: 'Unauthorized: Unable to verify user' }), {
+            status: 401,
+            headers: corsHeaders
+        });
+    }
+
+    // Verify role in user_roles table
+    const apiKey = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+    const roleRes = await fetch(`${SUPABASE_URL}/rest/v1/user_roles?user_id=eq.${authUser.id}&select=role`, {
+        headers: {
+            'apikey': apiKey,
+            'Authorization': `Bearer ${apiKey}`
+        }
+    });
+
+    if (!roleRes.ok) {
+        return new Response(JSON.stringify({ error: 'Forbidden: Could not verify user permissions' }), {
+            status: 403,
+            headers: corsHeaders
+        });
+    }
+
+    const roles = await roleRes.json();
+    if (!roles || roles.length === 0 || roles[0].role !== 'admin') {
+        return new Response(JSON.stringify({ error: 'Forbidden: Admin permissions required' }), {
+            status: 403,
+            headers: corsHeaders
+        });
+    }
+
     try {
         const body = await request.json();
         const { lead_id, email, business_name, google_maps_link, counter_count, slug } = body;
@@ -12,14 +81,13 @@ export async function onRequestPost(context) {
         if (!email || !business_name) {
             return new Response(JSON.stringify({ error: 'Email and business_name are required' }), {
                 status: 400,
-                headers: { 'Content-Type': 'application/json' }
+                headers: corsHeaders
             });
         }
 
         const clientSlug = slug || business_name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
-        const apiKey = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
 
-        // 1. Create/Insert Client Record in database
+        // 1. Create/Insert Pre-Approved Client Record in database
         const clientRes = await fetch(`${SUPABASE_URL}/rest/v1/clients`, {
             method: 'POST',
             headers: {
@@ -33,7 +101,8 @@ export async function onRequestPost(context) {
                 slug: clientSlug,
                 owner_email: email.toLowerCase(),
                 google_review_url: google_maps_link || 'https://g.page/r/review',
-                active: true
+                active: true,
+                portal_status: 'active'
             })
         });
 
@@ -42,30 +111,7 @@ export async function onRequestPost(context) {
             console.warn('Client pre-registration response:', clientData);
         }
 
-        // 2. Trigger Supabase inviteUserByEmail API if service_role key is available
-        let inviteResult = { invited: false };
-        if (SUPABASE_SERVICE_ROLE_KEY) {
-            const inviteRes = await fetch(`${SUPABASE_URL}/auth/v1/invite`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_SERVICE_ROLE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: email.toLowerCase(),
-                    redirectTo: env.OWNER_APP_URL || env.DASHBOARD_URL || 'https://app-taqyeemi.pages.dev'
-                })
-            });
-            const inviteData = await inviteRes.json();
-            if (inviteRes.ok) {
-                inviteResult = { invited: true, user: inviteData };
-            } else {
-                inviteResult = { invited: false, message: inviteData.msg || inviteData.message };
-            }
-        }
-
-        // 3. Update lead_submissions status if lead_id provided
+        // 2. Update lead_submissions status if lead_id provided
         if (lead_id) {
             await fetch(`${SUPABASE_URL}/rest/v1/lead_submissions?id=eq.${lead_id}`, {
                 method: 'PATCH',
@@ -85,17 +131,16 @@ export async function onRequestPost(context) {
             success: true,
             slug: clientSlug,
             owner_email: email.toLowerCase(),
-            funnel_url: funnelUrl,
-            invite: inviteResult
+            funnel_url: funnelUrl
         }), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' }
+            headers: corsHeaders
         });
 
     } catch (err) {
         return new Response(JSON.stringify({ error: err.message || 'Internal error' }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: corsHeaders
         });
     }
 }

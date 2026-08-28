@@ -182,32 +182,46 @@
             <button class="btn-logout" onclick="dbLogout()" id="txt-btn-logout">Log Out</button>
         </div>
     </nav>
-    <div class="db-stats">
-        <div class="db-stat">
-            <div class="db-stat-label" id="txt-stat-lbl-total">Total Reviews</div>
-            <div class="db-stat-value" id="db-stat-total" style="color:var(--g-blue)">&#x2014;</div>
-            <div class="db-stat-sub" id="txt-stat-sub-total">Customer notes</div>
+    <div id="db-active-view">
+        <div class="db-stats">
+            <div class="db-stat">
+                <div class="db-stat-label" id="txt-stat-lbl-total">Total Reviews</div>
+                <div class="db-stat-value" id="db-stat-total" style="color:var(--g-blue)">&#x2014;</div>
+                <div class="db-stat-sub" id="txt-stat-sub-total">Customer notes</div>
+            </div>
+            <div class="db-stat">
+                <div class="db-stat-label" id="txt-stat-lbl-avg">Average Rating</div>
+                <div class="db-stat-value" id="db-stat-avg" style="color:var(--g-yellow)">&#x2014;</div>
+                <div class="db-stat-sub" id="txt-stat-sub-avg">Out of 5 stars</div>
+            </div>
+            <div class="db-stat">
+                <div class="db-stat-label" id="txt-stat-lbl-unread">Unread</div>
+                <div class="db-stat-value" id="db-stat-unread" style="color:var(--g-green)">&#x2014;</div>
+                <div class="db-stat-sub" id="txt-stat-sub-unread">New items</div>
+            </div>
         </div>
-        <div class="db-stat">
-            <div class="db-stat-label" id="txt-stat-lbl-avg">Average Rating</div>
-            <div class="db-stat-value" id="db-stat-avg" style="color:var(--g-yellow)">&#x2014;</div>
-            <div class="db-stat-sub" id="txt-stat-sub-avg">Out of 5 stars</div>
+        <div class="db-filters">
+            <button class="db-filter active" data-f="all" onclick="dbFilter('all')" id="txt-flt-all">All</button>
+            <button class="db-filter" data-f="unread" onclick="dbFilter('unread')" id="txt-flt-unread">Unread</button>
+            <button class="db-filter" data-f="1" onclick="dbFilter('1')">&#9733; 1 Star</button>
+            <button class="db-filter" data-f="2" onclick="dbFilter('2')">&#9733;&#9733; 2 Stars</button>
+            <button class="db-filter" data-f="3" onclick="dbFilter('3')">&#9733;&#9733;&#9733; 3 Stars</button>
         </div>
-        <div class="db-stat">
-            <div class="db-stat-label" id="txt-stat-lbl-unread">Unread</div>
-            <div class="db-stat-value" id="db-stat-unread" style="color:var(--g-green)">&#x2014;</div>
-            <div class="db-stat-sub" id="txt-stat-sub-unread">New items</div>
+        <div class="db-list" id="db-list">
+            <div class="state-box"><div class="spinner"></div><div class="state-title" id="txt-loading-title">Loading Customer Reviews...</div></div>
         </div>
     </div>
-    <div class="db-filters">
-        <button class="db-filter active" data-f="all" onclick="dbFilter('all')" id="txt-flt-all">All</button>
-        <button class="db-filter" data-f="unread" onclick="dbFilter('unread')" id="txt-flt-unread">Unread</button>
-        <button class="db-filter" data-f="1" onclick="dbFilter('1')">&#9733; 1 Star</button>
-        <button class="db-filter" data-f="2" onclick="dbFilter('2')">&#9733;&#9733; 2 Stars</button>
-        <button class="db-filter" data-f="3" onclick="dbFilter('3')">&#9733;&#9733;&#9733; 3 Stars</button>
-    </div>
-    <div class="db-list" id="db-list">
-        <div class="state-box"><div class="spinner"></div><div class="state-title" id="txt-loading-title">Loading Customer Reviews...</div></div>
+    <div id="db-suspended-view" class="hidden" style="padding: 40px 20px; max-width: 620px; margin: 40px auto; text-align: center;">
+        <div style="background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius-lg); padding: 40px 32px; box-shadow: var(--shadow-md);">
+            <div style="font-size: 3rem; margin-bottom: 16px;">⏸️</div>
+            <h2 id="txt-susp-title" style="font-size: 1.4rem; font-weight: 700; color: #f28b82; margin-bottom: 12px;">Dashboard Access Suspended</h2>
+            <p id="txt-susp-msg" style="font-size: 0.95rem; color: var(--on-surface); line-height: 1.6; margin-bottom: 16px;">Your Taqyeemi dashboard access is currently suspended.</p>
+            <div id="txt-susp-funnel" style="background: rgba(52, 168, 83, 0.12); border: 1px solid rgba(52, 168, 83, 0.3); border-radius: var(--radius-sm); padding: 14px 18px; margin-bottom: 20px; font-size: 0.88rem; color: var(--g-green-light); line-height: 1.5;">
+                Your QR/NFC customer feedback system remains active and feedback continues to be collected securely.
+            </div>
+            <p id="txt-susp-contact" style="font-size: 0.86rem; color: var(--on-surface-variant); margin-bottom: 28px;">Please contact Taqyeemi to restore access.</p>
+            <button class="btn-primary" onclick="dbLogout()" style="max-width: 200px; margin: 0 auto; display: block;" id="txt-susp-logout">Log Out</button>
+        </div>
     </div>
 </div>
 
@@ -257,7 +271,12 @@ const i18n = {
         fltUnread: 'Unread',
         loadingTitle: 'Loading Customer Reviews...',
         markRead: '✓ Mark as Read',
-        readBadge: '✓ Read'
+        readBadge: '✓ Read',
+        suspTitle: 'Dashboard Access Suspended',
+        suspMsg: 'Your Taqyeemi dashboard access is currently suspended.',
+        suspFunnel: 'Your QR/NFC customer feedback system remains active and feedback continues to be collected securely.',
+        suspContact: 'Please contact Taqyeemi to restore access.',
+        suspLogout: 'Log Out'
     },
     ar: {
         langBtn: '🌐 English',
@@ -284,7 +303,12 @@ const i18n = {
         fltUnread: 'غير المقروءة',
         loadingTitle: 'جاري تحميل ملاحظات العملاء...',
         markRead: '✓ تحديد كمقروء',
-        readBadge: '✓ تم الاطلاع'
+        readBadge: '✓ تم الاطلاع',
+        suspTitle: 'تم تعليق الوصول للوحة التحكم',
+        suspMsg: 'تم تعليق صلاحية الدخول إلى لوحة تحكم تقييمي الخاصة بك حالياً.',
+        suspFunnel: 'نظام التقييم عبر رمز الاستجابة السريعة (QR) وتقنية NFC ما زال يعمل بنشاط، وتستمر الملاحظات في التراكم والوصول بأمان.',
+        suspContact: 'يرجى التواصل مع إدارة تقييمي لإعادة تفعيل لوحة التحكم.',
+        suspLogout: 'تسجيل الخروج'
     }
 };
 
@@ -315,9 +339,20 @@ function setLanguage(lang) {
     document.getElementById('txt-stat-lbl-avg').textContent = t.statLblAvg;
     document.getElementById('txt-stat-sub-avg').textContent = t.statSubAvg;
     document.getElementById('txt-stat-lbl-unread').textContent = t.statLblUnread;
-    document.getElementById('txt-stat-sub-unread').textContent = t.statSubUnread;
+    document.getElementById('txt-stat-sub-unread').textContent = t.statSubUntread || t.statSubUnread;
     document.getElementById('txt-flt-all').textContent = t.fltAll;
     document.getElementById('txt-flt-unread').textContent = t.fltUnread;
+
+    const suspTitle = document.getElementById('txt-susp-title');
+    if (suspTitle) suspTitle.textContent = t.suspTitle;
+    const suspMsg = document.getElementById('txt-susp-msg');
+    if (suspMsg) suspMsg.textContent = t.suspMsg;
+    const suspFunnel = document.getElementById('txt-susp-funnel');
+    if (suspFunnel) suspFunnel.textContent = t.suspFunnel;
+    const suspContact = document.getElementById('txt-susp-contact');
+    if (suspContact) suspContact.textContent = t.suspContact;
+    const suspLogout = document.getElementById('txt-susp-logout');
+    if (suspLogout) suspLogout.textContent = t.suspLogout;
 
     localStorage.setItem('preferred_lang', lang);
     if (dbFeedback.length > 0) dbRender();
@@ -373,25 +408,55 @@ async function dbActivate() {
     const pass = document.getElementById('db-act-pass').value;
     const btn = document.getElementById('db-btn-activate'), err = document.getElementById('db-act-err');
     
-    if (!email || !pass) { dbErr(err, currentLang === 'ar' ? 'يرجى إدخال البريد الإلكتروني وكلمة المرور.' : 'Please enter your email and password.'); return; }
-    if (pass.length < 8) { dbErr(err, currentLang === 'ar' ? 'كلمة المرور يجب أن تكون 8 خانات على الأقل.' : 'Password must be at least 8 characters.'); return; }
-    
-    btn.disabled = true; btn.textContent = currentLang === 'ar' ? 'جاري تفعيل الحساب...' : 'Activating account...'; err.classList.remove('show');
-    
-    const { data, error } = await sb.auth.signUp({ email, password: pass });
-    if (error) {
-        let msg = error.message;
-        if (msg.includes('Registration restricted')) {
-            msg = currentLang === 'ar' ? 'التسجيل مقيّد: هذا البريد الإلكتروني لم يتم اعتماده مسبقاً.' : 'Registration restricted: Email not pre-approved by Admin.';
-        }
-        dbErr(err, msg);
-        btn.disabled = false; btn.textContent = i18n[currentLang].btnActivate;
+    if (!email || !pass) {
+        dbErr(err, currentLang === 'ar' ? 'يرجى إدخال البريد الإلكتروني وكلمة المرور.' : 'Please enter your email and password.');
         return;
     }
-    if (data.session) {
-        dbEnter(data.session.user);
-    } else if (data.user) {
-        dbEnter(data.user);
+    if (pass.length < 8) {
+        dbErr(err, currentLang === 'ar' ? 'كلمة المرور يجب أن تكون 8 خانات على الأقل.' : 'Password must be at least 8 characters.');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = currentLang === 'ar' ? 'جاري تفعيل الحساب...' : 'Activating account...';
+    err.classList.remove('show');
+    
+    try {
+        const res = await fetch('/api/activate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: pass })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok || !data.success) {
+            let msg = data.error || (currentLang === 'ar' ? 'فشل تفعيل الحساب.' : 'Activation failed.');
+            if (res.status === 403) {
+                msg = currentLang === 'ar' ? 'التسجيل مقيّد: هذا البريد الإلكتروني لم يتم اعتماده مسبقاً من الإدارة.' : 'Registration restricted: Email not pre-approved by Administrator.';
+            } else if (res.status === 409) {
+                msg = currentLang === 'ar' ? 'هذا الحساب مفعّل بالفعل. يرجى استخدام تبويب تسجيل الدخول.' : 'Account already activated. Please use the Log In tab with your password.';
+            }
+            dbErr(err, msg);
+            btn.disabled = false;
+            btn.textContent = i18n[currentLang].btnActivate;
+            return;
+        }
+
+        // Canonical baseline: immediate sign in with the chosen password upon server activation
+        const { data: authData, error: authErr } = await sb.auth.signInWithPassword({ email, password: pass });
+        if (authErr) {
+            dbErr(err, authErr.message);
+            btn.disabled = false;
+            btn.textContent = i18n[currentLang].btnActivate;
+            return;
+        }
+        
+        dbEnter(authData.user);
+    } catch (e) {
+        dbErr(err, e.message || 'Activation request failed. Please check network connection.');
+        btn.disabled = false;
+        btn.textContent = i18n[currentLang].btnActivate;
     }
 }
 
@@ -415,26 +480,19 @@ async function dbEnter(user) {
     const s = document.getElementById('db-screen');
     s.classList.remove('hidden');
     
-    let { data: client } = await sb.from('clients').select('id,name,slug').eq('owner_user_id', user.id).maybeSingle();
+    let { data: client } = await sb.from('clients').select('id,name,slug,portal_status,active').eq('owner_user_id', user.id).maybeSingle();
     
     if (!client && sb) {
         try {
             await sb.rpc('claim_restaurant');
-            const { data: claimed } = await sb.from('clients').select('id,name,slug').eq('owner_user_id', user.id).maybeSingle();
+            const { data: claimed } = await sb.from('clients').select('id,name,slug,portal_status,active').eq('owner_user_id', user.id).maybeSingle();
             client = claimed;
         } catch(e) {}
     }
 
-    if (!client && user.email) {
-        await sb.from('clients')
-            .update({ owner_user_id: user.id })
-            .ilike('owner_email', user.email.trim());
-
-        const { data: recheck } = await sb.from('clients').select('id,name,slug').eq('owner_user_id', user.id).maybeSingle();
-        client = recheck;
-    }
-
     if (!client) {
+        document.getElementById('db-active-view').classList.add('hidden');
+        document.getElementById('db-suspended-view').classList.add('hidden');
         document.getElementById('db-list').innerHTML = '<div class="state-box"><div class="state-icon">\u26A0\uFE0F</div><div class="state-title">Account Not Linked</div><div class="state-sub">Your login is authenticated, but no pre-registered business record was found for "' + esc(user.email) + '". Please contact your Taqyeemi Administrator.</div></div>';
         document.getElementById('db-rest-name').textContent = user.email;
         return;
@@ -453,6 +511,26 @@ async function dbEnter(user) {
         }
     }
 
+    // Check suspension (individual client suspension or global suspension)
+    let isGloballySuspended = false;
+    try {
+        const { data: ps } = await sb.from('platform_settings').select('owner_portals_enabled').eq('id', 1).maybeSingle();
+        if (ps && ps.owner_portals_enabled === false) {
+            isGloballySuspended = true;
+        }
+    } catch (e) {}
+
+    const isSuspended = (client.portal_status === 'suspended') || isGloballySuspended;
+
+    if (isSuspended) {
+        document.getElementById('db-active-view').classList.add('hidden');
+        document.getElementById('db-suspended-view').classList.remove('hidden');
+        // Do NOT query feedback, do NOT show stats or unread counts
+        return;
+    }
+
+    document.getElementById('db-suspended-view').classList.add('hidden');
+    document.getElementById('db-active-view').classList.remove('hidden');
     await dbLoad();
 }
 

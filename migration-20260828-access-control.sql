@@ -38,7 +38,9 @@ ALTER TABLE platform_settings ENABLE ROW LEVEL SECURITY;
 -- 3. HELPER FUNCTIONS
 CREATE OR REPLACE FUNCTION is_admin()
 RETURNS BOOLEAN
-LANGUAGE sql STABLE SECURITY DEFINER AS $$
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
   SELECT EXISTS (
     SELECT 1 FROM user_roles
     WHERE user_id = auth.uid() AND role = 'admin'
@@ -47,7 +49,9 @@ $$;
 
 CREATE OR REPLACE FUNCTION are_owner_portals_enabled()
 RETURNS BOOLEAN
-LANGUAGE sql STABLE SECURITY DEFINER AS $$
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
   SELECT COALESCE(
     (SELECT owner_portals_enabled FROM platform_settings WHERE id = 1 LIMIT 1),
     TRUE
@@ -60,8 +64,9 @@ CREATE POLICY "admin_manage_platform_settings" ON platform_settings
   FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());
 
 DROP POLICY IF EXISTS "public_read_platform_settings" ON platform_settings;
-CREATE POLICY "public_read_platform_settings" ON platform_settings
-  FOR SELECT TO anon, authenticated USING (TRUE);
+DROP POLICY IF EXISTS "authenticated_read_platform_settings" ON platform_settings;
+CREATE POLICY "authenticated_read_platform_settings" ON platform_settings
+  FOR SELECT TO authenticated USING (TRUE);
 
 -- 5. SAFE PUBLIC CLIENT RPC (PREVENTS SENSITIVE DATA EXPOSURE)
 CREATE OR REPLACE FUNCTION get_public_client(p_slug TEXT)
@@ -72,7 +77,9 @@ RETURNS TABLE (
   google_review_url TEXT,
   active BOOLEAN
 )
-LANGUAGE sql STABLE SECURITY DEFINER AS $$
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
   SELECT id, name, slug, google_review_url, active
   FROM clients
   WHERE slug = p_slug AND active = TRUE
@@ -85,7 +92,9 @@ GRANT EXECUTE ON FUNCTION get_public_client(TEXT) TO anon, authenticated, servic
 -- 6. HARDEN CLAIM_RESTAURANT RPC
 CREATE OR REPLACE FUNCTION claim_restaurant()
 RETURNS JSONB
-LANGUAGE plpgsql SECURITY DEFINER AS $$
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
   v_email TEXT;

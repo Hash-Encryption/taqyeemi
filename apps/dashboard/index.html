@@ -165,6 +165,27 @@
             <button class="btn-primary" id="db-btn-activate" onclick="dbActivate()">Activate Account &rarr;</button>
             <div class="err-box" id="db-act-err"></div>
         </div>
+
+        <!-- PASSWORD RECOVERY FORM -->
+        <div id="db-form-recovery" class="hidden">
+            <p class="form-hint" style="margin-bottom:14px;color:var(--on-surface-variant);font-size:0.84rem;line-height:1.5;" id="txt-rec-hint">
+                Choose a new secure password for your account.
+            </p>
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-rec-pass">Set New Password</label>
+                <input class="form-input" type="password" id="db-rec-pass" placeholder="Min. 8 characters" required minlength="8" dir="ltr">
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="txt-lbl-rec-confirm">Confirm New Password</label>
+                <input class="form-input" type="password" id="db-rec-confirm" placeholder="Min. 8 characters" required minlength="8" dir="ltr">
+            </div>
+            <button class="btn-primary" id="db-btn-rec-save" onclick="dbUpdatePassword()">Update Password &rarr;</button>
+            <div class="err-box" id="db-rec-err"></div>
+            <div id="db-rec-success" class="hidden" style="margin-top:14px;padding:14px;border-radius:var(--radius-sm);background:rgba(52,168,83,0.12);border:1px solid rgba(52,168,83,0.3);color:var(--g-green);font-size:0.88rem;text-align:center;">
+                <div id="txt-rec-success" style="font-weight:600;margin-bottom:10px;">✓ Password updated successfully!</div>
+                <button class="btn-primary" onclick="dbFinishRecovery()" style="width:auto;padding:8px 18px;font-size:0.82rem;margin:0 auto;" id="txt-rec-continue">Continue to Dashboard &rarr;</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -276,7 +297,16 @@ const i18n = {
         suspMsg: 'Your Taqyeemi dashboard access is currently suspended.',
         suspFunnel: 'Your QR/NFC customer feedback system remains active and feedback continues to be collected securely.',
         suspContact: 'Please contact Taqyeemi to restore access.',
-        suspLogout: 'Log Out'
+        suspLogout: 'Log Out',
+        recTitle: 'Reset Your Password',
+        recSub: 'Choose a new secure password for your account.',
+        lblRecPass: 'Set New Password',
+        lblRecConfirm: 'Confirm New Password',
+        btnRecSave: 'Update Password →',
+        recSuccess: '✓ Password updated successfully!',
+        recContinue: 'Continue to Dashboard →',
+        recPassMismatch: 'Passwords do not match.',
+        recPassShort: 'Password must be at least 8 characters.'
     },
     ar: {
         langBtn: '🌐 English',
@@ -308,9 +338,20 @@ const i18n = {
         suspMsg: 'تم تعليق صلاحية الدخول إلى لوحة تحكم تقييمي الخاصة بك حالياً.',
         suspFunnel: 'نظام التقييم عبر رمز الاستجابة السريعة (QR) وتقنية NFC ما زال يعمل بنشاط، وتستمر الملاحظات في التراكم والوصول بأمان.',
         suspContact: 'يرجى التواصل مع إدارة تقييمي لإعادة تفعيل لوحة التحكم.',
-        suspLogout: 'تسجيل الخروج'
+        suspLogout: 'تسجيل الخروج',
+        recTitle: 'إعادة تعيين كلمة المرور',
+        recSub: 'اختر كلمة مرور جديدة وآمنة لحسابك.',
+        lblRecPass: 'تعيين كلمة المرور الجديدة',
+        lblRecConfirm: 'تأكيد كلمة المرور الجديدة',
+        btnRecSave: 'تحديث كلمة المرور ←',
+        recSuccess: '✓ تم تحديث كلمة المرور بنجاح!',
+        recContinue: 'المتابعة إلى لوحة التحكم ←',
+        recPassMismatch: 'كلمتا المرور غير متطابقتين.',
+        recPassShort: 'كلمة المرور يجب أن تكون 8 خانات على الأقل.'
     }
 };
+
+let isRecoveryMode = false;
 
 function setLanguage(lang) {
     currentLang = lang;
@@ -320,8 +361,8 @@ function setLanguage(lang) {
 
     document.getElementById('db-lang-btn').textContent = t.langBtn;
     document.getElementById('db-nav-lang-btn').textContent = t.langBtn;
-    document.getElementById('txt-auth-title').textContent = t.authTitle;
-    document.getElementById('txt-auth-sub').textContent = t.authSub;
+    document.getElementById('txt-auth-title').textContent = isRecoveryMode ? t.recTitle : t.authTitle;
+    document.getElementById('txt-auth-sub').textContent = isRecoveryMode ? t.recSub : t.authSub;
     document.getElementById('db-tab-login').textContent = t.tabLogin;
     document.getElementById('db-tab-activate').textContent = t.tabActivate;
     document.getElementById('txt-lbl-login-email').textContent = t.lblLoginEmail;
@@ -354,12 +395,89 @@ function setLanguage(lang) {
     const suspLogout = document.getElementById('txt-susp-logout');
     if (suspLogout) suspLogout.textContent = t.suspLogout;
 
+    const recHint = document.getElementById('txt-rec-hint');
+    if (recHint) recHint.textContent = t.recSub;
+    const lblRecPass = document.getElementById('txt-lbl-rec-pass');
+    if (lblRecPass) lblRecPass.textContent = t.lblRecPass;
+    const lblRecConfirm = document.getElementById('txt-lbl-rec-confirm');
+    if (lblRecConfirm) lblRecConfirm.textContent = t.lblRecConfirm;
+    const btnRecSave = document.getElementById('db-btn-rec-save');
+    if (btnRecSave && !btnRecSave.disabled) btnRecSave.textContent = t.btnRecSave;
+    const txtRecSuccess = document.getElementById('txt-rec-success');
+    if (txtRecSuccess) txtRecSuccess.textContent = t.recSuccess;
+    const txtRecContinue = document.getElementById('txt-rec-continue');
+    if (txtRecContinue) txtRecContinue.textContent = t.recContinue;
+
     localStorage.setItem('preferred_lang', lang);
     if (dbFeedback.length > 0) dbRender();
 }
 
 function toggleLanguage() {
     setLanguage(currentLang === 'en' ? 'ar' : 'en');
+}
+
+function showRecoveryForm() {
+    isRecoveryMode = true;
+    const tabs = document.querySelector('.auth-tabs');
+    if (tabs) tabs.classList.add('hidden');
+    document.getElementById('db-form-login').classList.add('hidden');
+    document.getElementById('db-form-activate').classList.add('hidden');
+    const recForm = document.getElementById('db-form-recovery');
+    if (recForm) recForm.classList.remove('hidden');
+    document.getElementById('db-auth').classList.remove('hidden');
+    document.getElementById('db-screen').classList.add('hidden');
+    document.getElementById('txt-auth-title').textContent = i18n[currentLang].recTitle;
+    document.getElementById('txt-auth-sub').textContent = i18n[currentLang].recSub;
+}
+
+async function dbUpdatePassword() {
+    const pass = document.getElementById('db-rec-pass').value;
+    const confirm = document.getElementById('db-rec-confirm').value;
+    const btn = document.getElementById('db-btn-rec-save');
+    const err = document.getElementById('db-rec-err');
+    const successBox = document.getElementById('db-rec-success');
+
+    err.classList.remove('show');
+    if (!pass || pass.length < 8) {
+        dbErr(err, i18n[currentLang].recPassShort);
+        return;
+    }
+    if (pass !== confirm) {
+        dbErr(err, i18n[currentLang].recPassMismatch);
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = currentLang === 'ar' ? 'جاري تحديث كلمة المرور...' : 'Updating password...';
+
+    try {
+        const { data, error } = await sb.auth.updateUser({ password: pass });
+        if (error) throw error;
+        
+        btn.classList.add('hidden');
+        document.getElementById('db-rec-pass').disabled = true;
+        document.getElementById('db-rec-confirm').disabled = true;
+        successBox.classList.remove('hidden');
+    } catch(e) {
+        btn.disabled = false;
+        btn.textContent = i18n[currentLang].btnRecSave;
+        dbErr(err, e.message || (currentLang === 'ar' ? 'فشل تحديث كلمة المرور.' : 'Failed to update password.'));
+    }
+}
+
+async function dbFinishRecovery() {
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.pathname);
+    }
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && session.user) {
+        isRecoveryMode = false;
+        document.getElementById('db-form-recovery').classList.add('hidden');
+        document.getElementById('db-auth').classList.add('hidden');
+        dbEnter(session.user);
+    } else {
+        window.location.reload();
+    }
 }
 
 async function initConfig() {
@@ -383,10 +501,26 @@ async function initConfig() {
 
 async function checkAuthSession() {
     if (!sb) await initConfig();
+
+    if (sb && sb.auth) {
+        sb.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                showRecoveryForm();
+            }
+        });
+    }
+
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+        showRecoveryForm();
+        return;
+    }
+
     const { data: { session } } = await sb.auth.getSession();
-    if (session) {
+    if (session && !isRecoveryMode) {
         dbEnter(session.user);
-    } else {
+    } else if (!isRecoveryMode) {
         document.getElementById('db-screen').classList.add('hidden');
         document.getElementById('db-auth').classList.remove('hidden');
     }

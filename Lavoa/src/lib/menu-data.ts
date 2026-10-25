@@ -547,7 +547,7 @@ export const MENU: MenuCategory[] = [
     labelEn: "Cold Drinks",
     items: [
       {
-        name: "لافوا آيس كوفي",
+        name: "لاڤوا آيس كوفي",
         nameEn: "Lavoa Iced Coffee",
         desc: "حليب مع قهوة الإسبريسو بنكهة البلوبيري",
         descEn: "Milk with espresso and blueberry flavor",

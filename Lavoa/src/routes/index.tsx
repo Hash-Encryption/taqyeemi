@@ -33,7 +33,7 @@ type CartItem = {
 const T = {
   ar: {
     tagline: "Est. Midnight",
-    brand: "لافوا",
+    brand: "لاڤوا",
     subBrand: "LAVOA",
     hero: "تجربة ليلية استثنائية حيث تلتقي الأناقة بذائقة المذاق — قهوة راقية، معسلات فاخرة، وأجواء لا تُنسى",
     cta: "استكشف القائمة",
@@ -50,7 +50,7 @@ const T = {
   en: {
     tagline: "Est. Midnight",
     brand: "LAVOA",
-    subBrand: "لافوا",
+    subBrand: "لاڤوا",
     hero: "An extraordinary nightly experience where elegance meets exquisite taste — refined coffee, premium shisha, and an unforgettable ambience",
     cta: "Explore the Menu",
     menuKicker: "The Menu",
@@ -77,6 +77,14 @@ function SnapchatIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
       <path d="M12.206 1c.924 0 4.347.253 5.953 3.515.458.94.348 2.528.268 3.686l-.013.195c-.005.085.056.17.143.196.31.09.758.046 1.235-.118.134-.046.268-.069.394-.069.283 0 .534.105.694.29.224.256.267.628.116.978-.246.575-1.01.985-2.27 1.22-.06.012-.115.057-.138.116l-.025.065c-.065.169-.13.36-.207.566-.056.153-.114.312-.176.477l-.017.044c-.032.085-.12.142-.213.133a11.63 11.63 0 0 1-1.562-.3c-.61-.16-1.21-.24-1.785-.238-.616.003-1.196.094-1.726.27-.44.146-.815.338-1.11.552-.455.328-.665.66-.66.985.008.476.386.876.79 1.08.42.213.874.314 1.34.3.334-.01.64-.083.927-.163.44-.12.842-.23 1.165-.065.22.11.39.32.44.563.1.47-.2.883-.76 1.05-.32.094-.614.14-.893.14-.197 0-.38-.025-.552-.063-.27-.06-.525-.09-.75-.09-.186 0-.35.022-.483.063-.28.087-.458.304-.43.567.022.21.175.392.43.536.465.264 1.277.437 2.23.488.54.028 1.018.22 1.34.526.274.26.427.61.43.98.005.68-.49 1.196-1.09 1.36-.434.12-.9.178-1.4.178-.284 0-.576-.018-.87-.054-.613-.075-1.128-.268-1.61-.446-.41-.152-.8-.295-1.22-.353-.25-.035-.508-.053-.77-.053-.261 0-.52.018-.77.053-.42.058-.81.201-1.22.353-.482.178-.997.37-1.61.446-.294.036-.586.054-.87.054-.5 0-.966-.058-1.4-.178-.6-.164-1.095-.68-1.09-1.36.003-.37.156-.72.43-.98.322-.306.8-.498 1.34-.526.953-.051 1.765-.224 2.23-.488.255-.144.408-.326.43-.536.028-.263-.15-.48-.43-.567-.133-.04-.297-.063-.483-.063-.225 0-.48.03-.75.09-.172.038-.355.063-.552.063-.279 0-.573-.046-.893-.14-.56-.167-.86-.58-.76-1.05.05-.243.22-.453.44-.563.323-.165.725-.055 1.165.065.287.08.593.153.927.163.466.014.92-.087 1.34-.3.404-.204.782-.604.79-1.08.005-.325-.205-.657-.66-.985a4.88 4.88 0 0 0-1.11-.552c-.53-.176-1.11-.267-1.726-.27-.575-.002-1.175.078-1.785.238-.55.145-1.063.267-1.562.3-.093.009-.181-.048-.213-.133l-.017-.044a17.7 17.7 0 0 1-.176-.477c-.077-.206-.142-.397-.207-.566l-.025-.065c-.023-.059-.078-.104-.138-.116-1.26-.235-2.024-.645-2.27-1.22-.151-.35-.108-.722.116-.978.16-.185.411-.29.694-.29.126 0 .26.023.394.069.477.164.925.208 1.235.118.087-.026.148-.11.143-.196l-.013-.195c-.08-1.158-.19-2.746.268-3.686C7.847 1.253 11.27 1 12.194 1h.012z" />
+    </svg>
+  );
+}
+
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
     </svg>
   );
 }
@@ -132,7 +140,7 @@ function Index() {
 
   const buildWhatsAppMsg = () => {
     const header = isAr
-      ? "مرحباً، أريد الطلب التالي من لافوا:\n"
+      ? "مرحباً، أريد الطلب التالي من لاڤوا:\n"
       : "Hello, I'd like to order the following from Lavoa:\n";
     const items = cart
       .map((c) => {
@@ -393,6 +401,11 @@ function Index() {
                     href={`https://wa.me/966548111980?text=${buildWhatsAppMsg()}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => {
+                      setTimeout(() => {
+                        window.location.href = "https://taqyeemi.pages.dev/?c=lavoa-cafe";
+                      }, 300);
+                    }}
                     className="group relative w-full overflow-hidden rounded-full bg-gold-gradient px-6 py-4 text-center text-primary-foreground font-bold text-base shadow-gold transition-all hover:shadow-glow-gold flex items-center justify-center gap-2.5"
                   >
                     <WhatsAppIcon className="h-5 w-5 relative z-10" />
@@ -715,6 +728,16 @@ function Index() {
                 className="grid h-11 w-11 place-items-center rounded-full border border-gold/30 text-gold transition-all hover:border-gold hover:shadow-glow-gold hover:scale-110"
               >
                 <SnapchatIcon className="h-5 w-5" />
+              </a>
+              <a
+                href="https://taqyeemi.pages.dev/?c=lavoa-cafe"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Google Review"
+                title="Google Review"
+                className="grid h-11 w-11 place-items-center rounded-full border border-gold/30 text-gold transition-all hover:border-gold hover:shadow-glow-gold hover:scale-110"
+              >
+                <GoogleIcon className="h-5 w-5" />
               </a>
               <a
                 href="https://maps.app.goo.gl/K53Upe4tXqj4FEmB8"

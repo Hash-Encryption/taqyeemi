@@ -10,6 +10,9 @@ import {
   MapPin,
   ShoppingCart,
   Plus,
+  Minus,
+  Trash2,
+  AlertCircle,
   X,
 } from "lucide-react";
 import heroImg from "@/assets/hero-lounge.jpg";
@@ -46,6 +49,22 @@ const T = {
     cartEmpty: "سلتك فارغة حتى الآن",
     cartTotal: "الإجمالي",
     cartCheckout: "اطلب عبر واتساب",
+    cartCustomerDetails: "بيانات العميل",
+    orderTypeQuestion: "هل أنت داخل أو خارج المطعم؟ *",
+    dineInOption: "🍽️ داخل المطعم (محلي)",
+    takeawayOption: "🛍️ خارج المطعم (سفري)",
+    nameLabel: "الاسم الكامل *",
+    namePlaceholder: "أدخل اسمك الكامل",
+    tableLabel: "رقم الطاولة *",
+    tableRequiredNote: "مطلوب للطلبات المحلية",
+    tablePlaceholder: "مثال: 34",
+    notesLabel: "ملاحظات التحضير للمطبخ",
+    notesPlaceholder: "لا توجد ملاحظات",
+    paymentDineIn: "💳 الدفع عند الطاولة (كاش أو مدى)",
+    paymentTakeaway: "💳 الدفع عند الاستلام (كاش أو مدى)",
+    nameError: "يرجى إدخال الاسم الكامل",
+    tableError: "يرجى إدخال رقم الطاولة",
+    currency: "ر.س",
   },
   en: {
     tagline: "Est. Midnight",
@@ -62,6 +81,22 @@ const T = {
     cartEmpty: "Your cart is empty",
     cartTotal: "Total",
     cartCheckout: "Order via WhatsApp",
+    cartCustomerDetails: "CUSTOMER DETAILS",
+    orderTypeQuestion: "Are you inside or outside the restaurant? *",
+    dineInOption: "🍽️ Inside (Dine-in)",
+    takeawayOption: "🛍️ Outside (Takeaway)",
+    nameLabel: "Full Name *",
+    namePlaceholder: "Enter your full name",
+    tableLabel: "Table Number *",
+    tableRequiredNote: "Required for dine-in",
+    tablePlaceholder: "e.g. 34",
+    notesLabel: "Kitchen Preparation Notes",
+    notesPlaceholder: "No notes",
+    paymentDineIn: "💳 Payment at table (Cash or Mada card)",
+    paymentTakeaway: "💳 Payment upon pickup (Cash or Mada card)",
+    nameError: "Please enter your full name",
+    tableError: "Please enter your table number",
+    currency: "SAR",
   },
 } as const;
 
@@ -102,6 +137,11 @@ function Index() {
   const [active, setActive] = useState(MENU[0].id);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
+  const [customerName, setCustomerName] = useState("");
+  const [tableNumber, setTableNumber] = useState("");
+  const [orderNotes, setOrderNotes] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const activeCat = MENU.find((c) => c.id === active) ?? MENU[0];
@@ -134,28 +174,108 @@ function Index() {
     });
   };
 
+  const updateQuantity = (id: string, newQty: number) => {
+    if (newQty <= 0) {
+      removeFromCart(id);
+      return;
+    }
+    setCart((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, quantity: newQty } : c)),
+    );
+  };
+
   const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((c) => c.id !== id));
   };
 
   const buildWhatsAppMsg = () => {
-    const header = isAr
-      ? "مرحباً، أريد الطلب التالي من لاڤوا:\n"
-      : "Hello, I'd like to order the following from Lavoa:\n";
-    const items = cart
-      .map((c) => {
-        const name = isAr ? c.name : c.nameEn;
-        const qty = c.quantity > 1 ? ` (×${c.quantity})` : "";
-        const itemTotal = (c.price * c.quantity).toFixed(2);
-        return isAr
-          ? `- ${name}${qty}: ${itemTotal} ريال`
-          : `- ${name}${qty}: S.R ${itemTotal}`;
-      })
-      .join("\n");
-    const total = isAr
-      ? `\nالإجمالي: ${totalPrice.toFixed(2)} ريال`
-      : `\nTotal: S.R ${totalPrice.toFixed(2)}`;
-    return encodeURIComponent(header + items + total);
+    const isDineIn = orderType === "dine-in";
+    const notesText = orderNotes.trim();
+
+    if (!isAr) {
+      const orderTypeStr = isDineIn
+        ? "Dine-in (Inside Restaurant) 🍽️"
+        : "Takeaway (Outside Restaurant) 🛍️";
+      const paymentStr = isDineIn
+        ? "Pay at table (Cash / Card) 💳"
+        : "Pay upon pickup (Cash / Card) 💳";
+      const notesStr = notesText || "No notes";
+
+      const itemsStr = cart
+        .map(
+          (c, idx) =>
+            `${idx + 1}. *${c.nameEn}* x ${c.quantity} (${(c.price * c.quantity).toFixed(2)} SAR)`
+        )
+        .join("\n");
+
+      const lines = [
+        "*New Order from Lavoa* 🔥",
+        "━━━━━━━━━━━━━━━━━━━━",
+        `📍 *Order Type:* ${orderTypeStr}`,
+        ...(isDineIn ? [`🪑 *Table Number:* ${tableNumber.trim()}`] : []),
+        `👤 *Name:* ${customerName.trim()}`,
+        `📝 *Notes:* ${notesStr}`,
+        "━━━━━━━━━━━━━━━━━━━━",
+        "📋 *Items:*",
+        itemsStr,
+        "━━━━━━━━━━━━━━━━━━━━",
+        `💰 *Total Amount:* *${totalPrice.toFixed(2)} SAR*`,
+        "━━━━━━━━━━━━━━━━━━━━",
+        `Payment: ${paymentStr}`,
+      ];
+
+      return encodeURIComponent(lines.join("\n"));
+    } else {
+      const orderTypeStr = isDineIn
+        ? "محلي (داخل المطعم) 🍽️"
+        : "سفري (خارج المطعم) 🛍️";
+      const paymentStr = isDineIn
+        ? "الدفع عند الطاولة (كاش / شبكة) 💳"
+        : "الدفع عند الاستلام (كاش / شبكة) 💳";
+      const notesStr = notesText || "لا توجد ملاحظات";
+
+      const itemsStr = cart
+        .map(
+          (c, idx) =>
+            `${idx + 1}. *${c.name}* × ${c.quantity} (${(c.price * c.quantity).toFixed(2)} ر.س)`
+        )
+        .join("\n");
+
+      const lines = [
+        "*طلب جديد من لافوا (Lavoa)* 🔥",
+        "━━━━━━━━━━━━━━━━━━━━",
+        `📍 *نوع الطلب:* ${orderTypeStr}`,
+        ...(isDineIn ? [`🪑 *رقم الطاولة:* ${tableNumber.trim()}`] : []),
+        `👤 *الاسم:* ${customerName.trim()}`,
+        `📝 *ملاحظات:* ${notesStr}`,
+        "━━━━━━━━━━━━━━━━━━━━",
+        "📋 *الطلبات:*",
+        itemsStr,
+        "━━━━━━━━━━━━━━━━━━━━",
+        `💰 *المبلغ الإجمالي:* *${totalPrice.toFixed(2)} ر.س*`,
+        "━━━━━━━━━━━━━━━━━━━━",
+        `الدفع: ${paymentStr}`,
+      ];
+
+      return encodeURIComponent(lines.join("\n"));
+    }
+  };
+
+  const handleCheckout = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!customerName.trim()) {
+      e.preventDefault();
+      setFormError(t.nameError);
+      return;
+    }
+    if (orderType === "dine-in" && !tableNumber.trim()) {
+      e.preventDefault();
+      setFormError(t.tableError);
+      return;
+    }
+    setFormError(null);
+    setTimeout(() => {
+      window.location.href = "https://taqyeemi.pages.dev/?c=lavoa-cafe";
+    }, 300);
   };
 
   useEffect(() => {
@@ -308,10 +428,10 @@ function Index() {
                               x: isAr ? -60 : 60,
                               transition: { duration: 0.2 },
                             }}
-                            className="glass-card flex items-center gap-3 rounded-2xl p-3"
+                            className="glass-card flex items-center gap-3 rounded-2xl p-3 border border-gold/15 bg-[#141414]"
                           >
                             {/* Thumbnail */}
-                            <div className="h-[58px] w-[58px] shrink-0 overflow-hidden rounded-xl ring-1 ring-gold/20">
+                            <div className="h-[62px] w-[62px] shrink-0 overflow-hidden rounded-xl ring-1 ring-gold/20">
                               {item.imageUrl ? (
                                 <img
                                   src={item.imageUrl}
@@ -331,69 +451,200 @@ function Index() {
                               )}
                             </div>
 
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                              <p
-                                className="font-bold text-sm leading-snug truncate"
-                                style={{ color: "var(--champagne)" }}
-                              >
-                                {name}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                <span className="text-xs text-muted-foreground">
-                                  {isAr
-                                    ? `${item.price.toFixed(2)} ريال`
-                                    : `S.R ${item.price.toFixed(2)}`}
-                                </span>
-                                {item.quantity > 1 && (
-                                  <span
-                                    className="text-[10px] font-bold rounded-full px-1.5 py-0.5 text-gold"
-                                    style={{ background: "rgba(212,175,55,0.15)" }}
-                                  >
-                                    ×{item.quantity}
-                                  </span>
-                                )}
-                              </div>
-                              {item.quantity > 1 && (
-                                <p className="text-xs font-bold text-gold mt-0.5">
-                                  ={" "}
-                                  {isAr
-                                    ? `${(item.price * item.quantity).toFixed(2)} ريال`
-                                    : `S.R ${(item.price * item.quantity).toFixed(2)}`}
+                            {/* Info & Stepper */}
+                            <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch py-0.5">
+                              <div className="flex items-start justify-between gap-2">
+                                <p
+                                  className="font-bold text-sm leading-snug line-clamp-1"
+                                  style={{ color: "var(--champagne)" }}
+                                >
+                                  {name}
                                 </p>
-                              )}
-                            </div>
+                                <span className="text-sm font-bold text-gold shrink-0">
+                                  {isAr
+                                    ? `${(item.price * item.quantity).toFixed(2)} ${t.currency}`
+                                    : `${(item.price * item.quantity).toFixed(2)} ${t.currency}`}
+                                </span>
+                              </div>
 
-                            {/* Remove */}
-                            <motion.button
-                              whileTap={{ scale: 0.84 }}
-                              onClick={() => removeFromCart(item.id)}
-                              className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-red-400/60 hover:text-red-400 transition-all"
-                              style={{ border: "1px solid rgba(239,68,68,0.22)" }}
-                              aria-label="Remove item"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </motion.button>
+                              <div className="flex items-center gap-2.5 mt-2">
+                                <div className="inline-flex items-center rounded-lg border border-gold/25 bg-[#0e0e0e] p-0.5 shadow-sm">
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                    disabled={item.quantity <= 1}
+                                    aria-label="Decrease quantity"
+                                    className="h-6 w-6 rounded-md flex items-center justify-center text-gold/80 hover:text-gold hover:bg-gold/10 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                                  >
+                                    <Minus className="h-3 w-3" />
+                                  </button>
+                                  <span className="min-w-[24px] px-1 text-center text-xs font-bold text-champagne">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                    aria-label="Increase quantity"
+                                    className="h-6 w-6 rounded-md flex items-center justify-center text-gold/80 hover:text-gold hover:bg-gold/10 transition-all"
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                  </button>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => removeFromCart(item.id)}
+                                  className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                                  aria-label="Remove item"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
                           </motion.div>
                         );
                       })}
                     </AnimatePresence>
+
+                    {/* CUSTOMER DETAILS Form */}
+                    <div className="mt-4 pt-4 border-t border-gold/20 flex flex-col gap-4">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xs font-bold tracking-wider uppercase text-gold/90">
+                          {t.cartCustomerDetails}
+                        </h3>
+                      </div>
+
+                      {/* Order Type Toggle */}
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-semibold text-champagne">
+                          {t.orderTypeQuestion}
+                        </label>
+                        <div className="grid grid-cols-2 p-1 rounded-xl bg-[#141414] border border-gold/20 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOrderType("dine-in");
+                              if (formError) setFormError(null);
+                            }}
+                            className={`py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${
+                              orderType === "dine-in"
+                                ? "bg-gold-gradient text-primary-foreground shadow-gold"
+                                : "text-muted-foreground hover:text-foreground bg-transparent"
+                            }`}
+                          >
+                            <span>{t.dineInOption}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOrderType("takeaway");
+                              if (formError) setFormError(null);
+                            }}
+                            className={`py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${
+                              orderType === "takeaway"
+                                ? "bg-gold-gradient text-primary-foreground shadow-gold"
+                                : "text-muted-foreground hover:text-foreground bg-transparent"
+                            }`}
+                          >
+                            <span>{t.takeawayOption}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Full Name */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-champagne">
+                          {t.nameLabel}
+                        </label>
+                        <input
+                          type="text"
+                          value={customerName}
+                          onChange={(e) => {
+                            setCustomerName(e.target.value);
+                            if (formError) setFormError(null);
+                          }}
+                          placeholder={t.namePlaceholder}
+                          className={`bg-[#141414] border rounded-xl px-3.5 py-2.5 text-sm text-champagne placeholder:text-muted-foreground/50 focus:outline-none transition-colors ${
+                            formError && !customerName.trim()
+                              ? "border-red-500/70 focus:border-red-500"
+                              : "border-gold/25 focus:border-gold"
+                          }`}
+                        />
+                      </div>
+
+                      {/* Table Number (Conditional) */}
+                      {orderType === "dine-in" && (
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-semibold text-champagne">
+                              {t.tableLabel}
+                            </label>
+                            <span className="text-[11px] font-medium text-gold/90">
+                              {t.tableRequiredNote}
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            value={tableNumber}
+                            onChange={(e) => {
+                              setTableNumber(e.target.value);
+                              if (formError) setFormError(null);
+                            }}
+                            placeholder={t.tablePlaceholder}
+                            className={`bg-[#141414] border rounded-xl px-3.5 py-2.5 text-sm text-champagne placeholder:text-muted-foreground/50 focus:outline-none transition-colors ${
+                              formError && !tableNumber.trim()
+                                ? "border-red-500/70 focus:border-red-500"
+                                : "border-gold/25 focus:border-gold"
+                            }`}
+                          />
+                        </div>
+                      )}
+
+                      {/* Kitchen Preparation Notes */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-champagne">
+                          {t.notesLabel}
+                        </label>
+                        <input
+                          type="text"
+                          value={orderNotes}
+                          onChange={(e) => setOrderNotes(e.target.value)}
+                          placeholder={t.notesPlaceholder}
+                          className="bg-[#141414] border border-gold/25 focus:border-gold rounded-xl px-3.5 py-2.5 text-sm text-champagne placeholder:text-muted-foreground/50 focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      {/* Payment Info Box */}
+                      <div className="rounded-xl p-3 border border-gold/25 bg-[#141414] text-xs sm:text-sm text-gold/90 flex items-center gap-2 font-medium">
+                        <span>
+                          {orderType === "dine-in" ? t.paymentDineIn : t.paymentTakeaway}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Checkout footer */}
               {cart.length > 0 && (
-                <div className="px-5 pb-8 pt-4 border-t border-gold/20 flex flex-col gap-4">
+                <div className="px-5 pb-8 pt-4 border-t border-gold/20 flex flex-col gap-3 bg-[#0B0B0B]">
+                  {/* Validation Error Banner */}
+                  {formError && (
+                    <div className="rounded-xl p-2.5 bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+                      <span>{formError}</span>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between px-1">
                     <span className="text-sm text-muted-foreground">{t.cartTotal}</span>
                     <span
-                      className="text-2xl font-black"
+                      className="text-2xl font-black text-gold"
                       style={{ color: "var(--champagne)" }}
                     >
                       {isAr
-                        ? `${totalPrice.toFixed(2)} ريال`
-                        : `S.R ${totalPrice.toFixed(2)}`}
+                        ? `${totalPrice.toFixed(2)} ${t.currency}`
+                        : `${totalPrice.toFixed(2)} ${t.currency}`}
                     </span>
                   </div>
                   <div className="h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
@@ -401,15 +652,15 @@ function Index() {
                     href={`https://wa.me/966548111980?text=${buildWhatsAppMsg()}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => {
-                      setTimeout(() => {
-                        window.location.href = "https://taqyeemi.pages.dev/?c=lavoa-cafe";
-                      }, 300);
-                    }}
-                    className="group relative w-full overflow-hidden rounded-full bg-gold-gradient px-6 py-4 text-center text-primary-foreground font-bold text-base shadow-gold transition-all hover:shadow-glow-gold flex items-center justify-center gap-2.5"
+                    onClick={handleCheckout}
+                    className="group relative w-full overflow-hidden rounded-full bg-gold-gradient px-6 py-4 text-center text-primary-foreground font-bold text-sm sm:text-base shadow-gold transition-all hover:shadow-glow-gold flex items-center justify-center gap-2.5"
                   >
                     <WhatsAppIcon className="h-5 w-5 relative z-10" />
-                    <span className="relative z-10">{t.cartCheckout}</span>
+                    <span className="relative z-10">
+                      {isAr
+                        ? `إرسال الطلب عبر واتساب (${totalPrice.toFixed(2)} ${t.currency})`
+                        : `Send Order via WhatsApp (${totalPrice.toFixed(2)} ${t.currency})`}
+                    </span>
                     <span className="absolute inset-0 -translate-x-full bg-white/20 transition-transform duration-700 group-hover:translate-x-full" />
                   </a>
                 </div>

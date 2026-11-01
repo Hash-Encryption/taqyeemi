@@ -564,7 +564,7 @@ function Index() {
                             if (formError) setFormError(null);
                           }}
                           placeholder={t.namePlaceholder}
-                          className={`bg-[#141414] border rounded-xl px-3.5 py-2.5 text-sm text-champagne placeholder:text-muted-foreground/50 focus:outline-none transition-colors ${
+                          className={`bg-[#141414] border rounded-xl px-3.5 py-2.5 text-base text-champagne placeholder:text-muted-foreground/50 focus:outline-none transition-colors ${
                             formError && !customerName.trim()
                               ? "border-red-500/70 focus:border-red-500"
                               : "border-gold/25 focus:border-gold"
@@ -591,7 +591,7 @@ function Index() {
                               if (formError) setFormError(null);
                             }}
                             placeholder={t.tablePlaceholder}
-                            className={`bg-[#141414] border rounded-xl px-3.5 py-2.5 text-sm text-champagne placeholder:text-muted-foreground/50 focus:outline-none transition-colors ${
+                            className={`bg-[#141414] border rounded-xl px-3.5 py-2.5 text-base text-champagne placeholder:text-muted-foreground/50 focus:outline-none transition-colors ${
                               formError && !tableNumber.trim()
                                 ? "border-red-500/70 focus:border-red-500"
                                 : "border-gold/25 focus:border-gold"
@@ -610,7 +610,7 @@ function Index() {
                           value={orderNotes}
                           onChange={(e) => setOrderNotes(e.target.value)}
                           placeholder={t.notesPlaceholder}
-                          className="bg-[#141414] border border-gold/25 focus:border-gold rounded-xl px-3.5 py-2.5 text-sm text-champagne placeholder:text-muted-foreground/50 focus:outline-none transition-colors"
+                          className="bg-[#141414] border border-gold/25 focus:border-gold rounded-xl px-3.5 py-2.5 text-base text-champagne placeholder:text-muted-foreground/50 focus:outline-none transition-colors"
                         />
                       </div>
 

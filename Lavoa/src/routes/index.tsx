@@ -65,6 +65,12 @@ const T = {
     nameError: "يرجى إدخال الاسم الكامل",
     tableError: "يرجى إدخال رقم الطاولة",
     currency: "ر.س",
+    nutritionalData: "البيانات الغذائية",
+    calories: "السعرات الحرارية",
+    caloriesUnit: "كيلو كالوري",
+    caloriesShort: "سعرة",
+    allergens: "مسببات الحساسية",
+    close: "إغلاق",
   },
   en: {
     tagline: "Est. Midnight",
@@ -97,6 +103,12 @@ const T = {
     nameError: "Please enter your full name",
     tableError: "Please enter your table number",
     currency: "SAR",
+    nutritionalData: "Nutritional Data",
+    calories: "Calories",
+    caloriesUnit: "kCal",
+    caloriesShort: "kcal",
+    allergens: "Allergens",
+    close: "Close",
   },
 } as const;
 
@@ -137,6 +149,7 @@ function Index() {
   const [active, setActive] = useState(MENU[0].id);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<(typeof MENU)[0]["items"][0] | null>(null);
   const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
   const [customerName, setCustomerName] = useState("");
   const [tableNumber, setTableNumber] = useState("");
@@ -340,6 +353,154 @@ function Index() {
           )}
         </AnimatePresence>
       </button>
+
+      
+      {/* Item Detail Modal */}
+      <AnimatePresence>
+        {selectedItem && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setSelectedItem(null)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            />
+
+            {/* Modal Sheet */}
+            <motion.div
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="relative z-10 w-full sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-gold/30 bg-[#121212] shadow-2xl flex flex-col"
+              dir={isAr ? "rtl" : "ltr"}
+            >
+              {/* Drag bar for mobile */}
+              <div className="pt-3 pb-1 flex justify-center sm:hidden">
+                <div className="w-12 h-1.5 rounded-full bg-white/20" />
+              </div>
+
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setSelectedItem(null)}
+                aria-label={t.close}
+                className="absolute top-3 end-3 z-20 h-9 w-9 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-gold/50 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              {/* Image banner with blur backdrop */}
+              <div className="relative h-60 sm:h-64 w-full overflow-hidden bg-black/80 shrink-0">
+                {selectedItem.imageUrl ? (
+                  <>
+                    <img
+                      src={selectedItem.imageUrl}
+                      alt={isAr ? selectedItem.name : selectedItem.nameEn}
+                      className="absolute inset-0 h-full w-full object-cover blur-xl opacity-30 scale-125"
+                    />
+                    <img
+                      src={selectedItem.imageUrl}
+                      alt={isAr ? selectedItem.name : selectedItem.nameEn}
+                      className="relative z-10 h-full w-full object-contain p-4"
+                    />
+                  </>
+                ) : (
+                  <div className="h-full w-full grid place-items-center">
+                    <Coffee className="h-12 w-12 text-gold/40" />
+                  </div>
+                )}
+              </div>
+
+              {/* Details Content */}
+              <div className="p-5 sm:p-6 space-y-4 flex-1">
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className="text-xl sm:text-2xl font-bold text-foreground leading-snug flex-1">
+                    {isAr ? selectedItem.name : selectedItem.nameEn}
+                  </h3>
+                  <div className="shrink-0 rounded-full border border-gold/50 px-3 py-1 bg-onyx/80">
+                    <span className="font-display font-bold text-base text-champagne tabular-nums">
+                      {isAr
+                        ? `${selectedItem.price.toFixed(2)} ${t.currency}`
+                        : `${selectedItem.price.toFixed(2)} ${t.currency}`}
+                    </span>
+                  </div>
+                </div>
+
+                {(isAr ? selectedItem.desc : selectedItem.descEn) && (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {isAr ? selectedItem.desc : selectedItem.descEn}
+                  </p>
+                )}
+
+                {/* Nutritional Data Card */}
+                {(selectedItem.calories !== undefined ||
+                  ((isAr ? selectedItem.allergies : selectedItem.allergiesEn) &&
+                    (isAr ? selectedItem.allergies : selectedItem.allergiesEn)!.length > 0)) && (
+                  <div className="rounded-2xl border border-gold/25 bg-black/50 p-4 space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gold/90">
+                      {t.nutritionalData}
+                    </h4>
+
+                    {selectedItem.calories !== undefined && (
+                      <div className="flex items-center justify-between text-sm pt-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-gold/15 text-gold border border-gold/30">
+                            kcal
+                          </span>
+                          <span className="text-muted-foreground">{t.calories}</span>
+                        </div>
+                        <span className="font-bold text-foreground tabular-nums">
+                          {selectedItem.calories} {t.caloriesUnit}
+                        </span>
+                      </div>
+                    )}
+
+                    {((isAr ? selectedItem.allergies : selectedItem.allergiesEn) &&
+                      (isAr ? selectedItem.allergies : selectedItem.allergiesEn)!.length > 0) && (
+                      <div className="pt-2 border-t border-white/5 space-y-1.5">
+                        <span className="text-xs text-muted-foreground">{t.allergens}:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(isAr ? selectedItem.allergies : selectedItem.allergiesEn)!.map((alg, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-amber-500/10 text-amber-200 border border-amber-500/25"
+                            >
+                              ⚠️ {alg}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Add to Cart button */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      addToCart(selectedItem);
+                      setSelectedItem(null);
+                    }}
+                    className="w-full py-3.5 px-6 rounded-xl bg-gold-gradient text-primary-foreground font-bold text-base shadow-gold transition-all hover:shadow-glow-gold active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    <span>
+                      {isAr
+                        ? `إضافة إلى السلة (${selectedItem.price.toFixed(2)} ${t.currency})`
+                        : `Add to Order (${selectedItem.price.toFixed(2)} ${t.currency})`}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Cart Drawer */}
       <AnimatePresence>
@@ -839,7 +1000,8 @@ function Index() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: Math.min(i * 0.05, 0.6) }}
                     whileHover={{ y: -6 }}
-                    className="glass-card group relative overflow-hidden rounded-2xl p-4 transition-all duration-500 hover:border-gold/60 hover:shadow-glow-gold"
+                    onClick={() => setSelectedItem(item)}
+                    className="glass-card group relative overflow-hidden rounded-2xl p-4 transition-all duration-500 hover:border-gold/60 hover:shadow-glow-gold cursor-pointer"
                   >
                     <div className="absolute inset-0 opacity-0 bg-gradient-to-br from-gold/10 via-transparent to-transparent transition-opacity duration-500 group-hover:opacity-100" />
                     <div className="relative flex items-stretch gap-4">

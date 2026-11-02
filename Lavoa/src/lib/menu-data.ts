@@ -76,7 +76,7 @@ export const MENU: MenuCategory[] = [
         desc: "كوكيز غني بنكهة الشوكولاتة المزدوجة",
         descEn: "Cookies rich in double chocolate flavor",
         imageUrl: `${CDN}/82/media-libraryVTBf5D`,
-        price: 8,
+        price: 15,
       },
       {
         name: "بقلاوة مع آيس كريم",
@@ -188,7 +188,7 @@ export const MENU: MenuCategory[] = [
         name: "كود رد",
         nameEn: "Code Red",
         imageUrl: `${CDN}/72/media-librarydhAduM`,
-        price: 20,
+        price: 18,
       },
     ],
   },

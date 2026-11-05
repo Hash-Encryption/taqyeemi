@@ -150,6 +150,13 @@ function Index() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<(typeof MENU)[0]["items"][0] | null>(null);
+  const [addedToast, setAddedToast] = useState<{ name: string; key: number } | null>(null);
+
+  useEffect(() => {
+    if (!addedToast) return;
+    const timer = setTimeout(() => setAddedToast(null), 2200);
+    return () => clearTimeout(timer);
+  }, [addedToast]);
   const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
   const [customerName, setCustomerName] = useState("");
   const [tableNumber, setTableNumber] = useState("");
@@ -355,6 +362,29 @@ function Index() {
       </button>
 
       
+      
+      {/* Added to Order Toast */}
+      <AnimatePresence>
+        {addedToast && (
+          <motion.div
+            key={addedToast.key}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-24 inset-x-0 mx-auto w-fit z-50 pointer-events-none px-4 py-2.5 rounded-full bg-[#161616]/95 border border-gold/50 shadow-glow-gold flex items-center gap-2.5 backdrop-blur-md"
+            dir={isAr ? "rtl" : "ltr"}
+          >
+            <div className="h-5 w-5 rounded-full bg-gold flex items-center justify-center text-black text-xs font-black">
+              ✓
+            </div>
+            <span className="text-xs sm:text-sm font-medium text-foreground">
+              {isAr ? `تمت إضافة ${addedToast.name} إلى السلة` : `Added ${addedToast.name} to order`}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Item Detail Modal */}
       <AnimatePresence>
         {selectedItem && (
@@ -1055,13 +1085,25 @@ function Index() {
                           </p>
                         )}
 
-                        {/* Bottom row: divider + plus button */}
+                        {/* Bottom row: calories + divider + plus button */}
                         <div className="mt-auto pt-3 flex items-center gap-3">
+                          {item.calories !== undefined && (
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gold/10 border border-gold/30 text-gold text-xs font-semibold tabular-nums shrink-0">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-gold/90">kcal</span>
+                              <span>{item.calories}</span>
+                            </div>
+                          )}
                           <div className="h-px flex-1 bg-gradient-to-l from-transparent via-gold/30 to-transparent" />
                           <motion.button
+                            type="button"
                             whileHover={{ scale: 1.18 }}
                             whileTap={{ scale: 0.82 }}
-                            onClick={() => addToCart(item)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart(item);
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
                             aria-label={`Add ${name} to cart`}
                             className="relative shrink-0 h-9 w-9 rounded-full bg-gold-gradient flex items-center justify-center shadow-gold transition-all hover:shadow-glow-gold"
                           >
@@ -1134,7 +1176,7 @@ function Index() {
                 <TikTokIcon className="h-5 w-5" />
               </a>
               <a
-                href="https://snapchat.com/t/6ipYMBLJ"
+                href="https://snapchat.com/t/HlrUtOz8"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Snapchat"

@@ -1,0 +1,13 @@
+name = "taqyeemi"
+compatibility_date = "2026-11-20"
+pages_build_output_dir = "."
+
+[vars]
+ADMIN_SECRET = "dev-admin-secret-replace-in-production"
+SESSION_SECRET = "dev-session-secret-min-32-chars-replace-in-production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "taqyeemi-db"
+database_id = "5d85a60d-80dd-4709-8ad1-334d215ef120"
+

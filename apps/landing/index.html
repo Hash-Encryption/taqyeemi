@@ -297,7 +297,16 @@
     </section>
 
     <footer class="site-footer" id="txt-footer">
-        &copy; 2026 Taqyeemi. All rights reserved. &bull; Powered by Google Reviews Platform
+        <div style="max-width:800px;margin:0 auto;line-height:1.7;">
+            <p dir="rtl" style="font-weight:600;margin-bottom:4px;">تقييمي (Taqyeemi) — إحدى منتجات MUHABWEB لتطوير البرمجيات وتقنية المعلومات | جدة، المملكة العربية السعودية</p>
+            <p style="margin-bottom:8px;">رقم وثيقة العمل الحر: <strong>FL-XXXXXXXXX</strong> &bull; للتواصل والدعم: <a href="mailto:support@taqyeemi.com" style="color:var(--g-blue);text-decoration:none;">support@taqyeemi.com</a></p>
+            <div style="display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+                <a href="/privacy" style="color:var(--on-surface-variant);text-decoration:none;">سياسة الخصوصية &bull; Privacy Policy</a>
+                <span>&bull;</span>
+                <a href="/terms" style="color:var(--on-surface-variant);text-decoration:none;">الشروط والأحكام &bull; Terms of Service</a>
+            </div>
+            <p>&copy; 2026 Taqyeemi by MUHABWEB. All rights reserved. &bull; Powered by Google Reviews Platform</p>
+        </div>
     </footer>
 </div>
 
@@ -376,6 +385,12 @@
         <h2 id="rv-fb-title">We'd love to improve</h2>
         <p class="sub" id="rv-fb-sub">Your feedback goes directly to our team &mdash; it won't be posted publicly.</p>
         <textarea class="rv-textarea" id="rv-text" placeholder="Tell us how we can do better next time..."></textarea>
+        <!-- Pre-submission Consent Notice (Saudi PDPL) -->
+        <div class="rv-consent-notice" style="background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:8px;padding:10px;margin-bottom:12px;font-size:.74rem;text-align:center;line-height:1.5;">
+            <p dir="rtl" style="margin-bottom:4px;">بإرسالك هذه الملاحظة، فإنك تقر باطلاعك وموافقتك على <a href="/privacy" target="_blank" rel="noopener noreferrer" style="color:var(--g-blue);text-decoration:underline;">سياسة الخصوصية</a> الخاصة بمنصة تقييمي.</p>
+            <p dir="ltr" style="color:var(--on-surface-variant);">By submitting this feedback, you acknowledge and agree to Taqyeemi's <a href="/privacy" target="_blank" rel="noopener noreferrer" style="color:var(--g-blue);text-decoration:underline;">Privacy Policy</a>.</p>
+        </div>
+
         <button type="button" class="rv-btn" id="rv-submit-btn" onclick="rvSubmit()">Send Feedback</button>
         <div class="rv-footer">Your response is private and confidential</div>
     </div>

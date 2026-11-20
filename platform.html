@@ -4,19 +4,18 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src  'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+        script-src  'self' 'unsafe-inline';
         style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src    https://fonts.gstatic.com;
-        connect-src https://*.supabase.co;
+        connect-src 'self';
         img-src     'self' data:;
     ">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Engine — Smart Google Review Funnel</title>
+    <title>Taqyeemi — Smart Google Review Funnel</title>
     <meta name="description" content="Automatically route 5-star reviews to Google and privately intercept negative feedback before it goes public.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
     <style>
         :root {
             --g-blue:#4285F4;--g-blue-dark:#1A73E8;--g-red:#EA4335;
@@ -30,7 +29,7 @@
         }
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         html{font-size:16px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
-        body{font-family:'Inter',sans-serif;background:var(--surface-dim);color:var(--on-surface);min-height:100vh}
+        body{font-family:'Inter',sans-serif;background:var(--surface-dim);color:var(--on-surface);min-height:100vh;display:flex;flex-direction:column}
 
         /* ── BG BLOBS ── */
         .bg-blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
@@ -48,11 +47,7 @@
         .hidden{display:none !important}
         .fade-in{animation:fadeIn .35s ease forwards}
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes cardIn{to{opacity:1;transform:translateY(0)}}
         @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes successPop{0%{transform:scale(0)}100%{transform:scale(1)}}
-        @keyframes checkDraw{to{stroke-dashoffset:0}}
-        @keyframes dotPulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.35);opacity:1}}
 
         /* ── TOP NAV ── */
         .top-nav {
@@ -95,261 +90,338 @@
         .form-input{width:100%;padding:11px 14px;background:var(--surface-dim);border:1.5px solid var(--outline);border-radius:var(--radius-sm);color:var(--on-surface);font-family:inherit;font-size:.92rem;outline:none;transition:border-color .2s,box-shadow .2s}
         .form-input::placeholder{color:var(--on-surface-variant);opacity:.55}
         .form-input:focus{border-color:var(--g-blue);box-shadow:0 0 0 3px rgba(66,133,244,.18)}
-        .form-hint{font-size:.74rem;color:var(--on-surface-variant);margin-top:4px}
         .btn-primary{width:100%;padding:12px;margin-top:6px;background:var(--g-blue);color:white;border:none;border-radius:var(--radius-full);font-family:inherit;font-size:.93rem;font-weight:600;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;position:relative;overflow:hidden}
         .btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent 60%);pointer-events:none}
-        .btn-primary:hover{background:var(--g-blue-dark);transform:translateY(-1px);box-shadow:0 4px 16px rgba(26,115,232,.35)}
-        .btn-primary:active{transform:scale(.98)}
-        .btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
-        .err-box{background:rgba(234,67,53,.1);border:1px solid rgba(234,67,53,.3);color:#f28b82;padding:10px 14px;border-radius:var(--radius-sm);font-size:.84rem;margin-top:12px;display:none}
+        .btn-primary:hover{background:var(--g-blue-dark);transform:translateY(-1px);box-shadow:0 4px 20px rgba(66,133,244,.45)}
+        .btn-sm{padding:7px 14px;border-radius:var(--radius-sm);font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;border:1px solid var(--outline);background:var(--surface);color:var(--on-surface);transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+        .btn-sm:hover{background:var(--surface-bright);border-color:var(--outline)}
+        .btn-sm.primary{background:var(--g-blue);color:white;border-color:var(--g-blue)}
+        .btn-sm.primary:hover{background:var(--g-blue-dark)}
+        .btn-sm.danger{color:#f28b82;border-color:rgba(234,67,53,.35)}
+        .btn-sm.danger:hover{background:rgba(234,67,53,.12)}
+        .err-box{display:none;padding:10px 14px;background:rgba(234,67,53,.12);border:1px solid rgba(234,67,53,.3);border-radius:var(--radius-sm);color:#f28b82;font-size:.82rem;margin-top:10px;text-align:left;line-height:1.4}
         .err-box.show{display:block}
-        .auth-tabs{display:flex;gap:0;margin-bottom:20px;background:var(--surface-dim);border-radius:var(--radius-sm);padding:3px}
-        .auth-tab{flex:1;padding:7px;border:none;background:none;border-radius:7px;font-family:inherit;font-size:.86rem;font-weight:500;color:var(--on-surface-variant);cursor:pointer;transition:background .2s,color .2s}
-        .auth-tab.active{background:var(--surface);color:var(--on-surface);box-shadow:var(--shadow-sm)}
+        .state-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 20px;text-align:center}
+        .state-icon{font-size:3rem;margin-bottom:14px}
+        .state-title{font-size:1.15rem;font-weight:700;margin-bottom:6px}
+        .state-sub{font-size:.88rem;color:var(--on-surface-variant);max-width:340px}
+        .spinner{width:36px;height:36px;border:3px solid var(--outline);border-top-color:var(--g-blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
 
-        /* ── SHARED DASHBOARD NAVBAR (inside views) ── */
-        .db-navbar{background:var(--surface);border-bottom:1px solid var(--outline-variant);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:60px;z-index:100}
-        .db-navbar-left{display:flex;align-items:center;gap:10px}
-        .db-navbar-icon{font-size:1.2rem}
-        .db-navbar-name{font-size:.98rem;font-weight:700}
-        .db-navbar-badge{background:var(--g-blue);color:white;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:var(--radius-full)}
-        .db-navbar-tag{background:rgba(66,133,244,.15);color:var(--g-blue);font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:var(--radius-full);letter-spacing:.05em}
-
-        /* ── SPINNER / STATES ── */
-        .spinner{width:36px;height:36px;border:3px solid var(--outline);border-top-color:var(--g-blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
-        .state-box{text-align:center;padding:56px 20px;color:var(--on-surface-variant)}
-        .state-icon{font-size:2.8rem;margin-bottom:12px}
-        .state-title{font-size:1rem;font-weight:600;margin-bottom:6px;color:var(--on-surface)}
-        .state-sub{font-size:.84rem}
-
-        /* ── BTN VARIANTS ── */
-        .btn-sm{padding:5px 13px;border-radius:var(--radius-full);font-family:inherit;font-size:.78rem;font-weight:500;cursor:pointer;border:1px solid var(--outline);background:none;color:var(--on-surface-variant);transition:all .2s}
-        .btn-sm:hover{background:var(--surface-container);color:var(--on-surface)}
-        .btn-sm.primary{border-color:var(--g-blue);color:var(--g-blue)}
-        .btn-sm.primary:hover{background:rgba(66,133,244,.1)}
-        .btn-sm.danger{border-color:var(--g-red);color:var(--g-red)}
-        .btn-sm.danger:hover{background:rgba(234,67,53,.1)}
-        .btn-sm.success{border-color:var(--g-green);color:var(--g-green)}
-        .btn-sm.success:hover{background:rgba(52,168,83,.1)}
-        .btn-add{display:flex;align-items:center;gap:8px;padding:9px 18px;background:var(--g-blue);color:white;border:none;border-radius:var(--radius-full);font-family:inherit;font-size:.87rem;font-weight:600;cursor:pointer;transition:background .2s,transform .15s}
-        .btn-add:hover{background:var(--g-blue-dark);transform:translateY(-1px)}
-        .btn-close{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface-variant);width:30px;height:30px;border-radius:50%;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
-        .btn-close:hover{background:var(--outline)}
-
-        /* ─────────────────────────────────────────
-           HOME / LANDING VIEW
-        ───────────────────────────────────────── */
-        #view-home{min-height:100vh;padding-top:60px;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;width:100%}
-
-        .hero-section {
-            max-width:860px;width:100%;padding:72px 24px 48px;
-            text-align:center;display:flex;flex-direction:column;align-items:center;
-        }
-        .hero-badge {
-            display:inline-flex;align-items:center;gap:8px;
-            background:rgba(66,133,244,.1);border:1px solid rgba(66,133,244,.28);
-            color:var(--g-blue);font-size:.8rem;font-weight:600;
-            padding:5px 16px;border-radius:var(--radius-full);margin-bottom:28px;letter-spacing:.03em;
-        }
-        .hero-badge .dot{width:7px;height:7px;background:var(--g-green);border-radius:50%;box-shadow:0 0 8px var(--g-green);display:inline-block}
-        .hero-title {
-            font-size:clamp(2.2rem,5.5vw,3.6rem);font-weight:800;line-height:1.1;
-            letter-spacing:-.028em;margin-bottom:18px;color:var(--on-surface);
-        }
-        .hero-title span{background:linear-gradient(135deg,var(--g-blue) 20%,var(--g-green) 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .hero-sub{font-size:1.1rem;color:var(--on-surface-variant);max-width:640px;margin:0 auto 40px;line-height:1.65}
-
-        /* Sign In card embedded in landing */
-        .signin-card {
-            width:100%;max-width:420px;background:var(--surface);
-            border:1px solid var(--outline-variant);border-radius:var(--radius-lg);
-            box-shadow:var(--shadow-lg);padding:36px 32px;position:relative;
-            animation:cardIn .5s cubic-bezier(.22,1,.36,1) forwards;opacity:0;transform:translateY(20px);
-        }
-        .signin-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;background:linear-gradient(90deg,var(--g-blue),var(--g-red) 38%,var(--g-yellow) 68%,var(--g-green))}
-        .signin-card-title{font-size:1.1rem;font-weight:700;margin-bottom:4px;text-align:center}
-        .signin-card-sub{font-size:.82rem;color:var(--on-surface-variant);margin-bottom:22px;text-align:center;line-height:1.5}
-
-        /* Feature grid */
-        .features-section{width:100%;max-width:960px;padding:0 24px 56px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
-        .feature-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:28px 24px;text-align:left;transition:border-color .25s,transform .25s}
-        .feature-card:hover{border-color:rgba(66,133,244,.4);transform:translateY(-3px)}
+        /* ── HERO & LANDING ── */
+        .hero-section{position:relative;z-index:1;padding:120px 20px 60px;max-width:860px;margin:0 auto;text-align:center}
+        .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-full);font-size:.78rem;font-weight:600;color:var(--g-blue);margin-bottom:24px;box-shadow:var(--shadow-sm)}
+        .hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--g-green)}
+        .hero-title{font-size:clamp(2rem,5vw,3.4rem);font-weight:800;line-height:1.15;letter-spacing:-.03em;margin-bottom:18px}
+        .hero-title span{background:linear-gradient(135deg,var(--g-blue),var(--g-green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hero-sub{font-size:clamp(1rem,2.2vw,1.2rem);color:var(--on-surface-variant);line-height:1.6;max-width:620px;margin:0 auto 36px}
+        .signin-card{background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-lg);padding:36px 32px;box-shadow:var(--shadow-lg);max-width:440px;margin:0 auto;text-align:center;position:relative;z-index:2}
+        .signin-card-title{font-size:1.2rem;font-weight:700;margin-bottom:6px}
+        .signin-card-sub{font-size:.85rem;color:var(--on-surface-variant);margin-bottom:24px}
+        .features-section{position:relative;z-index:1;max-width:1040px;margin:0 auto 60px;padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+        .feature-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:28px 24px}
         .feature-icon{font-size:2rem;margin-bottom:14px}
-        .feature-title{font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--on-surface)}
-        .feature-desc{font-size:.87rem;color:var(--on-surface-variant);line-height:1.6}
+        .feature-title{font-size:1rem;font-weight:700;margin-bottom:8px}
+        .feature-desc{font-size:.86rem;color:var(--on-surface-variant);line-height:1.6}
 
-        /* Footer */
-        .site-footer{width:100%;text-align:center;padding:28px 24px 40px;border-top:1px solid var(--outline-variant);margin-top:auto}
-        .footer-text{font-size:.75rem;color:var(--on-surface-variant);opacity:.5}
-        .admin-footer-link{background:none;border:none;color:var(--on-surface-variant);font-family:inherit;font-size:.73rem;cursor:pointer;padding:0;opacity:.35;transition:opacity .2s;text-decoration:underline;text-decoration-color:transparent;margin-top:10px;display:inline-block}
-        .admin-footer-link:hover{opacity:.65;text-decoration-color:var(--on-surface-variant)}
-
-        /* ─────────────────────────────────────────
-           OWNER DASHBOARD VIEW
-        ───────────────────────────────────────── */
-        #view-dashboard{flex-direction:column;min-height:100vh;padding-top:60px}
-        #view-dashboard:not(.hidden){display:flex}
-        .db-stats{padding:20px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-        .db-stat{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:16px 20px}
-        .db-stat-label{font-size:.72rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
-        .db-stat-value{font-size:1.7rem;font-weight:700;line-height:1}
-        .db-stat-sub{font-size:.72rem;color:var(--on-surface-variant);margin-top:4px}
-        .db-filters{padding:0 24px 14px;display:flex;gap:8px;flex-wrap:wrap}
-        .db-filter{padding:6px 15px;border:1px solid var(--outline);border-radius:var(--radius-full);background:none;color:var(--on-surface-variant);font-family:inherit;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s}
-        .db-filter.active{background:var(--g-blue);border-color:var(--g-blue);color:white}
-        .db-filter:hover:not(.active){border-color:var(--g-blue);color:var(--on-surface)}
-        .db-list{padding:0 24px 48px;display:flex;flex-direction:column;gap:12px}
-        .db-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:18px 20px;transition:border-color .2s}
-        .db-card:hover{border-color:rgba(66,133,244,.3)}
-        .db-card.unread{border-left:3px solid var(--g-blue)}
-        .db-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-        .db-card-stars{color:var(--g-yellow);font-size:.95rem;letter-spacing:1px}
+        /* ── OWNER DASHBOARD ── */
+        #view-dashboard{position:relative;z-index:1;padding-top:60px;min-height:100vh}
+        .db-navbar{height:60px;background:var(--surface);border-bottom:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,4vw,36px)}
+        .db-navbar-left{display:flex;align-items:center;gap:10px}
+        .db-navbar-icon{font-size:1.4rem}
+        .db-navbar-name{font-weight:700;font-size:1rem}
+        .db-navbar-badge{background:var(--g-blue);color:white;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:var(--radius-full)}
+        .branch-switcher-bar{background:var(--surface-bright);border-bottom:1px solid var(--outline-variant);padding:10px clamp(16px,4vw,36px);display:flex;align-items:center;gap:8px;overflow-x:auto}
+        .branch-pill{padding:6px 14px;border-radius:var(--radius-full);border:1px solid var(--outline-variant);background:var(--surface-dim);color:var(--on-surface-variant);font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
+        .branch-pill:hover{border-color:var(--g-blue);color:var(--on-surface)}
+        .branch-pill.active{background:var(--g-blue);color:white;border-color:var(--g-blue)}
+        .db-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;padding:24px clamp(16px,4vw,36px);max-width:1100px;margin:0 auto}
+        .db-stat{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:20px;text-align:center}
+        .db-stat-label{font-size:.74rem;font-weight:600;text-transform:uppercase;color:var(--on-surface-variant);letter-spacing:.06em}
+        .db-stat-value{font-size:2rem;font-weight:800;margin:6px 0 2px}
+        .db-stat-sub{font-size:.74rem;color:var(--on-surface-variant)}
+        .db-filters{display:flex;gap:8px;padding:0 clamp(16px,4vw,36px) 16px;max-width:1100px;margin:0 auto}
+        .db-filter{padding:7px 16px;background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-full);font-family:inherit;font-size:.82rem;font-weight:600;color:var(--on-surface-variant);cursor:pointer;transition:all .2s}
+        .db-filter.active{background:var(--g-blue);color:white;border-color:var(--g-blue)}
+        .db-list{padding:0 clamp(16px,4vw,36px) 60px;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+        .db-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:18px 20px}
+        .db-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+        .db-card-stars{color:var(--g-yellow);font-size:1.05rem;letter-spacing:2px}
         .db-card-date{font-size:.76rem;color:var(--on-surface-variant)}
-        .db-card-text{font-size:.9rem;color:var(--on-surface);line-height:1.6;margin-bottom:12px}
-        .db-card-footer{display:flex;justify-content:flex-end}
-        .btn-mark-read{background:none;border:1px solid var(--outline);color:var(--on-surface-variant);padding:5px 12px;border-radius:var(--radius-full);font-family:inherit;font-size:.76rem;cursor:pointer;transition:all .2s}
-        .btn-mark-read:hover{border-color:var(--g-green);color:var(--g-green)}
-        .read-badge{font-size:.74rem;color:var(--on-surface-variant);opacity:.5}
+        .db-card-text{font-size:.92rem;line-height:1.6;margin-bottom:8px}
+        .db-card-contact{font-size:.78rem;color:var(--g-blue);margin-top:6px}
 
-        /* ─────────────────────────────────────────
-           ADMIN PANEL VIEW
-        ───────────────────────────────────────── */
-        #view-admin{flex-direction:column;min-height:100vh;padding-top:60px}
-        #view-admin:not(.hidden){display:flex}
-        .admin-body{display:flex;flex:1}
-        .sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--outline-variant);padding:18px 10px;display:flex;flex-direction:column;gap:4px;position:sticky;top:118px;height:calc(100vh - 118px);overflow-y:auto}
-        .sidebar-section{font-size:.68rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.08em;padding:4px 12px;margin-top:8px;margin-bottom:2px}
-        .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--on-surface-variant);font-size:.88rem;font-weight:500;transition:background .15s,color .15s;border:none;background:none;font-family:inherit;width:100%;text-align:left}
+        /* ── CUSTOMER REVIEW VIEW ── */
+        #view-review{position:relative;z-index:2;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+        .rv-card{background:var(--surface);border:1px solid var(--outline);border-radius:var(--radius-lg);padding:40px 32px;width:100%;max-width:460px;text-align:center;box-shadow:var(--shadow-lg)}
+        .google-dots{display:flex;justify-content:center;gap:6px;margin-bottom:20px}
+        .google-dots span{width:8px;height:8px;border-radius:50%}
+        .google-dots span:nth-child(1){background:var(--g-blue)}
+        .google-dots span:nth-child(2){background:var(--g-red)}
+        .google-dots span:nth-child(3){background:var(--g-yellow)}
+        .google-dots span:nth-child(4){background:var(--g-green)}
+        .rv-card h2{font-size:1.35rem;font-weight:700;margin-bottom:8px}
+        .rv-card .sub{font-size:.88rem;color:var(--on-surface-variant);line-height:1.5;margin-bottom:24px}
+        .stars-container{margin-bottom:24px}
+        .stars{display:flex;justify-content:center;gap:8px}
+        .stars button{background:none;border:none;font-size:2.4rem;color:var(--outline);cursor:pointer;transition:transform .15s,color .15s;padding:4px}
+        .stars button.hovered,.stars button.active{color:var(--g-yellow);transform:scale(1.15)}
+        .star-text{font-size:.82rem;font-weight:600;min-height:22px;color:var(--on-surface-variant);margin-top:8px}
+        .rv-textarea{width:100%;height:110px;padding:12px;background:var(--surface-dim);border:1.5px solid var(--outline);border-radius:var(--radius-sm);color:var(--on-surface);font-family:inherit;font-size:.9rem;outline:none;resize:vertical;margin-bottom:12px}
+        .rv-textarea:focus{border-color:var(--g-blue)}
+        .rv-btn{width:100%;padding:13px;background:var(--g-blue);color:white;border:none;border-radius:var(--radius-full);font-family:inherit;font-size:.93rem;font-weight:600;cursor:pointer;transition:background .2s}
+        .rv-btn:hover{background:var(--g-blue-dark)}
+        .rv-footer{font-size:.72rem;color:var(--on-surface-variant);margin-top:20px}
+
+        /* Pre-submission Consent Notice (PDPL Compliant) */
+        .rv-consent-notice {
+            background:var(--surface-dim);
+            border:1px solid var(--outline-variant);
+            border-radius:var(--radius-sm);
+            padding:10px 12px;
+            margin-bottom:14px;
+            font-size:.74rem;
+            line-height:1.5;
+            text-align:center;
+        }
+        .rv-consent-notice p { margin-bottom:4px; }
+        .rv-consent-notice p:last-child { margin-bottom:0; }
+        .rv-consent-notice a { color:var(--g-blue); text-decoration:underline; font-weight:600; }
+
+        /* ── CHROMELESS EMBED VIEW (POS & IFRAME) ── */
+        #view-embed{padding:12px;background:var(--surface-dim);min-height:100vh}
+        .embed-container{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:16px;max-width:800px;margin:0 auto}
+        .embed-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;border-bottom:1px solid var(--outline-variant);padding-bottom:12px}
+        .embed-title{font-size:1.1rem;font-weight:700}
+        .embed-stats{font-size:.78rem;color:var(--on-surface-variant);margin-top:4px}
+        .embed-filters{display:flex;gap:6px}
+        .embed-filter{background:var(--surface-dim);border:1px solid var(--outline-variant);color:var(--on-surface-variant);padding:4px 10px;border-radius:var(--radius-full);font-size:.74rem;font-weight:600;cursor:pointer}
+        .embed-filter.active{background:var(--g-blue);color:white;border-color:var(--g-blue)}
+        .embed-list{display:flex;flex-direction:column;gap:10px;max-height:560px;overflow-y:auto}
+
+        /* ── ADMIN PANEL ── */
+        #view-admin{position:relative;z-index:1;padding-top:60px;min-height:100vh}
+        .admin-body{display:flex;max-width:1300px;margin:0 auto;min-height:calc(100vh - 60px)}
+        .sidebar{width:240px;background:var(--surface);border-right:1px solid var(--outline-variant);padding:24px 16px;display:flex;flex-direction:column;gap:6px}
+        .sidebar-section{font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--on-surface-variant);letter-spacing:.08em;margin-bottom:8px}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-sm);border:none;background:none;color:var(--on-surface-variant);font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;width:100%;text-align:left;transition:all .15s}
         .nav-item:hover{background:var(--surface-container);color:var(--on-surface)}
-        .nav-item.active{background:rgba(66,133,244,.12);color:var(--g-blue)}
-        .nav-icon{font-size:.95rem;width:20px;text-align:center}
-        .nav-badge{margin-left:auto;background:var(--g-blue);color:white;font-size:.66rem;font-weight:700;padding:1px 6px;border-radius:var(--radius-full)}
-        .mgr-content{flex:1;padding:28px;overflow-y:auto}
-        .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
-        .page-title{font-size:1.25rem;font-weight:700}
-        .page-sub{font-size:.83rem;color:var(--on-surface-variant);margin-top:2px}
-        .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:26px}
-        .summary-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:20px}
-        .summary-label{font-size:.72rem;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
-        .summary-value{font-size:1.9rem;font-weight:700}
-        .rest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-        .rest-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:20px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s}
-        .rest-card:hover{border-color:rgba(66,133,244,.35)}
-        .rest-card.inactive{opacity:.5}
-        .rc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-        .rc-name{font-size:.98rem;font-weight:700}
-        .rc-slug{font-size:.75rem;color:var(--on-surface-variant);margin-top:2px;font-family:monospace}
-        .rc-status{flex-shrink:0;font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:var(--radius-full)}
-        .rc-status.on{background:rgba(52,168,83,.15);color:var(--g-green)}
-        .rc-status.off{background:rgba(234,67,53,.12);color:var(--g-red)}
-        .rc-stats{display:flex;gap:16px}
-        .rc-stat{text-align:center}
-        .rc-stat-val{font-size:1.05rem;font-weight:700}
-        .rc-stat-label{font-size:.68rem;color:var(--on-surface-variant)}
-        .rc-link{font-size:.73rem;color:var(--on-surface-variant);background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:var(--radius-sm);padding:6px 10px;font-family:monospace;word-break:break-all}
-        .rc-actions{display:flex;gap:8px;flex-wrap:wrap}
+        .nav-item.active{background:rgba(66,133,244,.15);color:var(--g-blue)}
+        .nav-badge{margin-left:auto;background:var(--g-blue);color:white;font-size:.68rem;padding:2px 7px;border-radius:var(--radius-full)}
+        .mgr-content{flex:1;padding:28px 36px}
+        .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+        .page-title{font-size:1.4rem;font-weight:800}
+        .page-sub{font-size:.82rem;color:var(--on-surface-variant);margin-top:2px}
+        .btn-add{background:var(--g-blue);color:white;border:none;padding:10px 20px;border-radius:var(--radius-full);font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+        .btn-add:hover{background:var(--g-blue-dark)}
+        .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+        .summary-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:18px}
+        .summary-label{font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--on-surface-variant);letter-spacing:.06em}
+        .summary-value{font-size:1.8rem;font-weight:800;margin-top:4px}
+        .rest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+        .rest-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:20px;display:flex;flex-direction:column;gap:12px}
+        .rc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+        .rc-name{font-size:1.05rem;font-weight:700}
+        .rc-slug{font-size:.76rem;color:var(--on-surface-variant);margin-top:2px;font-family:monospace}
+        .rc-status{font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:var(--radius-full)}
+        .rc-status.on{background:rgba(52,168,83,.15);color:var(--g-green-light)}
+        .rc-stats{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface-dim);border-radius:var(--radius-sm);padding:10px;text-align:center}
+        .rc-stat-val{font-size:1.15rem;font-weight:700}
+        .rc-stat-label{font-size:.68rem;color:var(--on-surface-variant);margin-top:2px}
+        .btn-copy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px}
+        .btn-copy{padding:6px 8px;background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:var(--radius-sm);color:var(--on-surface-variant);font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+        .btn-copy:hover{border-color:var(--g-blue);color:var(--g-blue);background:var(--surface-bright)}
+        .btn-copy.copied{background:rgba(52,168,83,.15);border-color:var(--g-green);color:var(--g-green)}
+        .inline-email-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.76rem;padding-top:8px;border-top:1px dashed var(--outline-variant)}
+        .inline-email-val{color:var(--g-blue);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .inline-email-form{display:flex;gap:6px;margin-top:6px}
+        .inline-email-input{flex:1;padding:5px 8px;background:var(--surface-dim);border:1px solid var(--outline);border-radius:var(--radius-sm);color:var(--on-surface);font-size:.75rem}
 
-        /* ─────────────────────────────────────────
-           REVIEW VIEW (customer-facing)
-        ───────────────────────────────────────── */
-        #view-review{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;position:relative}
-        .rv-card{background:var(--surface);padding:40px 32px 36px;border-radius:28px;box-shadow:var(--shadow-lg);width:92%;max-width:420px;position:relative;z-index:1;border:1px solid var(--outline-variant);animation:cardIn .6s cubic-bezier(.22,1,.36,1) forwards;opacity:0;transform:translateY(24px) scale(.97)}
-        .rv-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:28px 28px 0 0;background:linear-gradient(90deg,var(--g-blue),var(--g-red) 30%,var(--g-yellow) 60%,var(--g-green))}
-        .google-dots{display:flex;justify-content:center;gap:8px;margin-bottom:24px}
-        .google-dots span{width:10px;height:10px;border-radius:50%;display:inline-block;animation:dotPulse 2s ease-in-out infinite}
-        .google-dots span:nth-child(1){background:var(--g-blue);animation-delay:0s}
-        .google-dots span:nth-child(2){background:var(--g-red);animation-delay:.15s}
-        .google-dots span:nth-child(3){background:var(--g-yellow);animation-delay:.3s}
-        .google-dots span:nth-child(4){background:var(--g-green);animation-delay:.45s}
-        .rv-card h2{color:var(--on-surface);font-weight:700;font-size:1.45rem;letter-spacing:-.02em;margin-bottom:6px}
-        .rv-card .sub{color:var(--on-surface-variant);font-size:.93rem;line-height:1.5;margin-bottom:28px}
-        .stars-container{background:var(--surface-dim);border-radius:var(--radius-md);padding:20px 12px;margin:0 -4px 8px;border:1px solid var(--outline-variant);transition:border-color .3s,box-shadow .3s}
-        .stars-container:hover{border-color:rgba(66,133,244,.5);box-shadow:0 0 0 3px rgba(66,133,244,.12)}
-        .stars-label{font-size:.73rem;font-weight:500;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:block}
-        .stars{font-size:2.75rem;display:flex;justify-content:center;gap:10px;user-select:none}
-        .stars button{cursor:pointer;color:var(--outline);background:none;border:none;padding:0;font:inherit;font-size:inherit;transition:color .2s,transform .2s cubic-bezier(.34,1.56,.64,1);line-height:1;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%}
-        .stars button:hover{transform:scale(1.15)}
-        .stars button:active{transform:scale(.95)}
-        .stars button.active{color:#FBBC05 !important;text-shadow:0 0 12px rgba(251,188,5,0.8) !important;filter:drop-shadow(0 2px 6px rgba(251,188,5,.45))}
-        .stars button.hovered{color:#FBBC05 !important;text-shadow:0 0 12px rgba(251,188,5,0.8) !important}
-        .star-text{height:24px;margin-top:14px;font-size:.84rem;font-weight:500;color:var(--g-blue);transition:opacity .25s;opacity:0}
-        .star-text.visible{opacity:1}
-        .rv-textarea{width:100%;height:130px;padding:16px;border-radius:var(--radius-md);border:1.5px solid var(--outline);font-family:inherit;font-size:.93rem;line-height:1.5;color:var(--on-surface);background:var(--surface-dim);resize:none;transition:border-color .3s,box-shadow .3s;outline:none}
-        .rv-textarea::placeholder{color:var(--on-surface-variant);opacity:.7}
-        .rv-textarea:focus{border-color:var(--g-blue);box-shadow:0 0 0 3px rgba(66,133,244,.22)}
-        .rv-btn{background:var(--g-blue);color:white;border:none;padding:13px 24px;border-radius:var(--radius-full);font-family:inherit;font-size:.93rem;font-weight:600;cursor:pointer;margin-top:16px;width:100%;transition:background .2s,box-shadow .3s,transform .15s;position:relative;overflow:hidden}
-        .rv-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent 60%);pointer-events:none}
-        .rv-btn:hover{background:var(--g-blue-dark);box-shadow:0 4px 16px rgba(26,115,232,.35);transform:translateY(-1px)}
-        .rv-btn:active{transform:scale(.98)}
-        .rv-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
-        .success-icon{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--g-green),var(--g-green-light));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:successPop .5s cubic-bezier(.34,1.56,.64,1)}
-        .success-icon svg{width:34px;height:34px;stroke:white;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
-        .success-icon svg path{stroke-dasharray:40;stroke-dashoffset:40;animation:checkDraw .5s .3s ease forwards}
-        .rv-footer{margin-top:24px;font-size:.7rem;color:var(--on-surface-variant);opacity:.45;letter-spacing:.02em}
-        .fb-icon{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,rgba(234,67,53,.15),rgba(251,188,5,.15));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.7rem}
+        /* ── LEGAL VIEWS (/privacy & /terms) ── */
+        .legal-container {
+            max-width:920px;
+            margin:80px auto 40px;
+            padding:0 20px;
+            position:relative;
+            z-index:2;
+            width:100%;
+        }
+        .legal-card {
+            background:var(--surface);
+            border:1px solid var(--outline-variant);
+            border-radius:var(--radius-lg);
+            padding:36px 32px;
+            box-shadow:var(--shadow-lg);
+            margin-bottom:24px;
+        }
+        .legal-nav-bar {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            margin-bottom:24px;
+            flex-wrap:wrap;
+            gap:12px;
+        }
+        .legal-lang-tabs {
+            display:flex;
+            gap:8px;
+        }
+        .legal-lang-btn {
+            padding:6px 14px;
+            border-radius:var(--radius-full);
+            border:1px solid var(--outline-variant);
+            background:var(--surface-dim);
+            color:var(--on-surface-variant);
+            font-size:.8rem;
+            font-weight:600;
+            cursor:pointer;
+            transition:all .15s;
+        }
+        .legal-lang-btn.active {
+            background:var(--g-blue);
+            color:white;
+            border-color:var(--g-blue);
+        }
+        .legal-section-ar {
+            line-height:1.85;
+            text-align:right;
+            font-size:.92rem;
+            color:var(--on-surface);
+        }
+        .legal-section-en {
+            line-height:1.75;
+            text-align:left;
+            font-size:.92rem;
+            color:var(--on-surface);
+        }
+        .legal-title {
+            font-size:1.35rem;
+            font-weight:800;
+            margin-bottom:6px;
+            color:var(--on-surface);
+        }
+        .legal-meta {
+            font-size:.78rem;
+            color:var(--on-surface-variant);
+            margin-bottom:18px;
+        }
+        .legal-intro-ar {
+            background:var(--surface-dim);
+            border-right:3px solid var(--g-blue);
+            padding:12px 16px;
+            border-radius:var(--radius-sm);
+            margin-bottom:20px;
+            font-weight:500;
+            line-height:1.8;
+        }
+        .legal-intro-en {
+            background:var(--surface-dim);
+            border-left:3px solid var(--g-blue);
+            padding:12px 16px;
+            border-radius:var(--radius-sm);
+            margin-bottom:20px;
+            font-weight:500;
+            line-height:1.7;
+        }
+        .legal-h3 {
+            font-size:1.02rem;
+            font-weight:700;
+            color:var(--g-blue);
+            margin:20px 0 8px;
+        }
+        .legal-p {
+            margin-bottom:12px;
+            color:var(--on-surface);
+        }
 
-        /* ─────────────────────────────────────────
-           ADMIN LOGIN MODAL
-        ───────────────────────────────────────── */
-        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
-        .modal-overlay.open{opacity:1;pointer-events:all}
-        .modal{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:420px;padding:36px 32px;transform:scale(.94);transition:transform .25s;max-height:90vh;overflow-y:auto;position:relative}
-        .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;background:linear-gradient(90deg,var(--g-red),var(--g-yellow))}
-        .modal-overlay.open .modal{transform:scale(1)}
-        .modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px}
-        .modal-title{font-size:1.05rem;font-weight:700}
-        .modal-sub{font-size:.8rem;color:var(--on-surface-variant);margin-top:3px}
-        .link-box{background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:var(--radius-sm);padding:10px 14px;font-family:monospace;font-size:.8rem;word-break:break-all;margin:8px 0;color:var(--g-blue)}
+        /* ── SAUDI E-COMMERCE LAW FOOTER ── */
+        .site-footer{
+            position:relative;
+            z-index:1;
+            padding:32px 20px;
+            text-align:center;
+            border-top:1px solid var(--outline-variant);
+            background:rgba(17,17,20,0.92);
+            margin-top:auto;
+        }
+        .footer-container {
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:8px;
+            max-width:860px;
+            margin:0 auto;
+            text-align:center;
+        }
+        .footer-identity {
+            font-size:.86rem;
+            font-weight:600;
+            color:var(--on-surface);
+            line-height:1.6;
+        }
+        .footer-meta {
+            font-size:.8rem;
+            color:var(--on-surface-variant);
+            line-height:1.5;
+        }
+        .footer-meta a {
+            color:var(--g-blue);
+            text-decoration:none;
+        }
+        .footer-meta a:hover {
+            text-decoration:underline;
+        }
+        .footer-links {
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-size:.8rem;
+            margin:6px 0;
+            flex-wrap:wrap;
+            justify-content:center;
+        }
+        .footer-links a {
+            color:var(--on-surface-variant);
+            text-decoration:none;
+            transition:color .2s;
+        }
+        .footer-links a:hover {
+            color:var(--g-blue);
+        }
+        .footer-copy {
+            font-size:.72rem;
+            color:var(--on-surface-variant);
+            opacity:.7;
+        }
+        .admin-footer-link{background:none;border:none;color:var(--outline);font-size:.78rem;cursor:pointer;font-family:inherit;transition:color .2s}
+        .admin-footer-link:hover{color:var(--on-surface-variant)}
 
-        /* ─────────────────────────────────────────
-           PANEL (admin feedback side-drawer)
-        ───────────────────────────────────────── */
+        /* ── MODALS & DRAWERS ── */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+        .modal-overlay.open{display:flex}
+        .modal{background:var(--surface-bright);border:1px solid var(--outline);border-radius:var(--radius-lg);padding:32px;width:100%;max-width:480px;box-shadow:var(--shadow-lg);position:relative}
+        .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+        .modal-title{font-size:1.15rem;font-weight:700}
+        .btn-close{background:none;border:none;color:var(--on-surface-variant);font-size:1.2rem;cursor:pointer;padding:4px}
+        .link-box{background:var(--surface-dim);border:1px solid var(--outline-variant);border-radius:var(--radius-sm);padding:8px 12px;font-family:monospace;font-size:.75rem;word-break:break-all;margin:6px 0 10px;color:var(--g-blue)}
         .panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;display:none}
         .panel-overlay.open{display:block}
-        .feedback-panel{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:95vw;background:var(--surface-bright);border-left:1px solid var(--outline-variant);box-shadow:var(--shadow-lg);z-index:200;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .35s cubic-bezier(.22,1,.36,1)}
+        .feedback-panel{position:fixed;top:0;right:0;bottom:0;width:440px;max-width:95vw;background:var(--surface-bright);border-left:1px solid var(--outline-variant);box-shadow:var(--shadow-lg);z-index:200;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .35s cubic-bezier(.22,1,.36,1)}
         .feedback-panel.open{transform:translateX(0)}
         .panel-header{padding:20px 24px;border-bottom:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:space-between}
-        .panel-title{font-size:.98rem;font-weight:700}
-        .panel-sub{font-size:.78rem;color:var(--on-surface-variant)}
-        .panel-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
-        .panel-card{background:var(--surface);border:1px solid var(--outline-variant);border-radius:var(--radius-md);padding:14px}
-        .panel-card.unread{border-left:3px solid var(--g-blue)}
-        .pc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-        .pc-stars{color:var(--g-yellow);font-size:.88rem}
-        .pc-date{font-size:.73rem;color:var(--on-surface-variant)}
-        .pc-text{font-size:.86rem;color:var(--on-surface);line-height:1.6}
-
-        /* ─────────────────────────────────────────
-           MOBILE / RESPONSIVE
-        ───────────────────────────────────────── */
-        .mob-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--outline-variant);z-index:150;padding-bottom:env(safe-area-inset-bottom,0px)}
-        .mob-nav-row{display:flex}
-        .mob-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;border:none;background:none;color:var(--on-surface-variant);font-family:inherit;font-size:.63rem;font-weight:500;cursor:pointer;transition:color .2s;min-height:54px}
-        .mob-nav-btn.active{color:var(--g-blue)}
-        .mob-nav-ico{font-size:1.3rem;line-height:1}
+        .panel-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
 
         @media(max-width:768px){
             .sidebar{display:none}
-            .mob-bottom-nav{display:block}
-            .summary-grid{grid-template-columns:1fr 1fr}
-            .mgr-content{padding:14px 14px 90px}
-            .db-stats{padding:14px;gap:8px}
-            .db-list{padding:0 14px 100px}
-            .db-filters{padding:0 14px 12px}
-            .btn-add span{display:none}
-            .hero-section{padding:52px 16px 32px}
-            .features-section{padding:0 16px 40px}
-            .signin-card{padding:28px 20px}
-        }
-        @media(max-width:500px){
-            .summary-grid,.rest-grid{grid-template-columns:1fr}
-            .db-stats{grid-template-columns:1fr 1fr}
+            .mgr-content{padding:16px 16px 80px}
+            .hero-section{padding:100px 16px 32px}
+            .legal-container{padding:0 12px;margin:70px auto 30px}
+            .legal-card{padding:24px 18px}
         }
     </style>
 </head>
 <body>
 
-<div class="bg-blobs" aria-hidden="true">
+<div class="bg-blobs" id="bg-blobs" aria-hidden="true">
     <div class="blob blob--blue"></div>
     <div class="blob blob--red"></div>
     <div class="blob blob--yellow"></div>
@@ -358,14 +430,12 @@
 
 <!-- ══ GLOBAL TOP NAV ══ -->
 <nav class="top-nav" id="global-nav" aria-label="Main navigation">
-    <a class="nav-brand" href="/" onclick="return goHome()">
+    <a class="nav-brand" href="/" onclick="return navGoHome(event)">
         <div class="nav-brand-icon" aria-hidden="true">&#x2B50;</div>
-        Review Engine
+        Taqyeemi
     </a>
-    <!-- Shown when NOT logged in as owner/admin -->
-    <button class="nav-signin-btn" id="nav-signin-btn" onclick="scrollToSignin()">Sign In</button>
-    <!-- Shown when logged in as owner -->
-    <button class="nav-signout-btn hidden" id="nav-signout-btn" onclick="ownerSignOut()">Sign Out</button>
+    <button class="nav-signin-btn" id="nav-signin-btn" onclick="navToLogin()">Owner Login</button>
+    <button class="nav-signout-btn hidden" id="nav-signout-btn" onclick="ownerSignOut()">Log Out</button>
 </nav>
 
 
@@ -373,102 +443,87 @@
      HOME / LANDING VIEW
 ══════════════════════════════════════════ -->
 <div id="view-home">
-    <!-- Hero -->
     <section class="hero-section">
-        <div class="hero-badge"><span class="dot"></span> Smart Google Review Funnel</div>
-        <h1 class="hero-title">More 5-Star Reviews.<br><span>Zero Public Complaints.</span></h1>
-        <p class="hero-sub">Automatically route happy customers to Google Maps and privately intercept negative feedback before it ever goes public.</p>
+        <div class="hero-badge"><span class="dot"></span> Smart Google Review Funnel Platform</div>
+        <h1 class="hero-title">More 5-Star Google Reviews.<br><span>Zero Public Complaints.</span></h1>
+        <p class="hero-sub">Automatically route happy customers to Google Maps and privately intercept negative feedback before it ever reaches the web.</p>
 
-        <!-- Inline sign-in / register card -->
-        <div class="signin-card" id="signin-card">
-            <p class="signin-card-title">&#x1F37D;&#xFE0F; Owner Portal</p>
-            <p class="signin-card-sub">Sign in to view your private customer feedback dashboard.</p>
-            <div class="auth-tabs">
-                <button class="auth-tab active" id="home-tab-login" onclick="homeSwitchTab('login')">Log In</button>
-                <button class="auth-tab" id="home-tab-register" onclick="homeSwitchTab('register')">Register</button>
+        <!-- Inline Owner Login Card -->
+        <div class="signin-card">
+            <p class="signin-card-title">&#x1F510; Merchant Dashboard</p>
+            <p class="signin-card-sub" id="otp-home-sub">Enter your email to receive a passwordless 6-digit access code.</p>
+            
+            <div id="home-otp-step1">
+                <div class="form-group">
+                    <label class="form-label" for="home-owner-email">Owner Email</label>
+                    <input class="form-input" type="email" id="home-owner-email" placeholder="owner@restaurant.com" autocomplete="email">
+                </div>
+                <button class="btn-primary" id="btn-home-send-otp" onclick="handleSendOtp('home')">Send 6-Digit Code &rarr;</button>
+                <div class="err-box" id="home-otp-send-err"></div>
             </div>
-            <!-- Login form -->
-            <div id="home-form-login">
+
+            <div id="home-otp-step2" class="hidden">
                 <div class="form-group">
-                    <label class="form-label" for="home-email">Email</label>
-                    <input class="form-input" type="email" id="home-email" placeholder="you@restaurant.com" autocomplete="email">
+                    <label class="form-label" for="home-otp-code">6-Digit Access Code</label>
+                    <input class="form-input" type="text" id="home-otp-code" placeholder="123456" maxlength="6" inputmode="numeric" style="letter-spacing:6px;font-size:1.4rem;text-align:center;">
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="home-password">Password</label>
-                    <input class="form-input" type="password" id="home-password" placeholder="••••••••" autocomplete="current-password">
-                </div>
-                <button class="btn-primary" id="home-btn-login" onclick="homeLogin()">Log In &rarr;</button>
-                <div class="err-box" id="home-login-err"></div>
-            </div>
-            <!-- Register form -->
-            <div id="home-form-register" class="hidden">
-                <div class="form-group">
-                    <label class="form-label" for="home-reg-email">Email</label>
-                    <input class="form-input" type="email" id="home-reg-email" placeholder="you@restaurant.com" autocomplete="email">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="home-reg-pass">Password</label>
-                    <input class="form-input" type="password" id="home-reg-pass" placeholder="Min. 8 characters" autocomplete="new-password">
-                </div>
-                <p class="form-hint" style="margin-bottom:12px">Your email must be pre-registered by an administrator.</p>
-                <button class="btn-primary" id="home-btn-register" onclick="homeRegister()">Create Account &rarr;</button>
-                <div class="err-box" id="home-register-err"></div>
+                <button class="btn-primary" id="btn-home-verify-otp" onclick="handleVerifyOtp('home')">Verify &amp; Enter Dashboard &rarr;</button>
+                <button class="btn-sm" style="margin-top:10px;width:100%" onclick="resetOtpSteps('home')">Try Different Email</button>
+                <div class="err-box" id="home-otp-verify-err"></div>
             </div>
         </div>
     </section>
 
-    <!-- Feature highlights -->
-    <section class="features-section" aria-label="Features">
+    <!-- Features -->
+    <section class="features-section">
         <div class="feature-card">
             <div class="feature-icon">&#x1F3AF;</div>
             <h4 class="feature-title">Smart Review Shield</h4>
-            <p class="feature-desc">Happy customers (4–5 stars) are sent directly to Google Maps. Constructive feedback (1–3 stars) stays 100% private to management.</p>
+            <p class="feature-desc">Happy customers (4–5 stars) are instantly directed to Google Maps. Constructive feedback (1–3 stars) stays 100% private to management.</p>
         </div>
         <div class="feature-card">
-            <div class="feature-icon">&#x1F50F;</div>
-            <h4 class="feature-title">Strict Access Control</h4>
-            <p class="feature-desc">Only pre-approved owner emails registered by the admin can create login accounts — no unauthorized signups.</p>
+            <div class="feature-icon">&#x26A1;</div>
+            <h4 class="feature-title">Instant Business Add-On</h4>
+            <p class="feature-desc">Create businesses with just a name and Google Maps URL. Slugs, QR links, and private dashboards are generated in one millisecond.</p>
         </div>
         <div class="feature-card">
-            <div class="feature-icon">&#x1F4C8;</div>
-            <h4 class="feature-title">Real-Time Dashboard</h4>
-            <p class="feature-desc">Owners get a private portal to review incoming customer notes, mark items as read, and track average star trends.</p>
+            <div class="feature-icon">&#x1F4F1;</div>
+            <h4 class="feature-title">Field Stand &amp; POS Ready</h4>
+            <p class="feature-desc">NFC stands, printed QR cards, and POS embedded iframe widgets sync feedback directly into your serverless Cloudflare D1 database.</p>
         </div>
     </section>
-
-    <!-- Footer with discreet admin link -->
-    <footer class="site-footer">
-        <p class="footer-text">&copy; Review Engine. All rights reserved.</p>
-        <br>
-        <button class="admin-footer-link" id="admin-footer-link" onclick="openAdminModal()" aria-label="Admin access">Admin Access</button>
-    </footer>
 </div>
 
 
 <!-- ══════════════════════════════════════════
-     OWNER DASHBOARD VIEW
+     OWNER DASHBOARD VIEW (/v/:token or /dashboard)
 ══════════════════════════════════════════ -->
 <div id="view-dashboard" class="hidden">
     <nav class="db-navbar" aria-label="Dashboard navigation">
         <div class="db-navbar-left">
             <span class="db-navbar-icon">&#x1F37D;&#xFE0F;</span>
-            <span class="db-navbar-name" id="db-rest-name">My Restaurant</span>
+            <span class="db-navbar-name" id="db-biz-name">My Business</span>
             <span class="db-navbar-badge hidden" id="db-unread-badge">0</span>
         </div>
-        <button class="nav-signout-btn" onclick="ownerSignOut()">Sign Out</button>
+        <button class="nav-signout-btn" id="db-signout-btn" onclick="ownerSignOut()">Log Out</button>
     </nav>
+
+    <!-- Branch Switcher (Rendered if session has multiple locations) -->
+    <div class="branch-switcher-bar hidden" id="db-branch-bar"></div>
+
     <div class="db-stats">
         <div class="db-stat"><div class="db-stat-label">Total</div><div class="db-stat-value" id="db-stat-total" style="color:var(--g-blue)">—</div><div class="db-stat-sub">reviews</div></div>
         <div class="db-stat"><div class="db-stat-label">Average</div><div class="db-stat-value" id="db-stat-avg" style="color:var(--g-yellow)">—</div><div class="db-stat-sub">stars</div></div>
-        <div class="db-stat"><div class="db-stat-label">Unread</div><div class="db-stat-value" id="db-stat-unread" style="color:var(--g-green)">—</div><div class="db-stat-sub">new</div></div>
+        <div class="db-stat"><div class="db-stat-label">Recent</div><div class="db-stat-value" id="db-stat-unread" style="color:var(--g-green)">—</div><div class="db-stat-sub">entries</div></div>
     </div>
+
     <div class="db-filters">
         <button class="db-filter active" data-f="all" onclick="dbFilter('all')">All</button>
-        <button class="db-filter" data-f="unread" onclick="dbFilter('unread')">Unread</button>
         <button class="db-filter" data-f="1" onclick="dbFilter('1')">&#9733;</button>
         <button class="db-filter" data-f="2" onclick="dbFilter('2')">&#9733;&#9733;</button>
         <button class="db-filter" data-f="3" onclick="dbFilter('3')">&#9733;&#9733;&#9733;</button>
     </div>
+
     <div class="db-list" id="db-list">
         <div class="state-box"><div class="spinner"></div><div class="state-title">Loading feedback&hellip;</div></div>
     </div>
@@ -476,25 +531,50 @@
 
 
 <!-- ══════════════════════════════════════════
-     REVIEW VIEW (customer-facing, via ?c=slug)
+     CHROMELESS EMBED VIEW (/embed/:token)
+══════════════════════════════════════════ -->
+<div id="view-embed" class="hidden">
+    <div class="embed-container">
+        <div class="embed-header">
+            <div>
+                <div class="embed-title" id="embed-biz-name">Business Feedback</div>
+                <div class="embed-stats" id="embed-stats-bar">Loading&hellip;</div>
+            </div>
+            <div class="embed-filters">
+                <button class="embed-filter active" data-f="all" onclick="embedFilter('all')">All</button>
+                <button class="embed-filter" data-f="1" onclick="embedFilter('1')">&#9733;</button>
+                <button class="embed-filter" data-f="2" onclick="embedFilter('2')">&#9733;&#9733;</button>
+                <button class="embed-filter" data-f="3" onclick="embedFilter('3')">&#9733;&#9733;&#9733;</button>
+            </div>
+        </div>
+        <div class="embed-list" id="embed-list">
+            <div class="state-box"><div class="spinner"></div><div class="state-title">Loading&hellip;</div></div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CUSTOMER REVIEW VIEW (?c=slug or /r/slug or /slug)
 ══════════════════════════════════════════ -->
 <div id="view-review" class="hidden">
     <div class="rv-card" id="rv-loading">
         <div class="spinner"></div>
-        <p style="color:var(--on-surface-variant);font-size:.9rem">Loading&hellip;</p>
+        <p style="color:var(--on-surface-variant);font-size:.9rem">Loading review link&hellip;</p>
     </div>
+
     <div class="rv-card hidden" id="rv-error">
         <div style="font-size:3rem;margin-bottom:16px">&#x1F615;</div>
-        <h2>Link Not Found</h2>
-        <p class="sub">This review link is invalid or has been deactivated. Please contact the restaurant for a new link.</p>
-        <div class="rv-footer">Powered by Google Reviews</div>
+        <h2>Review Link Not Found</h2>
+        <p class="sub">This stand or QR link is inactive or invalid. Please request a new link from management.</p>
+        <div class="rv-footer">Powered by Taqyeemi</div>
     </div>
+
     <div class="rv-card hidden" id="rv-rating">
         <div class="google-dots"><span></span><span></span><span></span><span></span></div>
-        <h2>How was your visit?</h2>
+        <h2 id="rv-heading">How was your visit?</h2>
         <p class="sub">Tap a star to rate your experience</p>
         <div class="stars-container">
-            <span class="stars-label">Your rating</span>
             <div class="stars" id="rv-stars">
                 <button type="button" id="star-1" aria-label="1 star">&#9733;</button>
                 <button type="button" id="star-2" aria-label="2 stars">&#9733;</button>
@@ -506,83 +586,103 @@
         </div>
         <div class="rv-footer">Powered by Google Reviews</div>
     </div>
+
     <div class="rv-card hidden" id="rv-feedback">
-        <div class="fb-icon">&#x1F4AC;</div>
+        <div class="fb-icon" style="font-size:2.5rem;margin-bottom:12px">&#x1F4AC;</div>
         <h2>We&rsquo;d love to improve</h2>
-        <p class="sub">Your feedback goes directly to our team &mdash; it won&rsquo;t be posted publicly.</p>
-        <textarea class="rv-textarea" id="rv-text" placeholder="Tell us how we can do better next time&hellip;"></textarea>
-        <button class="rv-btn" id="rv-submit-btn" onclick="rvSubmit()">Send Feedback</button>
+        <p class="sub">Your constructive feedback goes directly to our management team &mdash; it will never be posted publicly.</p>
+        <textarea class="rv-textarea" id="rv-text" placeholder="Tell us how we can make your next experience better&hellip;"></textarea>
+        <div class="form-group" style="margin-bottom:14px">
+            <input class="form-input" type="text" id="rv-contact" placeholder="Optional: Phone number or email if you'd like us to reach out">
+        </div>
+        
+        <!-- Pre-submission Consent Notice (Saudi PDPL) -->
+        <div class="rv-consent-notice">
+            <p dir="rtl">بإرسالك هذه الملاحظة، فإنك تقر باطلاعك وموافقتك على <a href="/privacy" target="_blank" rel="noopener noreferrer">سياسة الخصوصية</a> الخاصة بمنصة تقييمي.</p>
+            <p dir="ltr">By submitting this feedback, you acknowledge and agree to Taqyeemi's <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>
+        </div>
+
+        <button class="rv-btn" id="rv-submit-btn" onclick="rvSubmit()">Submit Private Feedback</button>
         <div class="rv-footer">Your response is private and confidential</div>
     </div>
 </div>
 
 
 <!-- ══════════════════════════════════════════
-     ADMIN PANEL VIEW
+     PRIVACY POLICY VIEW (/privacy)
 ══════════════════════════════════════════ -->
-<div id="view-admin" class="hidden">
-    <nav class="db-navbar" aria-label="Admin navigation">
-        <div class="db-navbar-left">
-            <span class="db-navbar-icon">&#x1F6E0;&#xFE0F;</span>
-            <span class="db-navbar-name">Review Platform</span>
-            <span class="db-navbar-tag">ADMIN</span>
-        </div>
-        <button class="nav-signout-btn" onclick="mgrSignOut()">Sign Out</button>
-    </nav>
-    <div class="admin-body">
-        <aside class="sidebar" aria-label="Admin sidebar">
-            <span class="sidebar-section">Menu</span>
-            <button class="nav-item active" id="nav-restaurants" onclick="mgrView('restaurants')">
-                <span class="nav-icon">&#x1F37D;&#xFE0F;</span> Restaurants
-                <span class="nav-badge hidden" id="mgr-count"></span>
-            </button>
-            <button class="nav-item" id="nav-feedback" onclick="mgrView('feedback')">
-                <span class="nav-icon">&#x1F4AC;</span> All Feedback
-            </button>
-        </aside>
-        <main class="mgr-content" id="mgr-content" aria-label="Admin content">
-            <div class="state-box"><div class="spinner"></div><div class="state-title">Loading&hellip;</div></div>
-        </main>
-    </div>
-    <!-- Mobile bottom nav -->
-    <nav class="mob-bottom-nav" aria-label="Mobile admin nav">
-        <div class="mob-nav-row">
-            <button class="mob-nav-btn active" id="mob-restaurants" onclick="mgrView('restaurants')">
-                <span class="mob-nav-ico">&#x1F37D;&#xFE0F;</span>Restaurants
-            </button>
-            <button class="mob-nav-btn" id="mob-feedback" onclick="mgrView('feedback')">
-                <span class="mob-nav-ico">&#x1F4AC;</span>Feedback
-            </button>
-            <button class="mob-nav-btn" onclick="mgrSignOut()">
-                <span class="mob-nav-ico">&#x1F6AA;</span>Sign Out
-            </button>
-        </div>
-    </nav>
-    <!-- Feedback panel -->
-    <div class="panel-overlay" id="mgr-panel-overlay" onclick="mgrClosePanel()"></div>
-    <aside class="feedback-panel" id="mgr-panel" aria-label="Feedback details">
-        <div class="panel-header">
-            <div><div class="panel-title" id="mgr-panel-title">Feedback</div><div class="panel-sub" id="mgr-panel-sub">&mdash;</div></div>
-            <button class="btn-close" onclick="mgrClosePanel()" aria-label="Close panel">&#x2715;</button>
-        </div>
-        <div class="panel-body" id="mgr-panel-body"></div>
-    </aside>
-    <!-- Add restaurant modal -->
-    <div class="modal-overlay" id="mgr-modal" role="dialog" aria-modal="true" aria-labelledby="mgr-modal-title">
-        <div class="modal">
-            <div class="modal-header">
-                <div>
-                    <div class="modal-title" id="mgr-modal-title">Add Restaurant</div>
-                </div>
-                <button class="btn-close" onclick="mgrCloseModal()" aria-label="Close modal">&#x2715;</button>
+<div id="view-privacy" class="hidden">
+    <div class="legal-container">
+        <div class="legal-nav-bar">
+            <button class="btn-sm" onclick="navGoHome(event)">&larr; العودة للرئيسية &bull; Back to Home</button>
+            <div class="legal-lang-tabs">
+                <button class="legal-lang-btn active" id="btn-priv-both" onclick="setLegalLang('privacy','both')">الكل &bull; Both</button>
+                <button class="legal-lang-btn" id="btn-priv-ar" onclick="setLegalLang('privacy','ar')">العربية</button>
+                <button class="legal-lang-btn" id="btn-priv-en" onclick="setLegalLang('privacy','en')">English</button>
             </div>
-            <div id="mgr-modal-body">
-                <div class="form-group"><label class="form-label" for="r-name">Restaurant Name</label><input class="form-input" type="text" id="r-name" placeholder="e.g. Burger Palace"></div>
-                <div class="form-group"><label class="form-label" for="r-email">Owner Email (Pre-Registration)</label><input class="form-input" type="email" id="r-email" placeholder="owner@restaurant.com"><p class="form-hint">Owner must sign up using this exact email address.</p></div>
-                <div class="form-group"><label class="form-label" for="r-slug">Restaurant Code (URL slug)</label><input class="form-input" type="text" id="r-slug" placeholder="e.g. burger-palace" oninput="sanitizeSlug(this)"><p class="form-hint">Lowercase, numbers, hyphens only. Used in the review link.</p></div>
-                <div class="form-group"><label class="form-label" for="r-url">Google Review URL</label><input class="form-input" type="url" id="r-url" placeholder="https://g.page/r/YOUR_ID/review"></div>
-                <button class="btn-primary" id="mgr-btn-save" onclick="mgrSave()">Create Restaurant</button>
-                <div class="err-box" id="mgr-modal-err"></div>
+        </div>
+
+        <!-- Arabic Privacy Policy -->
+        <div class="legal-card" id="privacy-card-ar">
+            <div class="legal-section-ar" dir="rtl">
+                <h2 class="legal-title">سياسة الخصوصية — منصة تقييمي (Taqyeemi)</h2>
+                <div class="legal-meta">آخر تحديث: نوفمبر 2026</div>
+                <div class="legal-intro-ar">
+                    تلتزم منصة <strong>تقييمي (Taqyeemi)</strong>، التابعة لـ <strong>MUHABWEB</strong> (جدة، المملكة العربية السعودية)، بحماية خصوصية زوار وعملاء المنشآت المشتركة وفقاً لأحكام <strong>نظام حماية البيانات الشخصية (PDPL)</strong> ولوائحه التنفيذية في المملكة العربية السعودية.
+                </div>
+
+                <h3 class="legal-h3">1. البيانات التي نجمعها (مبدأ الحد الأدنى للبيانات)</h3>
+                <p class="legal-p">لا تتطلب المنصة إنشاء حسابات مستخدمين أو تسجيل الدخول بالبريد الإلكتروني مسبقاً. نجمع فقط:</p>
+                <ul style="padding-right:20px;margin-bottom:14px">
+                    <li><strong>(أ)</strong> التقييم الرقمي والنص الذي يكتبه العميل طواعيةً.</li>
+                    <li><strong>(ب)</strong> الاسم أو رقم الجوال <strong>فقط</strong> في حال اختار العميل كتابتهما طواعيةً لتتواصل معه المنشأة.</li>
+                    <li><strong>(ج)</strong> البريد الإلكتروني لصاحب المنشأة اختيارياً عند تفعيل ميزة تسجيل الدخول للوحة التحكم.</li>
+                    <li><strong>(د)</strong> البيانات التقنية الأساسية لمنع الرسائل العشوائية (Spam) وضمان استقرار الخدمة.</li>
+                </ul>
+
+                <h3 class="legal-h3">2. الغرض من جمع البيانات</h3>
+                <p class="legal-p">تُعالج البيانات بناءً على موافقة المستخدم الصريحة لإيصال الملاحظات إلى المنشأة المعنية، ومصادقة دخول أصحاب المنشآت المصرح لهم، وحماية المنصة. لا نبيع البيانات ولا نستخدم أرقام الهواتف أو الرسائل لأي حملات تسويقية مطلقاً.</p>
+
+                <h3 class="legal-h3">3. مشاركة البيانات والاستضافة السحابية خارج المملكة</h3>
+                <p class="legal-p">تُعرض الملاحظات حصرياً للمنشأة المعنية عبر رابط وصول خاص ومشفر أو حساب المالك المعتمد. تُستضاف البيانات تقنياً عبر البنية التحتية السحابية لشركة <strong>Cloudflare</strong>، مما قد يتضمن معالجة وتخزين البيانات المشفرة على خوادم خارج المملكة العربية السعودية وفق ضوابط أمنية صارمة.</p>
+
+                <h3 class="legal-h3">4. مدة الاحتفاظ بالبيانات</h3>
+                <p class="legal-p">نحتفظ بالسجلات طالما بقيت المنشأة نشطة، وبحد أقصى <strong>(24) شهراً</strong> من تاريخ الإرسال ما لم يُطلب حذفها قبل ذلك.</p>
+
+                <h3 class="legal-h3">5. حقوق أصحاب البيانات</h3>
+                <p class="legal-p">يحق لك طلب الوصول إلى بياناتك أو تصحيحها أو حذفها نهائياً أو سحب موافقتك عبر التواصل على <a href="mailto:support@taqyeemi.com" style="color:var(--g-blue)">support@taqyeemi.com</a> (نلتزم بالرد خلال <strong>30 يوماً تقويمياً</strong>)، كما يحق لك تقديم شكوى إلى <strong>الهيئة السعودية للبيانات والذكاء الاصطناعي (SDAIA)</strong>.</p>
+            </div>
+        </div>
+
+        <!-- English Privacy Policy -->
+        <div class="legal-card" id="privacy-card-en">
+            <div class="legal-section-en" dir="ltr">
+                <h2 class="legal-title">Privacy Policy — Taqyeemi</h2>
+                <div class="legal-meta">Last Updated: November 2026</div>
+                <div class="legal-intro-en">
+                    <strong>Taqyeemi</strong>, operated by <strong>MUHABWEB</strong> (Jeddah, Kingdom of Saudi Arabia), protects personal data in accordance with the <strong>Saudi Personal Data Protection Law (PDPL)</strong> and its Implementing Regulations.
+                </div>
+
+                <h3 class="legal-h3">1. Data We Collect (Data Minimization)</h3>
+                <p class="legal-p">No upfront user accounts are required. We collect only:</p>
+                <ul style="padding-left:20px;margin-bottom:14px">
+                    <li><strong>(a)</strong> voluntary star ratings and text feedback,</li>
+                    <li><strong>(b)</strong> optional customer name/phone entered voluntarily for merchant follow-up,</li>
+                    <li><strong>(c)</strong> optional merchant owner email when enabled for dashboard login, and</li>
+                    <li><strong>(d)</strong> minimal technical anti-abuse logs.</li>
+                </ul>
+
+                <h3 class="legal-h3">2. Purpose &amp; No Marketing</h3>
+                <p class="legal-p">Processed strictly based on explicit consent to deliver private feedback to the relevant business, authenticate authorized business owners, and maintain platform security. We never sell data or use contact details for unsolicited marketing.</p>
+
+                <h3 class="legal-h3">3. Cross-Border Cloud Hosting</h3>
+                <p class="legal-p">Feedback is accessible strictly to the target business. Taqyeemi runs on <strong>Cloudflare</strong> serverless infrastructure, which may process and store encrypted records outside the Kingdom of Saudi Arabia under strict technical safeguards.</p>
+
+                <h3 class="legal-h3">4. Data Retention</h3>
+                <p class="legal-p">Retained while the business remains active, up to a maximum of <strong>24 months</strong>, then permanently deleted or anonymized unless deleted earlier upon request.</p>
+
+                <h3 class="legal-h3">5. Your PDPL Rights</h3>
+                <p class="legal-p">Right to access, correct, delete, or withdraw consent by emailing <a href="mailto:support@taqyeemi.com" style="color:var(--g-blue)">support@taqyeemi.com</a> (responded to within <strong>30 calendar days</strong>), or lodge a complaint with the <strong>Saudi Data &amp; AI Authority (SDAIA)</strong>.</p>
             </div>
         </div>
     </div>
@@ -590,407 +690,1159 @@
 
 
 <!-- ══════════════════════════════════════════
-     ADMIN LOGIN MODAL (triggered from footer)
+     TERMS OF SERVICE VIEW (/terms)
 ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
-    <div class="modal">
-        <div class="modal-header">
-            <div>
-                <div class="modal-title" id="admin-modal-title">&#x1F6E0;&#xFE0F; Admin Access</div>
-                <div class="modal-sub">Platform administrators only</div>
+<div id="view-terms" class="hidden">
+    <div class="legal-container">
+        <div class="legal-nav-bar">
+            <button class="btn-sm" onclick="navGoHome(event)">&larr; العودة للرئيسية &bull; Back to Home</button>
+            <div class="legal-lang-tabs">
+                <button class="legal-lang-btn active" id="btn-terms-both" onclick="setLegalLang('terms','both')">الكل &bull; Both</button>
+                <button class="legal-lang-btn" id="btn-terms-ar" onclick="setLegalLang('terms','ar')">العربية</button>
+                <button class="legal-lang-btn" id="btn-terms-en" onclick="setLegalLang('terms','en')">English</button>
             </div>
-            <button class="btn-close" onclick="closeAdminModal()" aria-label="Close">&#x2715;</button>
         </div>
-        <div class="form-group">
-            <label class="form-label" for="mgr-email">Email</label>
-            <input class="form-input" type="email" id="mgr-email" placeholder="admin@yourdomain.com" autocomplete="email">
+
+        <!-- Arabic Terms of Service -->
+        <div class="legal-card" id="terms-card-ar">
+            <div class="legal-section-ar" dir="rtl">
+                <h2 class="legal-title">الشروط والأحكام — منصة تقييمي (Taqyeemi)</h2>
+                <div class="legal-meta">آخر تحديث: نوفمبر 2026</div>
+                <div class="legal-intro-ar">
+                    تنظم هذه الشروط والأحكام استخدام منصة <strong>تقييمي (Taqyeemi)</strong>، وهي أداة برمجية مقدمة من <strong>MUHABWEB</strong> (جدة، المملكة العربية السعودية).
+                </div>
+
+                <h3 class="legal-h3">1. نطاق الخدمة وطبيعتها التقنية</h3>
+                <p class="legal-p">تُقدَّم منصة تقييمي بواسطة <strong>MUHABWEB</strong> كأداة برمجية تقنية لإدارة وتوجيه تجارب العملاء. تقتصر مسؤولية MUHABWEB على تقديم البنية البرمجية، ولا نتحمل أي مسؤولية عن محتوى التقييمات أو الملاحظات التي يكتبها العملاء أو النزاعات التجارية بين العملاء والمنشآت.</p>
+
+                <h3 class="legal-h3">2. سرية الروابط ولوحة التحكم</h3>
+                <p class="legal-p">يلتزم صاحب المنشأة بالحفاظ على سرية الرمز الخاص (<code>secret_token</code>) ورابط لوحة التحكم المباشرة والتضمين (Embed)، وعدم مشاركتها مع أطراف غير مصرح لها. في حال الشك بتسريب الرابط، يجب على المنشأة استخدام ميزة تدوير الرمز فوراً (<strong>Rotate Token</strong>) لإلغاء الرمز السابق.</p>
+
+                <h3 class="legal-h3">3. الامتثال لسياسات منصات التقييم الخارجية</h3>
+                <p class="legal-p">يقر المشترك بمسؤوليته الكاملة عن الامتثال لسياسات المنصات الخارجية، بما فيها إرشادات Google Business Profile التي تحظر حجب المراجعات السلبية قسراً (Review Gating) أو تقديم حوافز أو خصومات مالية مقابل الحصول على تقييمات إيجابية. تخلي MUHABWEB مسؤوليتها عن أي إجراء تتخذه أطراف ثالثة ضد حساب المنشأة.</p>
+
+                <h3 class="legal-h3">4. مسؤولية المنشأة كمسؤول بيانات (Data Controller)</h3>
+                <p class="legal-p">تلتزم المنشأة كمسؤول بيانات باستخدام بيانات التواصل التي يقدمها العميل طواعيةً لغرض حل المشكلة ومعالجة الملاحظة فقط، ويُحظر قطاعياً استخدامها لأي رسائل ترويجية أو إعلانية أو مشاركتها دون موافقة نظامية صريحة.</p>
+
+                <h3 class="legal-h3">5. حدود المسؤولية وتوافر الخدمة</h3>
+                <p class="legal-p">تُقدَّم الخدمة "كما هي" وبحسب توفر البنية السحابية العالمية. لا تتحمل MUHABWEB أي أضرار غير مباشرة أو خسائر تشغيلية ناجمة عن انقطاع مؤقت في الخدمة أو خوادم التخزين السحابي.</p>
+
+                <h3 class="legal-h3">6. القانون الواجب التطبيق والاختصاص القضائي</h3>
+                <p class="legal-p">تخضع هذه الشروط وتُفسر وفقاً للأنظمة واللوائح السارية في <strong>المملكة العربية السعودية</strong>، وتختص محاكم مدينة <strong>جدة</strong> بالفصل في أي نزاع ينشأ عنها.</p>
+            </div>
         </div>
-        <div class="form-group">
-            <label class="form-label" for="mgr-password">Password</label>
-            <input class="form-input" type="password" id="mgr-password" placeholder="••••••••" autocomplete="current-password">
+
+        <!-- English Terms of Service -->
+        <div class="legal-card" id="terms-card-en">
+            <div class="legal-section-en" dir="ltr">
+                <h2 class="legal-title">Terms of Service — Taqyeemi</h2>
+                <div class="legal-meta">Last Updated: November 2026</div>
+                <div class="legal-intro-en">
+                    These Terms govern the use of <strong>Taqyeemi</strong>, a technical software solution provided by <strong>MUHABWEB</strong> (Jeddah, Kingdom of Saudi Arabia).
+                </div>
+
+                <h3 class="legal-h3">1. Scope of Service &amp; Role</h3>
+                <p class="legal-p">Taqyeemi is a technical software tool provided by <strong>MUHABWEB</strong> to route and manage customer feedback. MUHABWEB acts solely as technical provider and does not verify, endorse, or assume liability for user-submitted commentary or merchant disputes.</p>
+
+                <h3 class="legal-h3">2. Confidentiality of Private Links</h3>
+                <p class="legal-p">Merchants are solely responsible for keeping their private <code>secret_token</code> dashboard and embed links confidential. In case of suspected compromise, the merchant must immediately utilize the <strong>Rotate Token</strong> button to revoke the previous credential.</p>
+
+                <h3 class="legal-h3">3. Third-Party Platform Compliance</h3>
+                <p class="legal-p">Merchants agree to comply with third-party review platform rules (including Google Business Profile policies prohibiting review gating or offering financial incentives/discounts in exchange for positive reviews). <strong>MUHABWEB</strong> bears no liability for third-party listing actions or penalties.</p>
+
+                <h3 class="legal-h3">4. Merchant Responsibility as Data Controller</h3>
+                <p class="legal-p">Merchants acting as data controllers must use any voluntary customer contact details solely to resolve feedback and never for unsolicited spam or marketing broadcasts without separate consent.</p>
+
+                <h3 class="legal-h3">5. Limitation of Liability</h3>
+                <p class="legal-p">The platform is provided on an "as is" and "as available" cloud basis. MUHABWEB disclaims liability for any indirect, incidental, or operational damages resulting from internet downtime or cloud outages.</p>
+
+                <h3 class="legal-h3">6. Governing Law &amp; Jurisdiction</h3>
+                <p class="legal-p">These Terms are governed by and construed in accordance with the laws of the <strong>Kingdom of Saudi Arabia</strong>. The courts of <strong>Jeddah</strong> shall have exclusive jurisdiction.</p>
+            </div>
         </div>
-        <button class="btn-primary" id="mgr-btn-login" onclick="mgrLogin()">Sign In to Admin Panel &rarr;</button>
-        <div class="err-box" id="mgr-auth-err"></div>
     </div>
 </div>
 
 
+<!-- ══════════════════════════════════════════
+     ADMIN PANEL VIEW (/admin)
+══════════════════════════════════════════ -->
+<div id="view-admin" class="hidden">
+    <nav class="db-navbar" aria-label="Admin navigation">
+        <div class="db-navbar-left">
+            <span class="db-navbar-icon">&#x1F6E0;&#xFE0F;</span>
+            <span class="db-navbar-name">Taqyeemi Admin</span>
+            <span class="db-navbar-badge">D1</span>
+        </div>
+        <button class="nav-signout-btn" onclick="adminSignOut()">Sign Out</button>
+    </nav>
+    <div class="admin-body">
+        <aside class="sidebar">
+            <span class="sidebar-section">Platform</span>
+            <button class="nav-item active">
+                <span class="nav-icon">&#x1F37D;&#xFE0F;</span> Businesses
+                <span class="nav-badge" id="admin-count">0</span>
+            </button>
+        </aside>
+        <main class="mgr-content">
+            <div class="page-header">
+                <div>
+                    <div class="page-title">Businesses</div>
+                    <div class="page-sub" id="admin-page-sub">Loading businesses from Cloudflare D1&hellip;</div>
+                </div>
+                <button class="btn-add" onclick="adminOpenAddModal()">&#xFF0B; <span>Add Business</span></button>
+            </div>
+            <div class="summary-grid">
+                <div class="summary-card"><div class="summary-label">Total Businesses</div><div class="summary-value" id="admin-stat-biz" style="color:var(--g-blue)">0</div></div>
+                <div class="summary-card"><div class="summary-label">Total Feedback</div><div class="summary-value" id="admin-stat-fb" style="color:var(--g-yellow)">0</div></div>
+            </div>
+            <div class="rest-grid" id="admin-biz-grid">
+                <div class="state-box"><div class="spinner"></div><div class="state-title">Loading businesses&hellip;</div></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Feedback Drawer -->
+    <div class="panel-overlay" id="admin-drawer-overlay" onclick="adminCloseDrawer()"></div>
+    <aside class="feedback-panel" id="admin-drawer">
+        <div class="panel-header">
+            <div><div class="panel-title" id="admin-drawer-title">Feedback</div><div class="panel-sub" id="admin-drawer-sub">&mdash;</div></div>
+            <button class="btn-close" onclick="adminCloseDrawer()">&#x2715;</button>
+        </div>
+        <div class="panel-body" id="admin-drawer-body"></div>
+    </aside>
+
+    <!-- Simplified Add Business Modal (No Email Upfront) -->
+    <div class="modal-overlay" id="admin-add-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="admin-modal-title">&#x2728; Add New Business</div>
+                <button class="btn-close" onclick="adminCloseAddModal()">&#x2715;</button>
+            </div>
+            <div id="admin-modal-body">
+                <p class="modal-sub" style="margin-bottom:16px">Create instant review funnel stands with only name and maps URL. No email is required upfront.</p>
+                <div class="form-group">
+                    <label class="form-label" for="new-biz-name">Business Name</label>
+                    <input class="form-input" type="text" id="new-biz-name" placeholder="e.g. Lavoa Cafe">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="new-biz-url">Google Maps URL</label>
+                    <input class="form-input" type="url" id="new-biz-url" placeholder="https://maps.app.goo.gl/... or search.google.com...">
+                </div>
+                <button class="btn-primary" id="btn-create-biz" onclick="adminSubmitCreateBusiness()">Create Business &rarr;</button>
+                <div class="err-box" id="admin-create-err"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     ADMIN SECRET LOGIN MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="admin-auth-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title">&#x1F6E0;&#xFE0F; Platform Admin</div>
+                <div class="modal-sub">Enter your ADMIN_SECRET token to manage businesses</div>
+            </div>
+            <button class="btn-close" onclick="closeAdminAuthModal()">&#x2715;</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="admin-token-input">Admin Secret Token</label>
+            <input class="form-input" type="password" id="admin-token-input" placeholder="Enter ADMIN_SECRET" autocomplete="current-password">
+        </div>
+        <button class="btn-primary" id="btn-admin-login" onclick="adminAuthSubmit()">Enter Admin Panel &rarr;</button>
+        <div class="err-box" id="admin-auth-err"></div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SAUDI E-COMMERCE LAW & IDENTIFICATION FOOTER
+══════════════════════════════════════════ -->
+<footer class="site-footer" id="main-footer">
+    <div class="footer-container">
+        <p class="footer-identity" dir="rtl">تقييمي (Taqyeemi) — إحدى منتجات MUHABWEB لتطوير البرمجيات وتقنية المعلومات | جدة، المملكة العربية السعودية</p>
+        <p class="footer-meta">رقم وثيقة العمل الحر: <strong>FL-XXXXXXXXX</strong> &bull; للتواصل والدعم: <a href="mailto:support@taqyeemi.com">support@taqyeemi.com</a></p>
+        <div class="footer-links">
+            <a href="/privacy" onclick="return navToLegal('privacy', event)">سياسة الخصوصية &bull; Privacy Policy</a>
+            <span>&bull;</span>
+            <a href="/terms" onclick="return navToLegal('terms', event)">الشروط والأحكام &bull; Terms of Service</a>
+            <span>&bull;</span>
+            <button class="admin-footer-link" onclick="openAdminModal()">Admin Access</button>
+        </div>
+        <p class="footer-copy">&copy; 2026 Taqyeemi by MUHABWEB. All rights reserved.</p>
+    </div>
+</footer>
+
+
 <script>
-/* ── CONFIG & SUPABASE INIT ── */
-let SUPABASE_URL = 'https://tldzmrghbvqfaclantlr.supabase.co';
-let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZHptcmdoYnZxZmFjbGFudGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjQ4MjUsImV4cCI6MjEwMDQwMDgyNX0.KvpR7DqUi-Ed4E3s_wVkJXMqB5cj3DHKEmis_jiTffw';
-let sb = null;
-const SITE_URL = 'https://taqyeemi.pages.dev';
+/* ────────────────────────────────────────────
+   GLOBAL STATE & ROUTER
+──────────────────────────────────────────── */
+let currentSlug = null;
+let currentRating = 0;
+let googleMapsUrl = '';
+let activeToken = null;
+let adminSecret = sessionStorage.getItem('tqm_admin_secret') || '';
+let adminBusinesses = [];
+let dbFeedback = [];
+let dbBusinesses = [];
+let activeDbBizId = null;
+let dbFilter_ = 'all';
 
-async function initConfig() {
-    try {
-        const res = await fetch('/api/config');
-        if (res.ok) {
-            const d = await res.json();
-            if (d.SUPABASE_URL && d.SUPABASE_ANON_KEY) { SUPABASE_URL = d.SUPABASE_URL; SUPABASE_ANON_KEY = d.SUPABASE_ANON_KEY; }
-        }
-    } catch(e) { console.log('Using static fallback credentials'); }
-    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-        try { const { createClient } = supabase; sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
-        catch(e) { console.error('Supabase init failed', e); }
-    }
-}
+const rvLabels = ['','Poor \u2014 we can do better','Fair \u2014 room for improvement','Good \u2014 but not great','Great \u2014 glad you enjoyed it!','Excellent \u2014 thank you! \uD83C\uDF89'];
 
-/* ── VIEW ROUTING ── */
 function showView(id) {
-    ['home','review','dashboard','admin'].forEach(v => {
-        const el = document.getElementById('view-'+v);
+    ['home','review','dashboard','embed','admin','privacy','terms'].forEach(v => {
+        const el = document.getElementById('view-' + v);
         if (el) el.classList.add('hidden');
     });
-    const target = document.getElementById('view-'+id);
+    const target = document.getElementById('view-' + id);
     if (target) target.classList.remove('hidden');
-    // Hide global nav on review view only
+
     const nav = document.getElementById('global-nav');
-    if (nav) nav.classList.toggle('hidden', id === 'review');
-    // Show/hide signin button based on view
+    if (nav) nav.classList.toggle('hidden', id === 'review' || id === 'embed');
+
+    const mainFooter = document.getElementById('main-footer');
+    if (mainFooter) mainFooter.classList.toggle('hidden', id === 'review' || id === 'embed');
+
     const signinBtn = document.getElementById('nav-signin-btn');
     const signoutBtn = document.getElementById('nav-signout-btn');
     if (signinBtn && signoutBtn) {
-        const isOwnerView = id === 'dashboard';
-        signinBtn.classList.toggle('hidden', isOwnerView || id === 'admin' || id === 'review');
-        signoutBtn.classList.toggle('hidden', !isOwnerView);
+        signinBtn.classList.toggle('hidden', id !== 'home' && id !== 'privacy' && id !== 'terms');
+        signoutBtn.classList.toggle('hidden', id !== 'dashboard');
     }
 }
 
-function goHome() {
+function navGoHome(e) {
+    if (e) e.preventDefault();
+    history.pushState(null, '', '/');
     showView('home');
     return false;
 }
 
-function scrollToSignin() {
-    const card = document.getElementById('signin-card');
+function navToLogin() {
+    const card = document.querySelector('.signin-card');
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-/* ── ADMIN MODAL ── */
-function openAdminModal() {
-    document.getElementById('admin-modal').classList.add('open');
-    setTimeout(() => document.getElementById('mgr-email').focus(), 300);
-}
-function closeAdminModal() {
-    document.getElementById('admin-modal').classList.remove('open');
-}
-// Close on backdrop click
-document.getElementById('admin-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeAdminModal();
-});
-
-/* ── OWNER SIGN OUT ── */
-async function ownerSignOut() {
-    if (sb) await sb.auth.signOut();
-    dbFeedback = []; dbClientId_ = null;
-    showView('home');
+function navToLegal(view, e) {
+    if (e) e.preventDefault();
+    history.pushState(null, '', '/' + view);
+    showView(view);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return false;
 }
 
-/* ── INIT ── */
-(async () => {
-    await initConfig();
-    const p = new URLSearchParams(window.location.search);
-    const slug = p.get('c'), view = p.get('view');
-    if (slug && sb) { showView('review'); rvInit(slug); return; }
-    if (view === 'admin' && sb) {
-        const { data: { session } } = await sb.auth.getSession();
-        if (session) {
-            const { data: role } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
-            if (role?.role === 'admin') { showView('admin'); await mgrLoad(); mgrView('restaurants'); return; }
-        }
-    }
-    // Check for existing owner session
-    if (sb) {
-        const { data: { session } } = await sb.auth.getSession();
-        if (session) {
-            // Check if owner (not admin)
-            const { data: role } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
-            if (role?.role === 'admin') { showView('home'); }
-            else { showView('dashboard'); await dbEnter(session.user); return; }
-        }
-    }
-    showView('home');
-})();
+function setLegalLang(view, lang) {
+    const arCard = document.getElementById(`${view}-card-ar`);
+    const enCard = document.getElementById(`${view}-card-en`);
+    const prefix = view === 'privacy' ? 'priv' : 'terms';
 
-/* ────────────────────────────────────────────
-   OWNER LOGIN (on landing page)
-──────────────────────────────────────────── */
-function homeSwitchTab(t) {
-    ['login','register'].forEach(x => {
-        document.getElementById('home-tab-'+x).classList.toggle('active', x === t);
-        document.getElementById('home-form-'+x).classList.toggle('hidden', x !== t);
+    ['both', 'ar', 'en'].forEach(l => {
+        document.getElementById(`btn-${prefix}-${l}`)?.classList.toggle('active', l === lang);
     });
-}
 
-async function homeLogin() {
-    const email = document.getElementById('home-email').value.trim();
-    const pass  = document.getElementById('home-password').value;
-    const btn = document.getElementById('home-btn-login'), err = document.getElementById('home-login-err');
-    if (!email || !pass) { showErr(err, 'Please fill in all fields.'); return; }
-    btn.disabled = true; btn.textContent = 'Logging in\u2026'; err.classList.remove('show');
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-    if (error) { showErr(err, 'Incorrect email or password.'); btn.disabled = false; btn.textContent = 'Log In \u2192'; return; }
-    showView('dashboard');
-    await dbEnter(data.user);
-}
-
-async function homeRegister() {
-    const email = document.getElementById('home-reg-email').value.trim().toLowerCase();
-    const pass  = document.getElementById('home-reg-pass').value;
-    const btn = document.getElementById('home-btn-register'), err = document.getElementById('home-register-err');
-    if (!email || !pass) { showErr(err, 'Please fill in all fields.'); return; }
-    if (pass.length < 8) { showErr(err, 'Password must be at least 8 characters.'); return; }
-    btn.disabled = true; btn.textContent = 'Creating account\u2026'; err.classList.remove('show');
-    const { data, error } = await sb.auth.signUp({ email, password: pass });
-    if (error) {
-        showErr(err, error.message.includes('Registration restricted') ? 'Your email has not been pre-registered by an Administrator.' : error.message);
-        btn.disabled = false; btn.textContent = 'Create Account \u2192'; return;
-    }
-    if (data.session) { showView('dashboard'); await dbEnter(data.session.user); }
-    else {
-        err.style.cssText += ';background:rgba(52,168,83,.12);border-color:rgba(52,168,83,.3);color:#81c995';
-        showErr(err, '\u2705 Account created! Check your email to verify, then log in.');
-        btn.disabled = false; btn.textContent = 'Create Account \u2192';
+    if (lang === 'ar') {
+        arCard?.classList.remove('hidden');
+        enCard?.classList.add('hidden');
+    } else if (lang === 'en') {
+        arCard?.classList.add('hidden');
+        enCard?.classList.remove('hidden');
+    } else {
+        arCard?.classList.remove('hidden');
+        enCard?.classList.remove('hidden');
     }
 }
 
 /* ────────────────────────────────────────────
-   REVIEW VIEW (customer-facing)
+   CLIENT-SIDE ROUTE DISPATCHER
 ──────────────────────────────────────────── */
-let rvClientId = null, rvGoogleURL = null, rvRating = 0;
-const rvLabels = ['','Poor \u2014 we can do better','Fair \u2014 room for improvement','Good \u2014 but not great','Great \u2014 glad you enjoyed it!','Excellent \u2014 thank you! \uD83C\uDF89'];
+async function router() {
+    const path = window.location.pathname.replace(/\/+$/, '');
+    const p = new URLSearchParams(window.location.search);
 
+    // 1. Embed View: /embed/:token (Chromeless POS/Website widget)
+    if (path.startsWith('/embed/')) {
+        const token = path.replace('/embed/', '').trim();
+        showView('embed');
+        loadEmbedDashboard(token);
+        return;
+    }
+
+    // 2. Private Token Dashboard: /v/:token
+    if (path.startsWith('/v/')) {
+        const token = path.replace('/v/', '').trim();
+        showView('dashboard');
+        loadTokenDashboard(token);
+        return;
+    }
+
+    // 3. Query Param Token Dashboard: ?token=...
+    if (p.get('token')) {
+        const token = p.get('token').trim();
+        showView('dashboard');
+        loadTokenDashboard(token);
+        return;
+    }
+
+    // 4. Privacy Policy View: /privacy
+    if (path === '/privacy') {
+        showView('privacy');
+        window.scrollTo({ top: 0 });
+        return;
+    }
+
+    // 5. Terms of Service View: /terms
+    if (path === '/terms') {
+        showView('terms');
+        window.scrollTo({ top: 0 });
+        return;
+    }
+
+    // 6. Owner Dashboard: /dashboard
+    if (path === '/dashboard') {
+        showView('dashboard');
+        loadSessionDashboard();
+        return;
+    }
+
+    // 7. Admin Panel: /admin or ?view=admin
+    if (path === '/admin' || p.get('view') === 'admin') {
+        showView('admin');
+        adminInit();
+        return;
+    }
+
+    // 8. Explicit QR query param: ?c=slug
+    if (p.get('c')) {
+        showView('review');
+        rvInit(p.get('c').trim());
+        return;
+    }
+
+    // 9. Explicit path review: /r/:slug
+    if (path.startsWith('/r/')) {
+        const slug = path.replace('/r/', '').trim();
+        showView('review');
+        rvInit(slug);
+        return;
+    }
+
+    // 10. Direct slug path: /:slug (e.g. /lavoa-cafe)
+    if (path !== '' && path !== '/' && path !== '/login') {
+        const candidateSlug = path.slice(1).trim();
+        showView('review');
+        rvInit(candidateSlug);
+        return;
+    }
+
+    // 11. Root Landing Page
+    showView('home');
+}
+
+window.addEventListener('popstate', router);
+document.addEventListener('DOMContentLoaded', router);
+
+/* ────────────────────────────────────────────
+   CUSTOMER REVIEW VIEW LOGIC
+──────────────────────────────────────────── */
 function rvShow(id) {
-    ['rv-loading','rv-error','rv-rating','rv-feedback'].forEach(s => document.getElementById(s).classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-    document.getElementById(id).classList.add('fade-in');
+    ['rv-loading','rv-error','rv-rating','rv-feedback'].forEach(s => {
+        const el = document.getElementById(s);
+        if (el) el.classList.add('hidden');
+    });
+    const target = document.getElementById(id);
+    if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('fade-in');
+    }
 }
 
 async function rvInit(slug) {
+    currentSlug = slug;
     rvShow('rv-loading');
-    const { data, error } = await sb.from('clients').select('id,name,google_review_url').eq('slug', slug).eq('active', true).maybeSingle();
-    if (error || !data) { rvShow('rv-error'); return; }
-    rvClientId = data.id; rvGoogleURL = data.google_review_url;
-    document.title = 'Rate ' + data.name;
-    rvShow('rv-rating');
+    try {
+        const res = await fetch(`/api/public/business/${encodeURIComponent(slug)}`);
+        if (!res.ok) {
+            rvShow('rv-error');
+            return;
+        }
+        const data = await res.json();
+        googleMapsUrl = data.google_maps_url || data.google_review_url || '';
+        document.title = 'Rate ' + data.name;
+        const heading = document.getElementById('rv-heading');
+        if (heading) heading.textContent = 'How was your visit to ' + data.name + '?';
+        rvShow('rv-rating');
+        rvBindStars();
+    } catch (e) {
+        rvShow('rv-error');
+    }
 }
 
-document.querySelectorAll('#rv-stars button').forEach((btn, i) => {
-    const v = i + 1;
-    btn.addEventListener('click', () => rvSelect(v));
-    btn.addEventListener('mouseenter', () => rvHover(v));
-    btn.addEventListener('mouseleave', () => rvResetHover());
-});
+function rvBindStars() {
+    for (let i = 1; i <= 5; i++) {
+        const btn = document.getElementById('star-' + i);
+        if (btn) {
+            btn.onclick = () => rvSelect(i);
+            btn.onmouseenter = () => rvHover(i);
+            btn.onmouseleave = () => rvResetHover();
+        }
+    }
+}
 
 function rvHover(n) {
-    if (rvRating > 0) return;
-    for (let i = 1; i <= 5; i++) document.getElementById('star-'+i).classList.toggle('hovered', i <= n);
-    const t = document.getElementById('rv-star-text'); t.textContent = rvLabels[n]; t.classList.add('visible');
+    if (currentRating > 0) return;
+    for (let i = 1; i <= 5; i++) {
+        document.getElementById('star-' + i)?.classList.toggle('hovered', i <= n);
+    }
+    const t = document.getElementById('rv-star-text');
+    if (t) { t.textContent = rvLabels[n]; t.classList.add('visible'); }
 }
+
 function rvResetHover() {
-    if (rvRating > 0) return;
-    for (let i = 1; i <= 5; i++) document.getElementById('star-'+i).classList.remove('hovered');
-    document.getElementById('rv-star-text').classList.remove('visible');
+    if (currentRating > 0) return;
+    for (let i = 1; i <= 5; i++) {
+        document.getElementById('star-' + i)?.classList.remove('hovered');
+    }
+    const t = document.getElementById('rv-star-text');
+    if (t) t.classList.remove('visible');
 }
+
 function rvSelect(n) {
-    rvRating = n;
-    for (let i = 1; i <= 5; i++) { const s = document.getElementById('star-'+i); s.classList.remove('hovered'); s.classList.toggle('active', i <= n); }
-    const t = document.getElementById('rv-star-text'); t.textContent = rvLabels[n]; t.classList.add('visible');
-    setTimeout(() => { n >= 4 ? (rvGoogleURL && rvGoogleURL.startsWith('https://') ? window.location.href = rvGoogleURL : rvShow('rv-feedback')) : rvShow('rv-feedback'); }, 500);
+    currentRating = n;
+    for (let i = 1; i <= 5; i++) {
+        const s = document.getElementById('star-' + i);
+        if (s) {
+            s.classList.remove('hovered');
+            s.classList.toggle('active', i <= n);
+        }
+    }
+    const t = document.getElementById('rv-star-text');
+    if (t) t.textContent = rvLabels[n];
+
+    setTimeout(() => {
+        if (n >= 4) {
+            if (googleMapsUrl && googleMapsUrl.startsWith('https://')) {
+                window.location.href = googleMapsUrl;
+            } else {
+                rvShow('rv-feedback');
+            }
+        } else {
+            rvShow('rv-feedback');
+        }
+    }, 450);
 }
 
 async function rvSubmit() {
-    const ta = document.getElementById('rv-text'), btn = document.getElementById('rv-submit-btn');
-    const txt = ta.value.trim();
-    if (!txt) { ta.style.borderColor = 'var(--g-red)'; setTimeout(() => { ta.style.borderColor = ''; }, 2000); return; }
-    btn.disabled = true; btn.textContent = 'Sending\u2026';
-    const { error } = await sb.from('feedback').insert({ client_id: rvClientId, rating: rvRating, feedback_text: txt });
-    if (error) { btn.disabled = false; btn.textContent = 'Send Feedback'; return; }
-    document.getElementById('rv-feedback').innerHTML = '<div class="fade-in"><div class="success-icon"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div><h2 style="color:var(--g-green)">Thank you!</h2><p class="sub">Your feedback has been sent privately to our management team. We truly appreciate your honesty.</p></div>';
+    const ta = document.getElementById('rv-text');
+    const contactInput = document.getElementById('rv-contact');
+    const btn = document.getElementById('rv-submit-btn');
+    const comment = ta ? ta.value.trim() : '';
+    const contact = contactInput ? contactInput.value.trim() : '';
+
+    if (!comment) {
+        if (ta) {
+            ta.style.borderColor = 'var(--g-red)';
+            setTimeout(() => { ta.style.borderColor = ''; }, 2000);
+        }
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending\u2026';
+
+    try {
+        const res = await fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                slug: currentSlug,
+                rating: currentRating,
+                comment: comment,
+                customerContact: contact || null
+            })
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || 'Failed to submit feedback.');
+        }
+
+        document.getElementById('rv-feedback').innerHTML = `
+            <div class="fade-in">
+                <div style="font-size:3rem;margin-bottom:16px">&#x2705;</div>
+                <h2 style="color:var(--g-green)">Thank you!</h2>
+                <p class="sub">Your feedback has been sent privately to our management team. We truly appreciate your honesty.</p>
+            </div>
+        `;
+    } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Submit Private Feedback';
+        alert('Error: ' + err.message);
+    }
 }
 
 /* ────────────────────────────────────────────
-   OWNER DASHBOARD
+   MERCHANT DASHBOARD LOGIC (TOKEN & SESSION)
 ──────────────────────────────────────────── */
-let dbFeedback = [], dbFilter_ = 'all', dbClientId_ = null;
+async function loadTokenDashboard(token) {
+    activeToken = token;
+    const signoutBtn = document.getElementById('db-signout-btn');
+    if (signoutBtn) signoutBtn.classList.add('hidden');
 
-async function dbEnter(user) {
-    const s = document.getElementById('db-screen');
-    const { data: client } = await sb.from('clients').select('id,name').eq('owner_user_id', user.id).maybeSingle();
-    if (!client) {
-        document.getElementById('db-list').innerHTML = '<div class="state-box"><div class="state-icon">\u26A0\uFE0F</div><div class="state-title">Account not linked</div><div class="state-sub">Contact your account manager.</div></div>';
-        document.getElementById('db-rest-name').textContent = user.email;
+    try {
+        const res = await fetch(`/api/dashboard?token=${encodeURIComponent(token)}`);
+        if (!res.ok) {
+            document.getElementById('db-list').innerHTML = `
+                <div class="state-box">
+                    <div class="state-icon">&#x26A0;&#xFE0F;</div>
+                    <div class="state-title">Invalid or Expired Private Link</div>
+                    <div class="state-sub">Please ask management for an updated private dashboard link.</div>
+                </div>`;
+            return;
+        }
+        const data = await res.json();
+        const biz = data.business || {};
+        dbFeedback = data.feedback || [];
+        document.getElementById('db-biz-name').textContent = biz.name || 'Dashboard';
+        document.title = (biz.name || 'Merchant') + ' — Dashboard';
+        renderDbStats();
+        renderDbFeedback();
+    } catch (err) {
+        document.getElementById('db-list').innerHTML = `<div class="state-box"><div class="state-title">Connection Error</div></div>`;
+    }
+}
+
+async function loadSessionDashboard() {
+    const signoutBtn = document.getElementById('db-signout-btn');
+    if (signoutBtn) signoutBtn.classList.remove('hidden');
+
+    try {
+        const res = await fetch('/api/dashboard', { credentials: 'include' });
+        if (res.status === 401) {
+            showView('home');
+            navToLogin();
+            return;
+        }
+        if (!res.ok) throw new Error('Failed to load dashboard');
+
+        const data = await res.json();
+        dbBusinesses = data.businesses || [];
+        const allFb = data.feedback || [];
+
+        if (dbBusinesses.length === 0) {
+            document.getElementById('db-list').innerHTML = `
+                <div class="state-box">
+                    <div class="state-icon">&#x1F37D;&#xFE0F;</div>
+                    <div class="state-title">No Businesses Attached</div>
+                    <div class="state-sub">Your email is verified, but no business profile has been assigned to ${esc(data.ownerEmail || '')} yet. Contact your administrator.</div>
+                </div>`;
+            return;
+        }
+
+        const branchBar = document.getElementById('db-branch-bar');
+        if (dbBusinesses.length > 1) {
+            branchBar.classList.remove('hidden');
+            branchBar.innerHTML = dbBusinesses.map((b, i) => `
+                <button class="branch-pill ${i === 0 ? 'active' : ''}" onclick="selectDbBranch('${b.id}')">${esc(b.name)}</button>
+            `).join('');
+        } else {
+            branchBar.classList.add('hidden');
+        }
+
+        activeDbBizId = dbBusinesses[0].id;
+        document.getElementById('db-biz-name').textContent = dbBusinesses[0].name;
+        dbFeedback = allFb.filter(f => f.business_id === activeDbBizId);
+        renderDbStats();
+        renderDbFeedback();
+    } catch (err) {
+        document.getElementById('db-list').innerHTML = `<div class="state-box"><div class="state-title">Error loading session dashboard</div></div>`;
+    }
+}
+
+function selectDbBranch(bizId) {
+    activeDbBizId = bizId;
+    const biz = dbBusinesses.find(b => b.id === bizId);
+    if (biz) document.getElementById('db-biz-name').textContent = biz.name;
+    document.querySelectorAll('.branch-pill').forEach(pill => {
+        pill.classList.toggle('active', pill.textContent === (biz?.name || ''));
+    });
+    fetch('/api/dashboard', { credentials: 'include' }).then(r => r.json()).then(d => {
+        dbFeedback = (d.feedback || []).filter(f => f.business_id === bizId);
+        renderDbStats();
+        renderDbFeedback();
+    });
+}
+
+function renderDbStats() {
+    const total = dbFeedback.length;
+    const avg = total > 0 ? (dbFeedback.reduce((s,f) => s + f.rating, 0) / total).toFixed(1) : '\u2014';
+    document.getElementById('db-stat-total').textContent = total;
+    document.getElementById('db-stat-avg').textContent = avg !== '\u2014' ? '\u2605' + avg : '\u2014';
+    document.getElementById('db-stat-unread').textContent = total;
+}
+
+function dbFilter(f) {
+    dbFilter_ = f;
+    document.querySelectorAll('.db-filter').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+    renderDbFeedback();
+}
+
+function renderDbFeedback() {
+    const list = document.getElementById('db-list');
+    const items = dbFilter_ === 'all' ? dbFeedback : dbFeedback.filter(f => f.rating === parseInt(dbFilter_, 10));
+
+    if (!items.length) {
+        list.innerHTML = `
+            <div class="state-box fade-in">
+                <div class="state-icon">&#x1F4AC;</div>
+                <div class="state-title">No feedback found</div>
+                <div class="state-sub">When customers submit private reviews, they will appear here.</div>
+            </div>`;
         return;
     }
-    dbClientId_ = client.id;
-    document.getElementById('db-rest-name').textContent = client.name;
-    document.title = client.name + ' \u2014 Dashboard';
-    await dbLoad();
-}
 
-async function dbLoad() {
-    const { data } = await sb.from('feedback').select('*').eq('client_id', dbClientId_).order('submitted_at', { ascending: false });
-    dbFeedback = data || []; dbUpdateStats(); dbRender();
-}
-
-function dbUpdateStats() {
-    const total = dbFeedback.length, unread = dbFeedback.filter(f => !f.is_read).length;
-    const avg = total > 0 ? (dbFeedback.reduce((s,f) => s+f.rating, 0)/total).toFixed(1) : '\u2014';
-    document.getElementById('db-stat-total').textContent = total;
-    document.getElementById('db-stat-avg').textContent = avg;
-    document.getElementById('db-stat-unread').textContent = unread;
-    const b = document.getElementById('db-unread-badge'); b.textContent = unread; b.classList.toggle('hidden', unread === 0);
-}
-
-function dbFilter(f) { dbFilter_ = f; document.querySelectorAll('.db-filter').forEach(b => b.classList.toggle('active', b.dataset.f === f)); dbRender(); }
-
-function dbRender() {
-    const list = document.getElementById('db-list');
-    const items = dbFilter_ === 'all' ? dbFeedback : dbFilter_ === 'unread' ? dbFeedback.filter(f => !f.is_read) : dbFeedback.filter(f => f.rating === parseInt(dbFilter_));
-    if (!items.length) { list.innerHTML = '<div class="state-box fade-in"><div class="state-icon">\uD83D\uDCAC</div><div class="state-title">No feedback here yet</div><div class="state-sub">When customers leave private comments, they\'ll appear here.</div></div>'; return; }
     list.innerHTML = items.map(f => {
-        const stars = '\u2605'.repeat(f.rating) + '\u2606'.repeat(5-f.rating);
-        const date = new Date(f.submitted_at).toLocaleDateString('en-US', { year:'numeric',month:'short',day:'numeric' });
-        return '<div class="db-card ' + (f.is_read ? '' : 'unread') + ' fade-in"><div class="db-card-header"><span class="db-card-stars">' + stars + '</span><span class="db-card-date">' + date + '</span></div><p class="db-card-text">' + esc(f.feedback_text) + '</p><div class="db-card-footer">' + (f.is_read ? '<span class="read-badge">\u2713 Read</span>' : '<button class="btn-mark-read" onclick="dbMarkRead(\'' + f.id + '\')">\u2713 Mark as read</button>') + '</div></div>';
+        const stars = '\u2605'.repeat(f.rating) + '\u2606'.repeat(5 - f.rating);
+        const date = new Date(f.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+        const contactHtml = f.customer_contact ? `<div class="db-card-contact">&#x1F4DE; Contact: ${esc(f.customer_contact)}</div>` : '';
+        return `
+            <div class="db-card fade-in">
+                <div class="db-card-header">
+                    <span class="db-card-stars">${stars}</span>
+                    <span class="db-card-date">${date}</span>
+                </div>
+                <p class="db-card-text">${esc(f.comment || '')}</p>
+                ${contactHtml}
+            </div>
+        `;
     }).join('');
 }
 
-async function dbMarkRead(id) {
-    await sb.from('feedback').update({ is_read: true }).eq('id', id);
-    const f = dbFeedback.find(x => x.id === id); if (f) f.is_read = true;
-    dbUpdateStats(); dbRender();
+/* ────────────────────────────────────────────
+   CHROMELESS EMBED DASHBOARD LOGIC
+──────────────────────────────────────────── */
+let embedFeedback = [];
+let embedFilter_ = 'all';
+
+async function loadEmbedDashboard(token) {
+    document.getElementById('bg-blobs')?.classList.add('hidden');
+    try {
+        const res = await fetch(`/api/dashboard?token=${encodeURIComponent(token)}`);
+        if (!res.ok) {
+            document.getElementById('embed-list').innerHTML = `<div class="state-box"><div class="state-title">Widget Unauthorized</div></div>`;
+            return;
+        }
+        const data = await res.json();
+        document.getElementById('embed-biz-name').textContent = (data.business?.name || '') + ' Feedback';
+        embedFeedback = data.feedback || [];
+        const total = embedFeedback.length;
+        const avg = total > 0 ? (embedFeedback.reduce((s,f) => s + f.rating, 0) / total).toFixed(1) : '\u2014';
+        document.getElementById('embed-stats-bar').textContent = `${total} customer reviews \u2022 Average: ${avg !== '\u2014' ? '\u2605' + avg : '\u2014'}`;
+        renderEmbedFeedback();
+    } catch {
+        document.getElementById('embed-list').innerHTML = `<div class="state-box"><div class="state-title">Error loading feedback</div></div>`;
+    }
+}
+
+function embedFilter(f) {
+    embedFilter_ = f;
+    document.querySelectorAll('.embed-filter').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+    renderEmbedFeedback();
+}
+
+function renderEmbedFeedback() {
+    const list = document.getElementById('embed-list');
+    const items = embedFilter_ === 'all' ? embedFeedback : embedFeedback.filter(f => f.rating === parseInt(embedFilter_, 10));
+
+    if (!items.length) {
+        list.innerHTML = `<div class="state-box fade-in"><div class="state-sub">No reviews recorded under this filter.</div></div>`;
+        return;
+    }
+
+    list.innerHTML = items.map(f => {
+        const stars = '\u2605'.repeat(f.rating) + '\u2606'.repeat(5 - f.rating);
+        const date = new Date(f.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+        return `
+            <div class="db-card" style="padding:12px;background:var(--surface-dim)">
+                <div class="db-card-header" style="margin-bottom:4px">
+                    <span class="db-card-stars" style="font-size:.9rem">${stars}</span>
+                    <span class="db-card-date">${date}</span>
+                </div>
+                <p class="db-card-text" style="font-size:.85rem">${esc(f.comment || '')}</p>
+            </div>
+        `;
+    }).join('');
 }
 
 /* ────────────────────────────────────────────
-   ADMIN PANEL
+   PASSWORDLESS OWNER OTP AUTH
 ──────────────────────────────────────────── */
-let mgrClients = [], mgrFeedback = [], mgrCurrentView = 'restaurants';
+let pendingEmail = '';
 
-async function mgrLogin() {
-    const email = document.getElementById('mgr-email').value.trim(), pass = document.getElementById('mgr-password').value;
-    const btn = document.getElementById('mgr-btn-login'), err = document.getElementById('mgr-auth-err');
-    if (!email || !pass) { showErr(err, 'Please fill in all fields.'); return; }
-    btn.disabled = true; btn.textContent = 'Signing in\u2026'; err.classList.remove('show');
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-    if (error) { showErr(err, 'Incorrect email or password.'); btn.disabled = false; btn.textContent = 'Sign In to Admin Panel \u2192'; return; }
-    const { data: role } = await sb.from('user_roles').select('role').eq('user_id', data.user.id).maybeSingle();
-    if (role?.role !== 'admin') { await sb.auth.signOut(); showErr(err, 'This account does not have admin access.'); btn.disabled = false; btn.textContent = 'Sign In to Admin Panel \u2192'; return; }
-    closeAdminModal();
-    showView('admin');
-    await mgrLoad(); mgrView('restaurants');
+async function handleSendOtp(prefix) {
+    const input = document.getElementById(prefix + '-owner-email');
+    const err = document.getElementById(prefix + '-otp-send-err');
+    const btn = document.getElementById('btn-' + prefix + '-send-otp');
+    const email = input ? input.value.trim().toLowerCase() : '';
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showErr(err, 'Please enter a valid email address.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending code\u2026';
+    err.classList.remove('show');
+
+    try {
+        const res = await fetch('/api/auth/send-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        pendingEmail = email;
+
+        btn.disabled = false;
+        btn.textContent = 'Send 6-Digit Code \u2192';
+
+        document.getElementById(prefix + '-otp-step1').classList.add('hidden');
+        document.getElementById(prefix + '-otp-step2').classList.remove('hidden');
+        document.getElementById('otp-home-sub').textContent = 'Code sent to ' + email + '. Enter the 6-digit code below.';
+    } catch (e) {
+        btn.disabled = false;
+        btn.textContent = 'Send 6-Digit Code \u2192';
+        showErr(err, 'Failed to send verification code. Please try again.');
+    }
 }
 
-async function mgrSignOut() {
-    if (sb) await sb.auth.signOut();
-    mgrClients = []; mgrFeedback = [];
+async function handleVerifyOtp(prefix) {
+    const codeInput = document.getElementById(prefix + '-otp-code');
+    const err = document.getElementById(prefix + '-otp-verify-err');
+    const btn = document.getElementById('btn-' + prefix + '-verify-otp');
+    const code = codeInput ? codeInput.value.trim() : '';
+
+    if (!code || code.length < 6) {
+        showErr(err, 'Please enter the 6-digit code.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Verifying\u2026';
+    err.classList.remove('show');
+
+    try {
+        const res = await fetch('/api/auth/verify-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email: pendingEmail, code })
+        });
+
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || 'Invalid or expired code.');
+        }
+
+        history.pushState(null, '', '/dashboard');
+        showView('dashboard');
+        loadSessionDashboard();
+    } catch (e) {
+        btn.disabled = false;
+        btn.textContent = 'Verify & Enter Dashboard \u2192';
+        showErr(err, e.message);
+    }
+}
+
+function resetOtpSteps(prefix) {
+    document.getElementById(prefix + '-otp-step1').classList.remove('hidden');
+    document.getElementById(prefix + '-otp-step2').classList.add('hidden');
+    document.getElementById('otp-home-sub').textContent = 'Enter your email to receive a passwordless 6-digit access code.';
+}
+
+async function ownerSignOut() {
+    await fetch('/api/auth/logout', { credentials: 'include' });
+    history.pushState(null, '', '/');
     showView('home');
 }
 
-async function mgrLoad() {
-    const [{ data: clients }, { data: feedback }] = await Promise.all([
-        sb.from('clients').select('*').order('created_at', { ascending: false }),
-        sb.from('feedback').select('*').order('submitted_at', { ascending: false })
-    ]);
-    mgrClients = clients || []; mgrFeedback = feedback || [];
-    const b = document.getElementById('mgr-count'); b.textContent = mgrClients.length; b.classList.toggle('hidden', mgrClients.length === 0);
-}
-
-function mgrView(v) {
-    mgrCurrentView = v;
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('nav-'+v).classList.add('active');
-    ['restaurants','feedback'].forEach(x => { const el = document.getElementById('mob-'+x); if (el) el.classList.toggle('active', x === v); });
-    v === 'restaurants' ? mgrRenderRestaurants() : mgrRenderFeedback();
-}
-
-function mgrRenderRestaurants() {
-    const total = mgrFeedback.length, unread = mgrFeedback.filter(f => !f.is_read).length;
-    document.getElementById('mgr-content').innerHTML =
-        '<div class="page-header"><div><div class="page-title">Restaurants</div><div class="page-sub">' + mgrClients.length + ' client' + (mgrClients.length !== 1 ? 's' : '') + '</div></div><button class="btn-add" onclick="mgrOpenModal()">\uFF0B <span>Add Restaurant</span></button></div>' +
-        '<div class="summary-grid"><div class="summary-card"><div class="summary-label">Restaurants</div><div class="summary-value" style="color:var(--g-blue)">' + mgrClients.length + '</div></div><div class="summary-card"><div class="summary-label">Total Feedback</div><div class="summary-value" style="color:var(--g-yellow)">' + total + '</div></div><div class="summary-card"><div class="summary-label">Unread</div><div class="summary-value" style="color:var(--g-green)">' + unread + '</div></div></div>' +
-        (mgrClients.length === 0
-            ? '<div class="state-box fade-in"><div class="state-icon">\uD83C\uDF7D\uFE0F</div><div class="state-title">No restaurants yet</div><div class="state-sub">Click "Add Restaurant" to create your first client.</div></div>'
-            : '<div class="rest-grid fade-in">' + mgrClients.map(mgrCard).join('') + '</div>');
-}
-
-function mgrCard(c) {
-    const fb = mgrFeedback.filter(f => f.client_id === c.id);
-    const cnt = fb.length, avg = cnt > 0 ? (fb.reduce((s,f) => s+f.rating,0)/cnt).toFixed(1) : '\u2014', unread = fb.filter(f => !f.is_read).length;
-    const link = SITE_URL + '?c=' + c.slug;
-    const ownerEmail = c.owner_email ? esc(c.owner_email) : 'Unassigned';
-    return '<div class="rest-card ' + (c.active ? '' : 'inactive') + ' fade-in"><div class="rc-header"><div><div class="rc-name">' + esc(c.name) + '</div><div class="rc-slug">' + esc(c.slug) + ' &bull; ' + ownerEmail + '</div></div><span class="rc-status ' + (c.active ? 'on' : 'off') + '">' + (c.active ? 'Active' : 'Paused') + '</span></div><div class="rc-stats"><div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-blue)">' + cnt + '</div><div class="rc-stat-label">Reviews</div></div><div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-yellow)">' + (avg !== '\u2014' ? '\u2605' + avg : '\u2014') + '</div><div class="rc-stat-label">Avg</div></div><div class="rc-stat"><div class="rc-stat-val" style="color:var(--g-green)">' + unread + '</div><div class="rc-stat-label">Unread</div></div></div><div class="rc-link">' + esc(link) + '</div><div class="rc-actions"><button class="btn-sm primary" onclick="mgrOpenPanel(\'' + c.id + '\')">View Feedback</button><button class="btn-sm" onclick="mgrCopy(\'' + link + '\',this)">Copy Link</button><button class="btn-sm ' + (c.active ? 'danger' : 'success') + '" onclick="mgrToggle(\'' + c.id + '\',' + c.active + ')">' + (c.active ? 'Pause' : 'Activate') + '</button></div></div>';
-}
-
-function mgrRenderFeedback() {
-    const el = document.getElementById('mgr-content');
-    if (!mgrFeedback.length) { el.innerHTML = '<div class="page-header"><div><div class="page-title">All Feedback</div></div></div><div class="state-box fade-in"><div class="state-icon">\uD83D\uDCAC</div><div class="state-title">No feedback yet</div></div>'; return; }
-    el.innerHTML = '<div class="page-header"><div><div class="page-title">All Feedback</div><div class="page-sub">' + mgrFeedback.length + ' total \u00B7 ' + mgrFeedback.filter(f=>!f.is_read).length + ' unread</div></div></div><div style="display:flex;flex-direction:column;gap:12px">' +
-        mgrFeedback.map(f => { const client = mgrClients.find(c => c.id === f.client_id); const stars = '\u2605'.repeat(f.rating)+'\u2606'.repeat(5-f.rating); const date = new Date(f.submitted_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); return '<div class="panel-card ' + (f.is_read ? '' : 'unread') + ' fade-in"><div class="pc-header"><div><div style="font-size:.75rem;color:var(--on-surface-variant);margin-bottom:4px">\uD83C\uDF7D\uFE0F ' + (client ? esc(client.name) : 'Unknown') + '</div><span class="pc-stars">' + stars + '</span></div><span class="pc-date">' + date + '</span></div><p class="pc-text">' + esc(f.feedback_text) + '</p></div>'; }).join('') + '</div>';
-}
-
-function mgrOpenPanel(clientId) {
-    const client = mgrClients.find(c => c.id === clientId), fb = mgrFeedback.filter(f => f.client_id === clientId);
-    document.getElementById('mgr-panel-title').textContent = client ? client.name : 'Feedback';
-    document.getElementById('mgr-panel-sub').textContent = fb.length + ' review' + (fb.length !== 1 ? 's' : '');
-    const body = document.getElementById('mgr-panel-body');
-    body.innerHTML = fb.length === 0
-        ? '<div class="state-box"><div class="state-icon">\uD83D\uDCAC</div><div class="state-title">No feedback yet</div></div>'
-        : fb.map(f => { const stars = '\u2605'.repeat(f.rating)+'\u2606'.repeat(5-f.rating), date = new Date(f.submitted_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); return '<div class="panel-card ' + (f.is_read ? '' : 'unread') + '"><div class="pc-header"><span class="pc-stars">' + stars + '</span><span class="pc-date">' + date + '</span></div><p class="pc-text">' + esc(f.feedback_text) + '</p></div>'; }).join('');
-    document.getElementById('mgr-panel').classList.add('open');
-    document.getElementById('mgr-panel-overlay').classList.add('open');
-}
-function mgrClosePanel() { document.getElementById('mgr-panel').classList.remove('open'); document.getElementById('mgr-panel-overlay').classList.remove('open'); }
-
-function mgrOpenModal() {
-    ['r-name','r-email','r-slug','r-url'].forEach(id => document.getElementById(id).value = '');
-    delete document.getElementById('r-slug').dataset.edited;
-    document.getElementById('mgr-modal-err').classList.remove('show');
-    document.getElementById('mgr-modal-title').textContent = 'Add Restaurant';
-    document.getElementById('mgr-modal-body').style.display = 'block';
-    document.getElementById('mgr-modal').classList.add('open');
-}
-function mgrCloseModal() { document.getElementById('mgr-modal').classList.remove('open'); }
-
-document.getElementById('r-name').addEventListener('input', function() {
-    const s = document.getElementById('r-slug');
-    if (!s.dataset.edited) s.value = this.value.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-{2,}/g,'-');
-});
-document.getElementById('r-slug').addEventListener('input', function() { this.dataset.edited = '1'; });
-function sanitizeSlug(el) { el.value = el.value.toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-{2,}/g,'-'); }
-
-async function mgrSave() {
-    const name = document.getElementById('r-name').value.trim();
-    const ownerEmail = document.getElementById('r-email').value.trim().toLowerCase();
-    const slug = document.getElementById('r-slug').value.trim();
-    const url = document.getElementById('r-url').value.trim();
-    const btn = document.getElementById('mgr-btn-save'), err = document.getElementById('mgr-modal-err');
-    if (!name || !ownerEmail || !slug || !url) { showErr(err, 'Please fill in all fields including Owner Email.'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) { showErr(err, 'Please enter a valid owner email address.'); return; }
-    if (!/^[a-z0-9-]+$/.test(slug)) { showErr(err, 'Code: lowercase letters, numbers, hyphens only.'); return; }
-    if (!url.startsWith('https://')) { showErr(err, 'Please enter a valid URL starting with https://'); return; }
-    btn.disabled = true; btn.textContent = 'Creating\u2026'; err.classList.remove('show');
-    const { error } = await sb.from('clients').insert({ name, owner_email: ownerEmail, slug, google_review_url: url });
-    if (error) {
-        showErr(err, error.code === '23505' ? 'That restaurant code or owner email already exists.' : 'Failed to create. Please try again.');
-        btn.disabled = false; btn.textContent = 'Create Restaurant'; return;
+/* ────────────────────────────────────────────
+   ADMIN PANEL LOGIC (CLOUDFLARE D1)
+──────────────────────────────────────────── */
+function openAdminModal() {
+    if (adminSecret) {
+        showView('admin');
+        adminLoad();
+    } else {
+        document.getElementById('admin-auth-modal').classList.add('open');
+        setTimeout(() => document.getElementById('admin-token-input')?.focus(), 250);
     }
-    const reviewLink = SITE_URL + '?c=' + slug;
-    document.getElementById('mgr-modal-title').textContent = '';
-    document.getElementById('mgr-modal-body').innerHTML = '<div style="text-align:center;padding:20px 0"><div style="font-size:3rem;margin-bottom:12px">\uD83C\uDF89</div><div style="font-size:1.05rem;font-weight:700;color:var(--g-green);margin-bottom:8px">Restaurant Pre-Registered!</div><div style="font-size:.86rem;color:var(--on-surface-variant);line-height:1.6">Share the review link with customers. The owner can now sign up using their pre-registered email.</div><div style="margin-top:20px;text-align:left"><div class="form-label" style="display:block;margin-bottom:6px">Customer Review Link</div><div class="link-box">' + esc(reviewLink) + '</div><div class="form-label" style="display:block;margin-top:16px;margin-bottom:6px">Pre-Registered Owner Email</div><div class="link-box">' + esc(ownerEmail) + '</div></div><button class="btn-primary" style="margin-top:20px" onclick="mgrCloseModal();mgrLoad().then(()=>mgrView(\'restaurants\'))">Done</button></div>';
-    await mgrLoad();
 }
 
-async function mgrToggle(id, isActive) { await sb.from('clients').update({ active: !isActive }).eq('id', id); await mgrLoad(); mgrView(mgrCurrentView); }
-
-async function mgrCopy(link, btn) {
-    try { await navigator.clipboard.writeText(link); const o = btn.textContent; btn.textContent = '\u2713 Copied!'; btn.classList.add('success'); setTimeout(() => { btn.textContent = o; btn.classList.remove('success'); }, 2000); }
-    catch { btn.textContent = 'Failed'; }
+function closeAdminAuthModal() {
+    document.getElementById('admin-auth-modal').classList.remove('open');
 }
 
-/* ── HELPERS ── */
-function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+async function adminAuthSubmit() {
+    const input = document.getElementById('admin-token-input');
+    const err = document.getElementById('admin-auth-err');
+    const btn = document.getElementById('btn-admin-login');
+    const secret = input ? input.value.trim() : '';
+
+    if (!secret) {
+        showErr(err, 'Admin secret is required.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Authenticating\u2026';
+    err.classList.remove('show');
+
+    try {
+        const res = await fetch('/api/admin/businesses', {
+            headers: { 'Authorization': `Bearer ${secret}` }
+        });
+        if (!res.ok) throw new Error('Invalid Admin Secret token.');
+
+        adminSecret = secret;
+        sessionStorage.setItem('tqm_admin_secret', secret);
+        closeAdminAuthModal();
+        history.pushState(null, '', '/admin');
+        showView('admin');
+        adminLoad();
+    } catch (e) {
+        btn.disabled = false;
+        btn.textContent = 'Enter Admin Panel \u2192';
+        showErr(err, e.message);
+    }
+}
+
+function adminInit() {
+    if (!adminSecret) {
+        openAdminModal();
+    } else {
+        adminLoad();
+    }
+}
+
+async function adminLoad() {
+    const pageSub = document.getElementById('admin-page-sub');
+    const grid = document.getElementById('admin-biz-grid');
+
+    try {
+        const res = await fetch('/api/admin/businesses', {
+            headers: { 'Authorization': `Bearer ${adminSecret}` }
+        });
+        if (res.status === 401) {
+            adminSecret = '';
+            sessionStorage.removeItem('tqm_admin_secret');
+            openAdminModal();
+            return;
+        }
+        const data = await res.json();
+        adminBusinesses = data.businesses || [];
+
+        const totalFb = adminBusinesses.reduce((s, b) => s + (b.feedback_count || 0), 0);
+        document.getElementById('admin-count').textContent = adminBusinesses.length;
+        document.getElementById('admin-stat-biz').textContent = adminBusinesses.length;
+        document.getElementById('admin-stat-fb').textContent = totalFb;
+        pageSub.textContent = `${adminBusinesses.length} active business profiles connected to Cloudflare D1.`;
+
+        renderAdminBusinesses();
+    } catch (err) {
+        grid.innerHTML = `<div class="state-box"><div class="state-title">Failed to load from D1</div></div>`;
+    }
+}
+
+function renderAdminBusinesses() {
+    const grid = document.getElementById('admin-biz-grid');
+    if (!adminBusinesses.length) {
+        grid.innerHTML = `<div class="state-box"><div class="state-title">No businesses created yet</div><div class="state-sub">Click "+ Add Business" to create your first stand profile.</div></div>`;
+        return;
+    }
+
+    const origin = window.location.origin;
+
+    grid.innerHTML = adminBusinesses.map(b => {
+        const publicLink = `${origin}/?c=${b.public_slug}`;
+        const privateLink = `${origin}/v/${b.secret_token}`;
+        const embedCode = `<iframe src="${origin}/embed/${b.secret_token}" width="100%" height="600" frameborder="0"></iframe>`;
+        const emailDisplay = b.owner_email ? esc(b.owner_email) : '<span style="color:var(--on-surface-variant);font-style:italic">No email attached</span>';
+
+        return `
+            <div class="rest-card fade-in" id="card-${b.id}">
+                <div class="rc-header">
+                    <div>
+                        <div class="rc-name">${esc(b.name)}</div>
+                        <div class="rc-slug">/${esc(b.public_slug)}</div>
+                    </div>
+                    <span class="rc-status on">Active</span>
+                </div>
+
+                <div class="rc-stats">
+                    <div class="rc-stat">
+                        <div class="rc-stat-val" style="color:var(--g-blue)">${b.feedback_count || 0}</div>
+                        <div class="rc-stat-label">Feedback</div>
+                    </div>
+                    <div class="rc-stat" style="grid-column:span 2">
+                        <div class="rc-stat-val" style="font-size:.85rem;color:var(--g-green-light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(b.google_maps_url)}">
+                            Google Maps Linked
+                        </div>
+                        <div class="rc-stat-label">NFC Stand Active</div>
+                    </div>
+                </div>
+
+                <div class="btn-copy-grid">
+                    <button class="btn-copy" onclick="copySnippet('${publicLink}', this)">&#x1F517; Public Link</button>
+                    <button class="btn-copy" onclick="copySnippet('${privateLink}', this)">&#x1F511; Private Link</button>
+                    <button class="btn-copy" onclick="copySnippet(decodeURIComponent('${encodeURIComponent(embedCode)}'), this)">&#x1F4CB; Embed Code</button>
+                </div>
+
+                <!-- Inline Owner Email Editor -->
+                <div class="inline-email-row" id="email-row-${b.id}">
+                    <div><strong style="color:var(--on-surface-variant)">Owner Email:</strong> <span class="inline-email-val">${emailDisplay}</span></div>
+                    <button class="btn-sm" style="padding:2px 8px;font-size:.7rem" onclick="toggleEmailEdit('${b.id}')">&#x270F;&#xFE0F; Edit</button>
+                </div>
+                <div class="inline-email-form hidden" id="email-form-${b.id}">
+                    <input class="inline-email-input" type="email" id="email-input-${b.id}" placeholder="owner@email.com" value="${esc(b.owner_email || '')}">
+                    <button class="btn-sm primary" onclick="saveOwnerEmail('${b.id}')">Save</button>
+                    <button class="btn-sm" onclick="toggleEmailEdit('${b.id}')">Cancel</button>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:4px">
+                    <button class="btn-sm primary" style="flex:1" onclick="openAdminFeedbackDrawer('${b.id}')">View Feedback</button>
+                    <button class="btn-sm danger" onclick="rotateBizToken('${b.id}')">&#x21BB; Rotate Link</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function toggleEmailEdit(id) {
+    const row = document.getElementById('email-row-' + id);
+    const form = document.getElementById('email-form-' + id);
+    if (row && form) {
+        form.classList.toggle('hidden');
+    }
+}
+
+async function saveOwnerEmail(id) {
+    const input = document.getElementById('email-input-' + id);
+    const email = input ? input.value.trim().toLowerCase() : '';
+
+    try {
+        const res = await fetch(`/api/admin/businesses/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${adminSecret}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ owner_email: email || null })
+        });
+        if (!res.ok) throw new Error('Failed to update email.');
+        await adminLoad();
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+async function rotateBizToken(id) {
+    if (!confirm('Rotate private dashboard link? The previous /v/:token link and iframe embed will stop working immediately.')) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/admin/businesses/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${adminSecret}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ rotateToken: true })
+        });
+        if (!res.ok) throw new Error('Failed to rotate token.');
+        alert('\u2705 Secret token rotated successfully.');
+        await adminLoad();
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+function adminOpenAddModal() {
+    ['new-biz-name','new-biz-url'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('admin-create-err')?.classList.remove('show');
+    document.getElementById('admin-modal-title').textContent = '\u2728 Add New Business';
+    document.getElementById('admin-modal-body').innerHTML = `
+        <p class="modal-sub" style="margin-bottom:16px">Create instant review funnel stands with only name and maps URL. No email is required upfront.</p>
+        <div class="form-group">
+            <label class="form-label" for="new-biz-name">Business Name</label>
+            <input class="form-input" type="text" id="new-biz-name" placeholder="e.g. Lavoa Cafe">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="new-biz-url">Google Maps URL</label>
+            <input class="form-input" type="url" id="new-biz-url" placeholder="https://maps.app.goo.gl/... or search.google.com...">
+        </div>
+        <button class="btn-primary" id="btn-create-biz" onclick="adminSubmitCreateBusiness()">Create Business &rarr;</button>
+        <div class="err-box" id="admin-create-err"></div>
+    `;
+    document.getElementById('admin-add-modal').classList.add('open');
+}
+
+function adminCloseAddModal() {
+    document.getElementById('admin-add-modal').classList.remove('open');
+}
+
+async function adminSubmitCreateBusiness() {
+    const name = document.getElementById('new-biz-name')?.value.trim();
+    const url = document.getElementById('new-biz-url')?.value.trim();
+    const btn = document.getElementById('btn-create-biz');
+    const err = document.getElementById('admin-create-err');
+
+    if (!name || !url) {
+        showErr(err, 'Please enter both Business Name and Google Maps URL.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Generating in D1\u2026';
+    err.classList.remove('show');
+
+    try {
+        const res = await fetch('/api/admin/businesses', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${adminSecret}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, googleMapsUrl: url })
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || 'Failed to create business.');
+        }
+        const created = await res.json();
+
+        // Render Success View with 3 Copy Buttons
+        document.getElementById('admin-modal-title').textContent = '\uD83C\uDF89 Business Stand Created!';
+        document.getElementById('admin-modal-body').innerHTML = `
+            <div style="text-align:center;padding:12px 0">
+                <p style="font-size:.9rem;color:var(--g-green);font-weight:700;margin-bottom:14px">Active and ready on Cloudflare D1 with zero sleep timers.</p>
+                
+                <div style="text-align:left;margin-bottom:12px">
+                    <span class="form-label">1. Public Stand &amp; QR Link</span>
+                    <div class="link-box">${esc(created.publicLink)}</div>
+                    <button class="btn-sm" style="width:100%" onclick="copySnippet('${created.publicLink}', this)">Copy Public Review Link</button>
+                </div>
+
+                <div style="text-align:left;margin-bottom:12px">
+                    <span class="form-label">2. Private Dashboard Link (/v/:token)</span>
+                    <div class="link-box">${esc(created.privateDashboardLink)}</div>
+                    <button class="btn-sm" style="width:100%" onclick="copySnippet('${created.privateDashboardLink}', this)">Copy Private Dashboard Link</button>
+                </div>
+
+                <div style="text-align:left;margin-bottom:16px">
+                    <span class="form-label">3. POS / Website Embed Iframe</span>
+                    <div class="link-box">${esc(created.embedIframeCode)}</div>
+                    <button class="btn-sm" style="width:100%" onclick="copySnippet(decodeURIComponent('${encodeURIComponent(created.embedIframeCode)}'), this)">Copy Embed Code</button>
+                </div>
+
+                <button class="btn-primary" onclick="adminCloseAddModal();adminLoad()">Done &amp; View All Businesses</button>
+            </div>
+        `;
+        adminLoad();
+    } catch (e) {
+        btn.disabled = false;
+        btn.textContent = 'Create Business \u2192';
+        showErr(err, e.message);
+    }
+}
+
+async function openAdminFeedbackDrawer(bizId) {
+    const biz = adminBusinesses.find(b => b.id === bizId);
+    document.getElementById('admin-drawer-title').textContent = (biz?.name || '') + ' Feedback';
+    document.getElementById('admin-drawer-sub').textContent = 'Loading\u2026';
+    document.getElementById('admin-drawer-body').innerHTML = `<div class="state-box"><div class="spinner"></div></div>`;
+    document.getElementById('admin-drawer').classList.add('open');
+    document.getElementById('admin-drawer-overlay').classList.add('open');
+
+    try {
+        const res = await fetch(`/api/dashboard?token=${biz.secret_token}`);
+        const data = await res.json();
+        const fbList = data.feedback || [];
+        document.getElementById('admin-drawer-sub').textContent = `${fbList.length} feedback entries`;
+
+        if (!fbList.length) {
+            document.getElementById('admin-drawer-body').innerHTML = `<div class="state-box"><div class="state-sub">No feedback has been submitted for this business yet.</div></div>`;
+            return;
+        }
+
+        document.getElementById('admin-drawer-body').innerHTML = fbList.map(f => {
+            const stars = '\u2605'.repeat(f.rating) + '\u2606'.repeat(5 - f.rating);
+            const date = new Date(f.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+            const contactHtml = f.customer_contact ? `<div style="font-size:.76rem;color:var(--g-blue);margin-top:4px">&#x1F4DE; ${esc(f.customer_contact)}</div>` : '';
+            return `
+                <div class="panel-card fade-in">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                        <span style="color:var(--g-yellow);font-size:.92rem">${stars}</span>
+                        <span style="font-size:.72rem;color:var(--on-surface-variant)">${date}</span>
+                    </div>
+                    <p style="font-size:.86rem;line-height:1.5">${esc(f.comment || '')}</p>
+                    ${contactHtml}
+                </div>
+            `;
+        }).join('');
+    } catch {
+        document.getElementById('admin-drawer-body').innerHTML = `<div class="state-box"><div class="state-title">Error loading feedback</div></div>`;
+    }
+}
+
+function adminCloseDrawer() {
+    document.getElementById('admin-drawer').classList.remove('open');
+    document.getElementById('admin-drawer-overlay').classList.remove('open');
+}
+
+function adminSignOut() {
+    adminSecret = '';
+    sessionStorage.removeItem('tqm_admin_secret');
+    history.pushState(null, '', '/');
+    showView('home');
+}
+
+/* ────────────────────────────────────────────
+   GENERAL UTILS
+──────────────────────────────────────────── */
+function copySnippet(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '\u2713 Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.innerHTML = orig;
+            btn.classList.remove('copied');
+        }, 2000);
+    }).catch(() => {
+        alert('Could not copy to clipboard. Please copy manually: ' + text);
+    });
+}
+
+function showErr(el, msg) {
+    if (el) {
+        el.textContent = msg;
+        el.classList.add('show');
+    }
+}
+
+function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 </body>
 </html>

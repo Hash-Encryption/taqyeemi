@@ -1,6 +1,11 @@
 node_modules/
 .env
 .env.local
+.dev.vars
+.dev.vars.*
 *.log
 .DS_Store
 Thumbs.db
+.wrangler/
+supabase-backup/
+

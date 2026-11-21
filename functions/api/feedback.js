@@ -25,14 +25,15 @@ export async function onRequestPost(context) {
   let businessId = null;
 
   try {
+    let biz = null;
     if (slug) {
-      const biz = await env.DB.prepare('SELECT id FROM businesses WHERE public_slug = ?').bind(slug).first();
+      biz = await env.DB.prepare('SELECT id, is_active FROM businesses WHERE public_slug = ?').bind(slug).first();
       if (!biz) {
         return jsonResponse({ error: `Business not found for slug '${slug}'.` }, 404);
       }
       businessId = biz.id;
     } else if (rawClientId) {
-      const biz = await env.DB.prepare('SELECT id FROM businesses WHERE id = ?').bind(rawClientId).first();
+      biz = await env.DB.prepare('SELECT id, is_active FROM businesses WHERE id = ?').bind(rawClientId).first();
       if (!biz) {
         return jsonResponse({ error: `Business not found for id '${rawClientId}'.` }, 404);
       }
@@ -41,19 +42,31 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: 'Either slug or business_id is required.' }, 400);
     }
 
-    const comment = body.comment !== undefined 
-      ? String(body.comment).trim() 
-      : (body.feedback_text !== undefined ? String(body.feedback_text).trim() : null);
+    if (biz.is_active === 0) {
+      return jsonResponse({ error: 'This business review link is currently inactive.' }, 403);
+    }
 
-    const customerContact = body.customerContact !== undefined 
-      ? String(body.customerContact).trim() 
-      : (body.customer_contact !== undefined ? String(body.customer_contact).trim() : null);
+    let comment = null;
+    const rawComment = body.comment !== undefined ? body.comment : body.feedback_text;
+    if (rawComment !== null && rawComment !== undefined) {
+      const trimmed = String(rawComment).trim();
+      if (trimmed) comment = trimmed;
+    }
+
+    let customerContact = null;
+    const rawContact = body.customerContact !== undefined ? body.customerContact : body.customer_contact;
+    if (rawContact !== null && rawContact !== undefined) {
+      const trimmed = String(rawContact).trim();
+      if (trimmed && trimmed.toLowerCase() !== 'null') {
+        customerContact = trimmed;
+      }
+    }
 
     const id = crypto.randomUUID();
 
     await env.DB.prepare(`
-      INSERT INTO feedback (id, business_id, rating, comment, customer_contact)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO feedback (id, business_id, rating, comment, customer_contact, is_read)
+      VALUES (?, ?, ?, ?, ?, 0)
     `).bind(id, businessId, ratingNum, comment, customerContact).run();
 
     return jsonResponse({

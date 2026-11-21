@@ -45,11 +45,17 @@ export async function onRequestPatch(context) {
       newToken = generateSecretToken();
     }
 
+    let newActive = current.is_active !== undefined ? current.is_active : 1;
+    if (body.isActive !== undefined || body.is_active !== undefined || body.active !== undefined) {
+      const rawActive = body.isActive !== undefined ? body.isActive : (body.is_active !== undefined ? body.is_active : body.active);
+      newActive = (rawActive === true || rawActive === 1 || rawActive === '1') ? 1 : 0;
+    }
+
     await env.DB.prepare(`
       UPDATE businesses 
-      SET name = ?, google_maps_url = ?, owner_email = ?, secret_token = ?
+      SET name = ?, google_maps_url = ?, owner_email = ?, secret_token = ?, is_active = ?
       WHERE id = ?
-    `).bind(newName, finalUrl, newEmail, newToken, id).run();
+    `).bind(newName, finalUrl, newEmail, newToken, newActive, id).run();
 
     const updated = await env.DB.prepare('SELECT * FROM businesses WHERE id = ?').bind(id).first();
 

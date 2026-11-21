@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS businesses (
   public_slug TEXT UNIQUE NOT NULL,
   secret_token TEXT UNIQUE NOT NULL,
   owner_email TEXT,
+  is_active INTEGER DEFAULT 1,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS feedback (
   rating INTEGER NOT NULL,
   comment TEXT,
   customer_contact TEXT,
+  is_read INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
 );

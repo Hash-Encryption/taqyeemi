@@ -34,7 +34,7 @@ export async function onRequestGet(context) {
       }
 
       const { results: feedback } = await env.DB.prepare(`
-        SELECT id, business_id, rating, comment, customer_contact, created_at
+        SELECT id, business_id, rating, comment, customer_contact, is_read, created_at
         FROM feedback
         WHERE business_id = ?
         ORDER BY created_at DESC
@@ -74,7 +74,7 @@ export async function onRequestGet(context) {
       const ids = businesses.map(b => b.id);
 
       const { results: feedback } = await env.DB.prepare(`
-        SELECT id, business_id, rating, comment, customer_contact, created_at
+        SELECT id, business_id, rating, comment, customer_contact, is_read, created_at
         FROM feedback
         WHERE business_id IN (${placeholders})
         ORDER BY created_at DESC

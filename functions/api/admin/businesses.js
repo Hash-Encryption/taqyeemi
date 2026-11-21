@@ -20,8 +20,11 @@ export async function onRequestGet(context) {
         b.public_slug,
         b.secret_token,
         b.owner_email,
+        COALESCE(b.is_active, 1) AS is_active,
         b.created_at,
-        COUNT(f.id) AS feedback_count
+        COUNT(f.id) AS feedback_count,
+        SUM(CASE WHEN f.is_read = 0 THEN 1 ELSE 0 END) AS unread_count,
+        ROUND(AVG(f.rating), 1) AS avg_rating
       FROM businesses b
       LEFT JOIN feedback f ON f.business_id = b.id
       GROUP BY b.id
@@ -62,8 +65,8 @@ export async function onRequestPost(context) {
     const secretToken = generateSecretToken();
 
     await env.DB.prepare(`
-      INSERT INTO businesses (id, name, google_maps_url, public_slug, secret_token, owner_email)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO businesses (id, name, google_maps_url, public_slug, secret_token, owner_email, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, 1)
     `).bind(id, name, googleMapsUrl, publicSlug, secretToken, ownerEmail).run();
 
     const origin = new URL(request.url).origin;
